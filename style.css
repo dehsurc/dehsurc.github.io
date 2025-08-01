@@ -63,3 +63,14 @@ footer {
   margin-top: 2rem;
 }
 a { color: #007acc; }
+
+.social-icons img {
+  width: 28px;
+  height: 28px;
+  margin: 0 6px;
+  transition: transform 0.2s;
+}
+
+.social-icons img:hover {
+  transform: scale(1.2);
+}
