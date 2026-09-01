@@ -468,7 +468,7 @@ function summaryView(){
   const c=s.results.filter(x=>x.ok).length,n=s.results.length;
   const wrong=s.results.filter(x=>!x.ok);
   const title=({morning:'아침 퀴즈 완료',evening:'저녁 복습 완료',extra:'추가 연습 완료'})[s.mode];
-  const next=s.mode==='morning'?`틀린 ${wrong.length}문제는 저녁 7시에 다시 나와요`:s.mode==='evening'?`틀린 ${wrong.length}문제는 내일 아침에 다시`:`틀린 ${wrong.length}문제는 내일 다시`;
+  const next=s.mode==='morning'?`틀린 ${wrong.length}문제는 저녁 7시 20분에 다시 나와요`:s.mode==='evening'?`틀린 ${wrong.length}문제는 내일 아침에 다시`:`틀린 ${wrong.length}문제는 내일 다시`;
   let lv='';
   if(s.levelChange==='up')lv=`<div class="level-note">최근 정답률이 높아서 난이도가 Lv ${S.level}로 올라갔어요.</div>`;
   if(s.levelChange==='down')lv=`<div class="level-note">최근 정답률이 낮아서 난이도를 Lv ${S.level}로 낮췄어요. 다시 쌓아 올리면 됩니다.</div>`;
