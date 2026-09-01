@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>매일 영어 퀴즈</title>
+<style>
+:root{
+  --bg:#EEF1F5; --paper:#FFFFFF; --ink:#14213D; --muted:#5B6478; --line:#CBD2DE;
+  --ok:#0F766E; --okbg:#E1F2EF; --no:#B4432F; --nobg:#F9E5E1; --accent:#1F4E9C; --tag:#FFE9A3;
+  --sans:-apple-system,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",system-ui,sans-serif;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5}
+button{font-family:inherit;font-size:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+#app{max-width:520px;margin:0 auto;padding:16px 16px 92px}
+h1{font-size:22px;margin:0 0 4px;font-weight:700;letter-spacing:-0.01em}
+.sub{color:var(--muted);font-size:14px;margin:0 0 20px}
+.status{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+.status div{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:10px 12px;flex:1;min-width:100px}
+.status b{display:block;font-size:22px;font-weight:700;line-height:1.1}
+.status span{font-size:13px;color:var(--muted)}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:18px 18px 16px;margin-bottom:14px}
+.btn{display:block;width:100%;padding:14px 16px;border-radius:12px;border:none;background:var(--ink);color:#fff;font-weight:600;font-size:17px}
+.btn.secondary{background:var(--paper);color:var(--ink);border:1.5px solid var(--ink)}
+.btn.ghost{background:transparent;color:var(--accent);border:none;font-weight:600;padding:10px}
+.btn:disabled{opacity:.4;cursor:default}
+.btn+.btn{margin-top:10px}
+.tag{display:inline-block;font-size:13px;padding:3px 9px;border-radius:999px;background:#E4E8F0;color:var(--muted);margin-right:6px}
+.tag.review{background:var(--tag);color:#6B5300}
+.progress{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-size:14px;color:var(--muted)}
+.bar{height:4px;background:var(--line);border-radius:2px;margin-bottom:16px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent)}
+.q{font-family:var(--serif);font-size:21px;line-height:1.55;margin:10px 0 18px;letter-spacing:.005em}
+.q.ko{font-family:var(--sans);font-size:19px}
+.blank{display:inline-block;min-width:3.6em;border-bottom:2px solid var(--ink);vertical-align:-3px;height:1.2em}
+.hint{font-size:14px;color:var(--muted);margin:-10px 0 14px}
+input.ans{width:100%;padding:14px;border:1.5px solid var(--line);border-radius:10px;font-size:18px;font-family:var(--serif);background:#FBFCFD}
+.choices button{display:block;width:100%;text-align:left;padding:13px 14px;margin-bottom:8px;background:#FBFCFD;border:1.5px solid var(--line);border-radius:10px;font-family:var(--serif);font-size:17px;line-height:1.4;color:var(--ink)}
+.choices button.ok{background:var(--okbg);border-color:var(--ok)}
+.choices button.no{background:var(--nobg);border-color:var(--no)}
+.result{border-radius:10px;padding:12px 14px;margin-top:14px;font-size:15px}
+.result.ok{background:var(--okbg);color:#0B4F4A}
+.result.no{background:var(--nobg);color:#7A2A1D}
+.result .a{font-family:var(--serif);font-size:18px;display:block;margin:4px 0}
+.result .exp{margin-top:6px;color:var(--ink);opacity:.85}
+.list{list-style:none;padding:0;margin:0}
+.list li{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:8px}
+.list .qq{font-family:var(--serif);font-size:16px;margin:2px 0 4px}
+.list .meta{font-size:13px;color:var(--muted)}
+.empty{color:var(--muted);text-align:center;padding:30px 10px}
+.summary .big{font-size:40px;font-weight:700;line-height:1;margin:6px 0}
+.level-note{background:var(--tag);border-radius:10px;padding:10px 12px;margin:12px 0;font-size:15px}
+.weekchart{display:flex;gap:6px;align-items:flex-end;height:90px;margin:12px 0 4px}
+.weekchart div{flex:1;background:var(--accent);border-radius:4px 4px 0 0;min-height:3px;position:relative}
+.weekchart div.empty{background:var(--line)}
+.weeklabels{display:flex;gap:6px;font-size:11px;color:var(--muted)}
+.weeklabels div{flex:1;text-align:center}
+textarea{width:100%;min-height:120px;border:1.5px solid var(--line);border-radius:10px;padding:10px;font-family:ui-monospace,Menlo,monospace;font-size:13px}
+.note{font-size:14px;color:var(--muted)}
+code{font-family:ui-monospace,Menlo,monospace;font-size:13px;background:#E4E8F0;padding:1px 5px;border-radius:4px}
+nav{position:fixed;left:0;right:0;bottom:0;background:var(--paper);border-top:1px solid var(--line);display:flex;padding:6px 8px calc(6px + env(safe-area-inset-bottom))}
+nav button{flex:1;background:none;border:none;padding:10px 4px;font-size:13px;color:var(--muted);border-radius:8px}
+nav button.on{color:var(--ink);font-weight:700;background:#E4E8F0}
+.toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:999px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.show{opacity:1}
+.banner{background:var(--nobg);color:#7A2A1D;border-radius:10px;padding:10px 12px;font-size:14px;margin-bottom:14px}
+.row{display:flex;gap:8px}
+.row .btn{flex:1}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<nav id="nav"></nav>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------- 문제 은행 ---------- */
+// F: 빈칸/입력형  M: 객관식
+const F=(id,type,level,q,a,exp)=>({id,type,level,kind:'fill',q,a,exp});
+const M=(id,type,level,q,choices,ans,exp)=>({id,type,level,kind:'mc',q,choices,ans,exp});
+const BANK=[
+// ---- 문법 Lv1: 형태 ----
+F('g01','g',1,'I ______ (study) end-to-end autonomous driving.',['study'],'주어 I → 동사원형'),
+F('g02','g',1,'Our model ______ (use) satellite images.',['uses'],'3인칭 단수 → -s'),
+F('g03','g',1,'This gate ______ (not / require) learned parameters.',['does not require',"doesn't require"],"doesn't 뒤는 원형"),
+F('g04','g',1,'______ your method need calibration? (Do / Does)',['does'],'단수 주어 의문문 → Does'),
+F('g05','g',1,'The two branches ______ (share) the same backbone.',['share'],'복수 주어 → 원형'),
+F('g06','g',1,'We ______ (not / train) it from scratch.',['do not train',"don't train"],"We → don't"),
+F('g07','g',1,'Right now I ______ (run) experiments for the rebuttal.',['am running'],'지금 진행 중 → 현재진행'),
+F('g08','g',1,'Our model ______ (consist) of two branches.',['consists'],'구조 설명 → 현재, -s'),
+F('g09','g',1,'I ______ (know) that paper.',['know'],'상태동사는 진행형을 쓰지 않음'),
+F('g10','g',1,'We ______ (train) the model for 24 epochs last week.',['trained'],'끝난 실험 → 과거'),
+F('g11','g',1,'I ______ (not / use) any extra annotation. (과거)',['did not use',"didn't use"],"didn't 뒤는 원형"),
+F('g12','g',1,'______ you try the larger version? (과거 의문)',['did'],'과거 의문문 → Did'),
+F('g13','g',1,'We ______ (run) the ablation three times. (과거)',['ran'],'run의 과거 → ran'),
+F('g14','g',1,'I ______ (go) to the workshop last year.',['went'],'go → went'),
+F('g15','g',1,'I ______ (not / try) that setting yet.',['have not tried',"haven't tried"],'yet + 아직 → 현재완료'),
+F('g16','g',1,'We ______ (work) on this since last year.',['have been working','have worked'],'since → 현재완료(진행)'),
+F('g17','g',1,'______ you read their latest paper? (경험)',['have'],'경험 → Have you...?'),
+F('g18','g',1,'We ______ (just / finish) the ablation.',['have just finished'],'방금 끝남 → 현재완료'),
+// ---- 문법 Lv2: 시제 선택·오류 수정 ----
+M('g19','g',2,'Our model ___ two encoders. (구조 설명)',['has','had','is having'],0,'변하지 않는 구조 → 현재'),
+M('g20','g',2,'We ___ it on nuScenes last month.',['evaluate','evaluated','have evaluated'],1,'last month → 과거'),
+M('g21','g',2,'This module ___ the error by 3 points. (일반적 효과)',['reduces','reduced','is reducing'],0,'항상 그런 효과 → 현재'),
+M('g22','g',2,'틀린 문장을 고친 것은? — "I have been to Japan last year."',['I went to Japan last year.','I have gone to Japan last year.','I was been to Japan last year.'],0,'last year가 있으면 과거'),
+M('g23','g',2,'___ you ever tried a transformer backbone?',['Did','Have','Do'],1,'ever + 경험 → Have'),
+M('g24','g',2,'맞는 문장은?',['We finished it yesterday.','We have finished it yesterday.','We are finished it yesterday.'],0,'yesterday → 과거'),
+F('g25','g',2,'What are you working on these days? — I ______ (work) on a new dataset.',['am working'],'요즘 하는 일 → 현재진행'),
+M('g26','g',2,'I ___ that paper — I read it last month.',['know','am knowing','have known'],0,'know는 진행형 X'),
+F('g27','g',2,'It ______ (not / need) HD maps.',['does not need',"doesn't need"],'It → doesn\'t + 원형'),
+M('g28','g',2,'Right now we ___ the camera-ready version.',['prepare','are preparing','prepared'],1,'Right now → 진행'),
+M('g29','g',2,'The performance ___ when the weather is bad.',['degrades','degraded','is degrading'],0,'조건적 일반 사실 → 현재'),
+F('g30','g',2,'I ______ (present) this at a domestic workshop last spring.',['presented'],'last spring → 과거'),
+// ---- 문법 Lv3: 한→영 ----
+F('g31','g',3,'저는 자율주행 연구를 합니다.',['i work on autonomous driving'],'분야 전체 → 현재 / work on'),
+F('g32','g',3,'우리 모델은 추가 라벨이 필요 없습니다.',['our model does not need extra labels',"our model doesn't need extra labels",'our model does not require extra labels',"our model doesn't require extra labels"],"doesn't need / require"),
+F('g33','g',3,'저는 라이다를 쓰지 않습니다.',['i do not use lidar',"i don't use lidar"],"I don't use ~"),
+F('g34','g',3,'우리는 지금 nuScenes에서 평가하고 있습니다.',['we are currently evaluating it on nuscenes',"we're currently evaluating it on nuscenes",'we are evaluating it on nuscenes',"we're evaluating it on nuscenes"],'지금 → 현재진행, on nuScenes'),
+F('g35','g',3,'저는 아직 그 설정을 시도해보지 않았습니다.',['i have not tried that setting yet',"i haven't tried that setting yet"],"haven't tried ~ yet"),
+F('g36','g',3,'우리는 그것을 두 데이터셋에서 평가했습니다.',['we evaluated it on two datasets'],'evaluated / on'),
+F('g37','g',3,'저는 작년에 CVPR에 갔습니다.',['i went to cvpr last year'],'went / last year'),
+F('g38','g',3,'그 backbone을 써 본 적 있나요?',['have you tried that backbone','have you ever tried that backbone'],'경험 → Have you (ever) tried'),
+F('g39','g',3,'저는 이 주제를 1년 정도 연구해 왔습니다.',['i have been working on this topic for about a year',"i've been working on this topic for about a year",'i have been working on this for about a year',"i've been working on this for about a year",'i have worked on this topic for about a year'],'현재완료진행 + for about a year'),
+F('g40','g',3,'이 모듈이 성능을 향상시킵니다.',['this module improves performance','this module improves the performance'],'improves'),
+// ---- 문법 관사·명사 (2주차) ----
+F('g41','g',1,'We use ______ transformer decoder. (a / an / the)',['a'],'처음 언급하는 단수 → a'),
+F('g42','g',1,'It takes about ______ hour to train. (a / an)',['an'],'hour는 모음 소리 → an'),
+F('g43','g',1,'This is ______ first version of our model. (a / the)',['the'],'first → the'),
+M('g44','g',2,'We need more ___.',['data','datas','a data'],0,'data는 구어에서 셀 수 없는 명사'),
+M('g45','g',2,'Our lab has ___ GPUs.',['eight','an eight','the eight'],0,'복수 + 숫자 → 관사 없음'),
+F('g46','g',2,'______ satellite image gives extra context. (앞에서 언급한 그 이미지)',['the'],'이미 언급 → the'),
+M('g47','g',2,'I got a lot of useful ___ from the reviewers.',['feedback','feedbacks','a feedback'],0,'feedback은 셀 수 없음'),
+M('g48','g',2,'She\'s ___ PhD student at KAIST.',['a','an','the'],0,'PhD는 /p/ 소리로 시작 → a'),
+M('g49','g',2,'Most ___ in this field use LiDAR.',['methods','of methods','the methods'],0,'일반적인 대부분 → most + 복수'),
+M('g50','g',2,'We trained it on ___ nuScenes dataset.',['the','a','(없음)'],0,'특정 데이터셋 이름 + dataset → the'),
+// ---- 문법 전치사 (3주차) ----
+F('g51','g',1,'We evaluated it ______ nuScenes.',['on'],'evaluate on + 데이터셋'),
+F('g52','g',1,'I\'m interested ______ auxiliary task learning.',['in'],'interested in'),
+F('g53','g',1,'We compared our method ______ three baselines.',['with','to'],'compare with / to'),
+F('g54','g',1,'It depends ______ the input resolution.',['on'],'depend on'),
+F('g55','g',1,'The model consists ______ two branches.',['of'],'consist of'),
+F('g56','g',1,'I\'m a student ______ Hanyang University.',['at'],'소속 기관 → at'),
+F('g57','g',1,'We\'re presenting ______ Thursday afternoon.',['on'],'요일 → on'),
+F('g58','g',1,'This is related ______ your work.',['to'],'related to'),
+F('g59','g',1,'It outperforms the baseline ______ 3 points.',['by'],'차이의 크기 → by'),
+F('g60','g',1,'Thanks ______ coming by.',['for'],'thanks for + -ing'),
+// ---- 어휘 Lv1: 알아보기 ----
+M('v01','v',1,'저는 자율주행 연구를 합니다.',['I work on autonomous driving.','I work autonomous driving.','I am working autonomous driving.'],0,'work on ~'),
+M('v02','v',1,'~에 집중하다',['focus on','focus in','focus to'],0,'focus on'),
+M('v03','v',1,'저는 서울에 있어요. (거주·소속)',["I'm based in Seoul.","I'm basing in Seoul.","I'm based at Seoul."],0,'based in + 도시'),
+M('v04','v',1,'저는 2년차입니다.',["I'm in my second year.","I'm second year.","I have second year."],0,"in my second year"),
+M('v05','v',1,'간단히 말하면',['In a nutshell','In a short','In shortly'],0,'in a nutshell'),
+M('v06','v',1,'더 구체적으로는',['More specifically','More specific','Specifically more'],0,'more specifically'),
+M('v07','v',1,'목표는 ~를 줄이는 것입니다',['The goal is to reduce ~','The goal is reduce ~','The goal is reducing to ~'],0,'the goal is to + 동사'),
+M('v08','v',1,'우리 방법은 baseline보다 3점 높습니다.',['It outperforms the baseline by 3 points.','It outperforms than the baseline 3 points.','It is outperform the baseline by 3 points.'],0,'outperform A by N'),
+M('v09','v',1,'성능이 떨어진다',['The performance drops.','The performance drop.','The performance dropping.'],0,'drop / degrade'),
+M('v10','v',1,'A를 B와 비교하다',['compare A with B','compare A to with B','compare A by B'],0,'compare with'),
+M('v11','v',1,'아직 그건 살펴보지 않았어요.',["We haven't looked into that yet.","We didn't look that yet.","We haven't look into that."],0,'look into ~'),
+M('v12','v',1,'좋은 질문이네요.',["That's a good question.","That's good question.","It's a good asking."],0,'시간 벌기용 문장'),
+M('v13','v',1,'이메일로 다시 답해도 될까요?',['Could I get back to you by email?','Can I back you by email?','Could I return you with email?'],0,'get back to ~'),
+M('v14','v',1,'이번이 처음 오신 건가요?',['Is this your first time here?','Is it your first here?','Are you first time here?'],0,'first time here'),
+M('v15','v',1,'발표도 하시나요?',['Are you presenting too?','Do you present too?','Are you presentation too?'],0,'presenting'),
+M('v16','v',1,'만나서 반가웠어요. (마무리)',['It was nice talking to you.','It was nice to talk you.','Nice talking you.'],0,'nice talking to you'),
+M('v17','v',1,'이메일 주소 알려주실 수 있나요?',['Could I get your email?','Could I have you email?','Can you give me email?'],0,'Could I get your email?'),
+M('v18','v',1,'미세조정하다',['fine-tune','fine-tuning to','tune-fine'],0,'fine-tune'),
+M('v19','v',1,'그건 사실 저희 future work입니다.',["That's actually our future work.","That's actual our future work.","That's our actually future work."],0,'actually 위치'),
+M('v20','v',1,'제 공저자가 더 잘 알 거예요.',['My co-author would know better.','My co-author knows more better.','My co-author would know more good.'],0,'would know better'),
+// ---- 어휘 Lv2: 핵심어 쓰기 ----
+F('v21','v',2,'I ______ ______ end-to-end autonomous driving. (연구 분야, 두 단어)',['work on'],'work on'),
+F('v22','v',2,'Our lab ______ on perception. (집중하다)',['focuses'],'focuses on'),
+F('v23','v',2,'I\'m ______ in Seoul. (거주·소속)',['based'],'based in'),
+F('v24','v',2,'We ______ our method with three baselines. (비교했다)',['compared'],'compared with'),
+F('v25','v',2,'It ______ the baseline by 3 points. (더 좋다)',['outperforms','beats'],'outperforms'),
+F('v26','v',2,'We ran an ______ on each module. (구성요소 제거 실험)',['ablation','ablation study'],'ablation'),
+F('v27','v',2,'We haven\'t ______ ______ that yet. (살펴보다, 두 단어)',['looked into'],'looked into'),
+F('v28','v',2,'Could I ______ ______ to you by email? (나중에 답하다, 두 단어)',['get back'],'get back to'),
+F('v29','v',2,'What ______ you to this session? (무슨 일로 오셨어요?)',['brings','brought'],'What brings you to ~?'),
+F('v30','v',2,'I ______ your poster earlier. (봤다)',['saw'],'saw'),
+F('v31','v',2,'That ______ interesting. (흥미롭네요)',['sounds'],'That sounds interesting.'),
+F('v32','v',2,'In a ______, we build maps without HD maps. (간단히 말하면)',['nutshell'],'in a nutshell'),
+F('v33','v',2,'I\'d ______ it to work, but we haven\'t tested it. (~할 것으로 예상하다)',['expect'],"I'd expect ~"),
+F('v34','v',2,'Let me ______ for a second. (생각 좀 할게요)',['think'],'Let me think for a second.'),
+F('v35','v',2,'We ______ it on two datasets. (평가했다)',['evaluated','tested'],'evaluated on'),
+F('v36','v',2,'The performance ______ in bad weather. (저하되다)',['drops','degrades','decreases'],'drops / degrades'),
+F('v37','v',2,'This ______ the mAP by about 2%. (향상시키다)',['improves','increases','boosts'],'improves'),
+F('v38','v',2,'We ______ the model on 8 GPUs. (학습시켰다)',['trained'],'trained'),
+F('v39','v',2,'Is your team ______ interns next year? (뽑다)',['taking','hiring','accepting'],'taking interns'),
+F('v40','v',2,'Who should I ______ to about internships? (얘기하다)',['talk','speak'],'talk to ~ about'),
+// ---- 어휘 Lv3: 문장 통째로 ----
+F('v41','v',3,'저는 한양대학교 석사과정 학생입니다.',["i am a master's student at hanyang university","i'm a master's student at hanyang university",'i am a masters student at hanyang university',"i'm a masters student at hanyang university"],"a master's student at ~"),
+F('v42','v',3,'우리는 그것을 세 개의 baseline과 비교했습니다.',['we compared it with three baselines','we compared it to three baselines','we compared our method with three baselines'],'compared with'),
+F('v43','v',3,'아직 그건 살펴보지 않았어요.',["we haven't looked into that yet",'we have not looked into that yet',"i haven't looked into that yet",'i have not looked into that yet'],"haven't looked into ~ yet"),
+F('v44','v',3,'이메일로 다시 답해도 될까요?',['could i get back to you by email','can i get back to you by email'],'get back to you by email'),
+F('v45','v',3,'무슨 일로 이 세션에 오셨어요?',['what brings you to this session','what brought you to this session'],'What brings you to ~?'),
+F('v46','v',3,'발표도 하시나요?',['are you presenting too','are you presenting as well','are you also presenting'],'Are you presenting too?'),
+F('v47','v',3,'만나서 반가웠어요. (헤어질 때)',['it was nice talking to you','nice talking to you','it was nice to meet you','nice to meet you','it was nice meeting you'],'It was nice talking to you.'),
+F('v48','v',3,'저희 논문을 보내드릴게요.',["i'll send you our paper",'i will send you our paper',"i'll send our paper to you",'i will send our paper to you'],"I'll send you ~"),
+F('v49','v',3,'팀에서 내년에 인턴을 뽑나요?',['is your team taking interns next year','is your team hiring interns next year','are you taking interns next year','are you hiring interns next year'],'Is your team taking interns?'),
+F('v50','v',3,'인턴십에 대해 누구와 얘기하면 될까요?',['who should i talk to about internships','who should i speak to about internships','who should i talk to about the internship','who should i talk to about internship'],'Who should I talk to about ~?'),
+F('v51','v',3,'그건 사실 저희 향후 연구입니다.',["that's actually our future work",'that is actually our future work',"that's our future work","actually that's our future work"],"That's actually our future work."),
+F('v52','v',3,'목표는 오프라인 지도 의존을 줄이는 것입니다.',['the goal is to reduce the reliance on offline maps','the goal is to reduce reliance on offline maps','the goal is to reduce the dependence on offline maps','the goal is to reduce dependence on offline maps','our goal is to reduce the reliance on offline maps','our goal is to reduce reliance on offline maps'],'reduce the reliance on ~'),
+F('v53','v',3,'이 연구는 어제 발표하신 것과 관련이 있어요.',["it's related to what you presented yesterday",'it is related to what you presented yesterday','this is related to what you presented yesterday','this work is related to what you presented yesterday'],'related to what you presented'),
+F('v54','v',3,'저는 보조 태스크가 planning에 어떻게 영향을 주는지에 관심이 있습니다.',["i'm interested in how auxiliary tasks affect planning",'i am interested in how auxiliary tasks affect planning',"i'm interested in how auxiliary tasks influence planning",'i am interested in how auxiliary tasks influence planning'],'interested in how ~ affect ~'),
+F('v55','v',3,'좋은 지적이네요, 하지만 아직 테스트는 안 했어요.',["that's a good point but we haven't tested it yet","that's a good point, but we haven't tested it yet","good point but we haven't tested it yet",'that is a good point but we have not tested it yet',"that's a good point but we haven't tested that yet"],"That's a good point, but ~"),
+
+// ================= 심화 문제 =================
+// 오류 수정 (틀린 부분을 바르게 고쳐 문장 전체를 다시 쓰기)
+F('e01','g',2,'[오류 수정] The model consist of two encoder and one decoder.',['the model consists of two encoders and one decoder'],'consist→consists, encoder→encoders'),
+F('e02','g',2,'[오류 수정] We have submitted the paper in May.',['we submitted the paper in may'],'in May(시점) → 과거시제'),
+F('e03','g',2,'[오류 수정] Our method outperforms than the baseline.',['our method outperforms the baseline'],'outperform은 than을 쓰지 않음'),
+F('e04','g',2,'[오류 수정] I am interested to your work.',['i am interested in your work',"i'm interested in your work"],'interested in'),
+F('e05','g',2,'[오류 수정] We didn\'t used any extra annotation.',["we didn't use any extra annotation",'we did not use any extra annotation'],"didn't 뒤는 동사원형"),
+F('e06','g',2,'[오류 수정] This module make the training more stable.',['this module makes the training more stable','this module makes training more stable'],'3인칭 단수 -s'),
+F('e07','g',2,'[오류 수정] Can you explain me the figure?',['can you explain the figure to me'],'explain은 4형식 불가 → explain A to B'),
+F('e08','g',2,'[오류 수정] We discussed about the limitation in the paper.',['we discussed the limitation in the paper','we discussed the limitations in the paper'],'discuss는 타동사, about 불필요'),
+F('e09','g',2,'[오류 수정] The result is depend on the resolution.',['the result depends on the resolution','the results depend on the resolution'],'depend는 동사, be동사 불필요'),
+F('e10','g',2,'[오류 수정] I have a question about how does it work.',['i have a question about how it works'],'간접의문문 어순 → how it works'),
+F('e11','g',2,'[오류 수정] Almost researchers use this dataset.',['most researchers use this dataset'],'almost는 부사 → most'),
+F('e12','g',2,'[오류 수정] We compared with the baseline our method.',['we compared our method with the baseline'],'목적어 위치'),
+F('e13','g',2,'[오류 수정] It takes 2 hours for train the model.',['it takes 2 hours to train the model','it takes two hours to train the model'],'for + 동사원형 불가 → to부정사'),
+F('e14','g',2,'[오류 수정] Thank you for come to my poster.',['thank you for coming to my poster'],'for + 동명사'),
+F('e15','g',2,'[오류 수정] I will send you the paper until Friday.',['i will send you the paper by friday',"i'll send you the paper by friday"],'기한 → by (until은 계속)'),
+
+// 문맥 빈칸 (동사 힌트 없음)
+F('e16','g',2,'A: How long have you been working on this? B: ______ about a year.',['for'],'기간 → for'),
+F('e17','g',2,'The error drops ______ 12% ______ 8%. (에서→로)',['from to','from  to'],'from A to B'),
+F('e18','g',2,'This is the module ______ handles occlusion. (관계사)',['that','which'],'주격 관계대명사'),
+F('e19','g',2,'We use satellite images ______ the camera view is blocked. (~할 때)',['when','whenever'],'시간 접속사'),
+F('e20','g',2,'______ we remove this module, the performance drops. (~하면)',['if','when'],'조건절'),
+F('e21','g',2,'It works well ______ in bad weather. (~조차)',['even'],'even in ~'),
+F('e22','g',2,'The model runs at 10 FPS, ______ is fast enough for us. (계속적 용법)',['which'],'앞 절 전체를 받는 which'),
+F('e23','g',2,'We trained it ______ two days ______ 8 GPUs.',['for on','for  on'],'기간 for / 수단 on'),
+F('e24','g',2,'I\'d rather ______ that in the paper than here. (설명하다)',['explain'],'would rather + 동사원형'),
+F('e25','g',2,'There ______ two main limitations in our work.',['are'],'복수 주어 → are'),
+
+// 한→영 실전 문장 (긴 것)
+F('e26','g',3,'이 모듈을 제거하면 성능이 3점 정도 떨어집니다.',['if we remove this module the performance drops by about 3 points','if we remove this module performance drops by about 3 points','when we remove this module the performance drops by about 3 points','removing this module drops the performance by about 3 points'],'if절 + drops by'),
+F('e27','g',3,'저희는 아직 다른 데이터셋에서는 테스트해보지 않았습니다.',["we haven't tested it on other datasets yet",'we have not tested it on other datasets yet',"we haven't evaluated it on other datasets yet"],"haven't tested it on ~ yet"),
+F('e28','g',3,'그 부분은 제 공저자가 맡아서, 제가 정확히 답드리기 어렵습니다.',['my co-author worked on that part so i cannot answer that exactly',"my co-author worked on that part so i can't answer that exactly",'my co-author handled that part so i cannot answer that exactly',"my co-author handled that part so i can't answer that exactly"],'so 연결'),
+F('e29','g',3,'좋은 지적입니다. 실제로 그게 저희의 주요 한계 중 하나예요.',["that's a good point actually that's one of our main limitations","that's a good point actually it's one of our main limitations",'that is a good point actually that is one of our main limitations'],'one of our main limitations'),
+F('e30','g',3,'위성 이미지를 쓰는 이유는 카메라 시야가 가려질 때가 있기 때문입니다.',['we use satellite images because the camera view is sometimes blocked','we use satellite images because the camera view can be blocked','the reason we use satellite images is that the camera view is sometimes blocked'],'because절'),
+F('e31','g',3,'혹시 그 논문 링크를 이메일로 보내주실 수 있을까요?',['could you send me the link to that paper by email','could you send me a link to that paper by email','would you mind sending me the link to that paper by email'],'Could you send me ~'),
+F('e32','g',3,'저희 방법은 사전 구축된 HD 맵에 의존하지 않습니다.',['our method does not rely on pre-built hd maps',"our method doesn't rely on pre-built hd maps",'our method does not depend on pre-built hd maps',"our method doesn't depend on pre-built hd maps"],'rely on'),
+F('e33','g',3,'실험은 두 데이터셋에서 각각 세 번씩 돌렸습니다.',['we ran the experiments three times on each of the two datasets','we ran the experiments three times on each dataset','we ran each experiment three times on both datasets'],'three times on each ~'),
+F('e34','g',3,'그건 저희가 다음에 해보려고 하는 부분입니다.',["that's something we want to try next","that's what we want to try next","that's something we plan to try next","that's our next step"],'something we want to try next'),
+F('e35','g',3,'제가 질문을 제대로 이해했는지 모르겠는데, 다시 말씀해주시겠어요?',["i'm not sure i understood the question could you say that again",'i am not sure i understood the question could you say that again',"i'm not sure i got the question could you say that again","i'm not sure i understood your question could you repeat that"],"I'm not sure I understood ~"),
+
+// 어휘 심화 — 자연스러운 표현 고르기
+M('e36','v',3,'포스터 앞에서 "이 부분부터 보시면 됩니다"에 가장 가까운 것은?',['You can start from this figure here.','You can start this figure from here.','From here you can start to see this figure.'],0,'start from ~'),
+M('e37','v',3,'"성능이 좋아 보이는데 왜 그런 거죠?"에 대한 자연스러운 시작은?',["That's mainly because of the confidence gate.",'That is mainly reason of the confidence gate.','The main because is the confidence gate.'],0,"That's mainly because ~"),
+M('e38','v',3,'논문 얘기 중 "제가 제대로 이해했다면"의 자연스러운 표현은?',['If I understand correctly, ...','If I am understanding correct, ...','If I understood rightly, ...'],0,'If I understand correctly'),
+M('e39','v',3,'인턴십 얘기를 자연스럽게 꺼내는 문장으로 가장 적절한 것은?',['Is your team taking interns next year?','Do you have internship for me?','Can I get internship in your team?'],0,'Is your team taking interns?'),
+M('e40','v',3,'"연락 계속 하고 지내요"에 가장 가까운 것은?',["Let's keep in touch.","Let's keep contact.","Let's continue to touch."],0,'keep in touch'),
+M('e41','v',3,'상대 발표를 칭찬할 때 가장 자연스러운 것은?',['I really enjoyed your talk.','I really enjoyed to your talk.','Your talk was really enjoy.'],0,'enjoyed your talk'),
+M('e42','v',3,'"조금 더 자세히 설명해주실 수 있나요?"',['Could you elaborate on that a bit?','Could you explain more detail?','Could you more explain about that?'],0,'elaborate on'),
+M('e43','v',3,'"제 이해로는 두 방법의 차이가 크지 않은 것 같은데요"의 시작으로 적절한 것은?',['As far as I understand, the two methods are not that different.','As far as I understanding, the two methods are not different that much.','In my understand, two methods are not so different.'],0,'As far as I understand'),
+M('e44','v',3,'대화를 정중히 끝낼 때 가장 자연스러운 것은?',["I should let you get back to it — thanks for stopping by.","I will finish our talk now, thank you.","Our conversation is over, thank you for coming."],0,'let you get back to it'),
+M('e45','v',3,'"저희 랩에서 이 방향으로 계속 연구하고 있어요"',["Our lab has been working in this direction for a while.","Our lab is working this direction since a while.","Our lab works to this direction from a while."],0,'work in this direction'),
+];
+
+/* ---------- 상태 ---------- */
+const KEY='engquiz-state-v3';
+const EXTRA_N=5, MAX_REVIEW=8, EVENING_TARGET=8, EVENING_NEW_MAX=6;
+let S=null, memMode=false, view='home', ui={};
+
+function fmt(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function today(){return fmt(new Date())}
+function addDays(s,n){const [y,m,d]=s.split('-').map(Number);return fmt(new Date(y,m-1,d+n))}
+function defaultState(){return{level:2,streak:0,lastDone:'',history:{},review:{},recent:[],day:null,session:null,packs:[],totals:{answered:0,correct:0},log:[],morningN:18}}
+function ensureDay(){const t=today();if(!S.day||S.day.date!==t){S.day={date:t,morning:null,evening:null};S.session=null}}
+
+async function load(){
+  try{
+    const raw=localStorage.getItem(KEY);
+    S=Object.assign(defaultState(),raw?JSON.parse(raw):{});
+    localStorage.setItem(KEY+':probe','1');localStorage.removeItem(KEY+':probe');
+  }catch(e){memMode=true;S=defaultState()}
+}
+async function save(){
+  if(memMode)return;
+  try{localStorage.setItem(KEY,JSON.stringify(S))}
+  catch(e){console.error(e);toast('저장 실패 — 시크릿 모드인지 확인해주세요')}
+}
+function allQ(){const m={};BANK.forEach(q=>m[q.id]=q);(S.packs||[]).forEach(p=>p.forEach(q=>m[q.id]=q));return m}
+
+/* ---------- 출제 ---------- */
+function dueReviews(Q){const t=today();return Object.keys(S.review).filter(id=>Q[id]&&S.review[id].due<=t).sort((a,b)=>S.review[a].due.localeCompare(S.review[b].due))}
+function pickNew(n,Q,exclude){
+  const order=[S.level,S.level-1,S.level+1].filter(l=>l>=1&&l<=3);
+  const rank=id=>{const h=S.history[id];return [order.indexOf(Q[id].level),h?1:0,h?h.lastSeen:'',Math.random()]};
+  const cmp=(a,b)=>{const ra=rank(a),rb=rank(b);for(let i=0;i<4;i++){if(ra[i]<rb[i])return -1;if(ra[i]>rb[i])return 1}return 0};
+  const t=today();
+  const ids=Object.keys(Q).filter(id=>!exclude.has(id)&&!S.review[id]&&order.includes(Q[id].level)&&!(S.history[id]&&S.history[id].lastSeen===t));
+  const g=ids.filter(id=>Q[id].type==='g').sort(cmp), v=ids.filter(id=>Q[id].type==='v').sort(cmp);
+  const out=[];let wantG=Math.ceil(n/2),wantV=n-wantG;
+  out.push(...g.slice(0,wantG));out.push(...v.slice(0,wantV));
+  if(out.length<n){const rest=[...g.slice(wantG),...v.slice(wantV)].sort(cmp);out.push(...rest.slice(0,n-out.length))}
+  // 섞되 순서 무작위
+  for(let i=out.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[out[i],out[j]]=[out[j],out[i]]}
+  return out;
+}
+function buildSession(mode){
+  ensureDay();
+  const Q=allQ(),t=today();
+  let due=[],retest=[],n;
+  if(mode==='morning'){n=S.morningN||18;due=dueReviews(Q).slice(0,MAX_REVIEW)}
+  else if(mode==='evening'){
+    const m=S.day.morning;
+    retest=m?m.results.filter(r=>!r.ok).map(r=>r.id).filter(id=>Q[id]):[];
+    n=retest.length+Math.min(EVENING_NEW_MAX,Math.max(2,EVENING_TARGET-retest.length));
+  }else{n=EXTRA_N}
+  const fresh=pickNew(n-due.length-retest.length,Q,new Set([...due,...retest]));
+  const qids=[...due,...retest,...fresh];
+  S.session={date:t,mode,qids,reviewSet:due,retestSet:retest,idx:0,results:[],done:false};
+}
+
+/* ---------- 채점 ---------- */
+function norm(s){
+  s=String(s).toLowerCase().replace(/[\u2019\u2018`]/g,"'").replace(/[.,!?;:"\u201c\u201d()]/g,' ').replace(/\s+/g,' ').trim();
+  const rep=[[/^'m\b/,'am'],[/\bi'm\b/g,'i am'],[/\bcan't\b/g,'cannot'],[/\bwon't\b/g,'will not'],[/n't\b/g,' not'],[/'re\b/g,' are'],[/'ve\b/g,' have'],[/'ll\b/g,' will'],[/'d\b/g,' would'],[/\bthat's\b/g,'that is'],[/\bit's\b/g,'it is'],[/\bwhat's\b/g,'what is'],[/\bthere's\b/g,'there is'],[/\bhere's\b/g,'here is'],[/\bcan not\b/g,'cannot']];
+  rep.forEach(([r,t])=>s=s.replace(r,t));
+  return s.replace(/\s+/g,' ').trim();
+}
+function grade(q,input){
+  if(q.kind==='mc')return Number(input)===q.ans;
+  const u=norm(input);if(!u)return false;
+  return q.a.some(a=>norm(a)===u);
+}
+function record(id,ok,kind){ // kind: 'new' | 'review' | 'retest'
+  const t=today();
+  const h=S.history[id]||{seen:0,correct:0,wrong:0,lastSeen:''};
+  h.seen++;if(ok)h.correct++;else h.wrong++;h.lastSeen=t;S.history[id]=h;
+  if(kind==='retest'){
+    if(!ok)S.review[id]={due:addDays(t,1),stage:0}; // 저녁에도 틀리면 내일 다시(이미 그렇게 잡혀 있음)
+    // 저녁에 맞혀도 내일 확인은 그대로 남김
+  }else{
+    if(!ok){S.review[id]={due:addDays(t,1),stage:0}}
+    else if(kind==='review'){const r=S.review[id];if(!r||r.stage>=2)delete S.review[id];else{r.stage++;r.due=addDays(t,r.stage===1?3:7)}}
+    if(kind==='new'){S.recent.push(ok?1:0);if(S.recent.length>20)S.recent.shift()}
+  }
+  S.totals.answered++;if(ok)S.totals.correct++;
+}
+function adjustLevel(){
+  const r=S.recent;if(r.length<10)return null;
+  const acc=r.reduce((a,b)=>a+b,0)/r.length;
+  if(acc>=0.85&&S.level<3){S.level++;S.recent=[];return 'up'}
+  if(acc<=0.5&&S.level>1){S.level--;S.recent=[];return 'down'}
+  return null;
+}
+function finishSession(){
+  const s=S.session,t=today();s.done=true;ensureDay();
+  const c=s.results.filter(x=>x.ok).length,n=s.results.length;
+  if(s.mode==='morning'){
+    S.day.morning=s;
+    if(S.lastDone!==t){S.streak=(S.lastDone===addDays(t,-1))?S.streak+1:1;S.lastDone=t}
+    S.log.push({date:t,c,n,ec:null,en:null,level:S.level});if(S.log.length>120)S.log.shift();
+  }else if(s.mode==='evening'){
+    S.day.evening=s;
+    const l=S.log.find(x=>x.date===t);if(l){l.ec=c;l.en=n}
+  }
+  s.levelChange=adjustLevel();
+}
+
+/* ---------- 렌더 ---------- */
+const $=id=>document.getElementById(id);
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function qhtml(q){const ko=/[\uac00-\ud7a3]/.test(q.q)&&q.level===3;return `<p class="q${ko?' ko':''}">${esc(q.q).replace(/_{3,}/g,'<span class="blank"></span>')}</p>`}
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(ui.tt);ui.tt=setTimeout(()=>t.classList.remove('show'),1800)}
+function typeLabel(q){return q.type==='g'?'문법':'어휘'}
+
+function render(){
+  const app=$('app');
+  const banner=memMode?`<div class="banner">이 브라우저에서 저장이 막혀 있어요. 시크릿/프라이빗 모드를 끄고 다시 열어주세요.</div>`:'';
+  let body='';
+  if(view==='home')body=homeView();
+  else if(view==='quiz')body=quizView();
+  else if(view==='notes')body=notesView();
+  else if(view==='stats')body=statsView();
+  else if(view==='settings')body=settingsView();
+  app.innerHTML=banner+body;
+  const tabs=[['home','오늘'],['notes','오답 노트'],['stats','기록'],['settings','설정']];
+  $('nav').innerHTML=tabs.map(([k,l])=>`<button class="${(view===k||(k==='home'&&view==='quiz'))?'on':''}" data-v="${k}">${l}</button>`).join('');
+  $('nav').querySelectorAll('button').forEach(b=>b.onclick=()=>{view=b.dataset.v;render()});
+  bind();
+}
+
+function statusBar(){
+  const Q=allQ();const due=dueReviews(Q).length;
+  return `<div class="status">
+    <div><b>Lv ${S.level}</b><span>난이도</span></div>
+    <div><b>${S.streak}일</b><span>연속</span></div>
+    <div><b>${due}</b><span>오늘 복습</span></div>
+  </div>`;
+}
+function homeView(){
+  ensureDay();
+  const t=today(),d=S.day,s=S.session,Q=allQ();
+  const dateStr=new Date().toLocaleDateString('ko-KR',{month:'long',day:'numeric',weekday:'short'});
+  const resuming=s&&s.date===t&&!s.done;
+  let morning='',evening='';
+  // 아침
+  if(resuming&&s.mode==='morning'){
+    morning=`<div class="card"><p style="margin:0 0 4px">아침 퀴즈</p><p class="sub" style="margin:0 0 14px">${s.idx}/${s.qids.length} 진행 중</p><button class="btn" data-act="resume">이어서 풀기</button></div>`;
+  }else if(d.morning){
+    const c=d.morning.results.filter(x=>x.ok).length,n=d.morning.results.length;
+    morning=`<div class="card"><p style="margin:0 0 4px">아침 퀴즈 완료</p><p class="sub" style="margin:0">${n}문제 중 ${c}개 정답 · 틀린 ${n-c}문제는 저녁에 다시</p></div>`;
+  }else{
+    const due=Math.min(dueReviews(Q).length,MAX_REVIEW),n=S.morningN||18;
+    morning=`<div class="card"><p style="margin:0 0 4px">아침 퀴즈 · 약 20분</p><p class="sub" style="margin:0 0 14px">복습 ${due}문제 + 새 문제 ${n-due}문제</p><button class="btn" data-act="startMorning" ${resuming?'disabled':''}>시작</button></div>`;
+  }
+  // 저녁
+  if(resuming&&s.mode==='evening'){
+    evening=`<div class="card"><p style="margin:0 0 4px">저녁 복습</p><p class="sub" style="margin:0 0 14px">${s.idx}/${s.qids.length} 진행 중</p><button class="btn" data-act="resume">이어서 풀기</button></div>`;
+  }else if(d.evening){
+    const c=d.evening.results.filter(x=>x.ok).length,n=d.evening.results.length;
+    evening=`<div class="card"><p style="margin:0 0 4px">저녁 복습 완료</p><p class="sub" style="margin:0 0 14px">${n}문제 중 ${c}개 정답</p><button class="btn secondary" data-act="extra">${EXTRA_N}문제 더 풀기</button></div>`;
+  }else if(d.morning){
+    const w=d.morning.results.filter(x=>!x.ok).length;
+    const nn=Math.min(EVENING_NEW_MAX,Math.max(2,EVENING_TARGET-w));
+    evening=`<div class="card"><p style="margin:0 0 4px">저녁 복습 · 약 10분</p><p class="sub" style="margin:0 0 14px">아침에 틀린 ${w}문제 다시 + 새 문제 ${nn}문제</p><button class="btn" data-act="startEvening" ${resuming?'disabled':''}>시작</button></div>`;
+  }else{
+    evening=`<div class="card" style="opacity:.55"><p style="margin:0 0 4px">저녁 복습</p><p class="sub" style="margin:0">아침 퀴즈를 끝내면 열려요. 아침에 틀린 문제로 만들어집니다.</p></div>`;
+  }
+  return `<h1>매일 영어 퀴즈</h1><p class="sub">${dateStr}</p>${statusBar()}${morning}${evening}
+  <p class="note">아침에 틀린 문제는 저녁에 한 번 더, 다음 날 아침에 또 나옵니다. 그때 맞히면 3일 뒤 → 7일 뒤 확인 후 졸업. 최근 20문제 정답률 85% 이상이면 난이도가 올라가고 50% 이하면 내려갑니다.</p>`;
+}
+
+function quizView(){
+  const s=S.session,Q=allQ();
+  if(s.done)return summaryView();
+  const q=Q[s.qids[s.idx]];
+  const isRev=s.reviewSet.includes(q.id),isRetest=(s.retestSet||[]).includes(q.id);
+  const r=ui.result;
+  let answer='';
+  if(q.kind==='fill'){
+    answer=`<input class="ans" id="ansInput" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="영어로 입력" ${r?'disabled':''} value="${r?esc(r.input):''}">
+      ${r?'':'<button class="btn" style="margin-top:12px" data-act="check">확인</button>'}`;
+  }else{
+    answer=`<div class="choices">${q.choices.map((c,i)=>{
+      let cls='';if(r){if(i===q.ans)cls='ok';else if(Number(r.input)===i)cls='no'}
+      return `<button data-choice="${i}" class="${cls}" ${r?'disabled':''}>${esc(c)}</button>`}).join('')}</div>`;
+  }
+  let res='';
+  if(r){
+    const ansText=q.kind==='fill'?q.a[0]:q.choices[q.ans];
+    res=`<div class="result ${r.ok?'ok':'no'}">${r.ok?(isRetest?'정답 — 내일 아침에 한 번 더 확인':'정답'):(isRetest?'오답 — 내일 아침에 다시':'오답 — 저녁에 다시 나와요')}
+      ${r.ok?'':`<span class="a">${esc(ansText)}</span>`}
+      ${q.exp?`<div class="exp">${esc(q.exp)}</div>`:''}</div>
+      <button class="btn" style="margin-top:14px" data-act="next">${s.idx+1>=s.qids.length?'결과 보기':'다음'}</button>`;
+  }
+  return `<div class="progress"><span>${s.idx+1} / ${s.qids.length}</span><span>${({morning:'아침 퀴즈',evening:'저녁 복습',extra:'추가 연습'})[s.mode]}</span></div>
+    <div class="bar"><i style="width:${(s.idx/s.qids.length)*100}%"></i></div>
+    <div class="card">
+      <div><span class="tag">${typeLabel(q)}</span><span class="tag">Lv ${q.level}</span>${isRev?'<span class="tag review">복습</span>':''}${isRetest?'<span class="tag review">아침 오답</span>':''}</div>
+      ${qhtml(q)}
+      ${q.kind==='fill'&&q.level===3?'<p class="hint">문장 전체를 영어로. 대소문자·마침표는 신경 쓰지 않아도 돼요.</p>':''}
+      ${answer}${res}
+    </div>`;
+}
+
+function summaryView(){
+  const s=S.session,Q=allQ();
+  const c=s.results.filter(x=>x.ok).length,n=s.results.length;
+  const wrong=s.results.filter(x=>!x.ok);
+  const title=({morning:'아침 퀴즈 완료',evening:'저녁 복습 완료',extra:'추가 연습 완료'})[s.mode];
+  const next=s.mode==='morning'?`틀린 ${wrong.length}문제는 저녁 7시에 다시 나와요`:s.mode==='evening'?`틀린 ${wrong.length}문제는 내일 아침에 다시`:`틀린 ${wrong.length}문제는 내일 다시`;
+  let lv='';
+  if(s.levelChange==='up')lv=`<div class="level-note">최근 정답률이 높아서 난이도가 Lv ${S.level}로 올라갔어요.</div>`;
+  if(s.levelChange==='down')lv=`<div class="level-note">최근 정답률이 낮아서 난이도를 Lv ${S.level}로 낮췄어요. 다시 쌓아 올리면 됩니다.</div>`;
+  return `<div class="card summary"><p style="margin:0">${title}</p>
+    <div class="big">${c} / ${n}</div>
+    <p class="sub" style="margin:0">${wrong.length?next:'전부 맞혔어요'}</p>${lv}
+    ${wrong.length?`<ul class="list" style="margin-top:14px">${wrong.map(w=>{const q=Q[w.id];const a=q.kind==='fill'?q.a[0]:q.choices[q.ans];return `<li><div class="meta">${typeLabel(q)}</div><div class="qq">${esc(q.q)}</div><div class="qq" style="color:var(--ok)">${esc(a)}</div></li>`}).join('')}</ul>`:''}
+    <button class="btn" style="margin-top:16px" data-act="home">홈으로</button>
+  </div>`;
+}
+
+function notesView(){
+  const Q=allQ(),t=today();
+  const ids=Object.keys(S.review).filter(id=>Q[id]).sort((a,b)=>S.review[a].due.localeCompare(S.review[b].due));
+  if(!ids.length)return `<h1>오답 노트</h1><p class="sub">틀린 문제가 자동으로 쌓입니다</p><div class="empty">아직 비어 있어요.<br>틀린 문제가 생기면 여기서 다시 볼 수 있어요.</div>`;
+  const stageName=['1일 뒤','3일 뒤','7일 뒤'];
+  return `<h1>오답 노트</h1><p class="sub">${ids.length}문제 · 소리 내어 3번씩 읽어두세요</p>
+    <ul class="list">${ids.map(id=>{const q=Q[id],r=S.review[id],h=S.history[id]||{wrong:0};const a=q.kind==='fill'?q.a[0]:q.choices[q.ans];
+      const dueTxt=r.due<=t?'오늘':r.due===addDays(t,1)?'내일':r.due;
+      return `<li><div class="meta">${typeLabel(q)} · ${h.wrong}번 틀림 · 다음 확인 ${dueTxt} (${stageName[r.stage]||''} 단계)</div><div class="qq">${esc(q.q)}</div><div class="qq" style="color:var(--ok)">${esc(a)}</div>${q.exp?`<div class="meta">${esc(q.exp)}</div>`:''}</li>`}).join('')}</ul>`;
+}
+
+function statsView(){
+  const t=today();const days=[];for(let i=6;i>=0;i--)days.push(addDays(t,-i));
+  const byDate={};S.log.forEach(l=>byDate[l.date]=l);
+  const bars=days.map(d=>{const l=byDate[d];const h=l?Math.max(8,Math.round(l.c/l.n*100)):0;return `<div class="${l?'':'empty'}" style="height:${l?h:3}%" title="${d}${l?` 아침 ${l.c}/${l.n}`:''}${l&&l.en!=null?` 저녁 ${l.ec}/${l.en}`:''}"></div>`}).join('');
+  const labels=days.map(d=>`<div>${Number(d.slice(8))}일</div>`).join('');
+  const acc=S.totals.answered?Math.round(S.totals.correct/S.totals.answered*100):0;
+  const rec=S.recent.length?Math.round(S.recent.reduce((a,b)=>a+b,0)/S.recent.length*100):null;
+  const Q=allQ();const seen=Object.keys(S.history).filter(id=>Q[id]).length,total=Object.keys(Q).length;
+  return `<h1>기록</h1><p class="sub">최근 7일 아침 퀴즈 정답률</p>
+    <div class="card"><div class="weekchart">${bars}</div><div class="weeklabels">${labels}</div></div>
+    ${statusBar()}
+    <div class="card">
+      <p style="margin:0 0 6px">전체 정답률 <b>${acc}%</b> (${S.totals.correct}/${S.totals.answered})</p>
+      <p style="margin:0 0 6px">최근 새 문제 정답률 <b>${rec===null?'-':rec+'%'}</b> (${S.recent.length}/20 누적)</p>
+      <p style="margin:0 0 6px">풀어본 문제 <b>${seen}</b> / ${total}</p>
+      <p style="margin:0">오답 노트 <b>${Object.keys(S.review).length}</b>문제</p>
+    </div>
+    <p class="note">85% 이상이면 다음 난이도, 50% 이하면 이전 난이도로 조정됩니다. 20문제가 쌓여야 판단해요.</p>`;
+}
+
+function settingsView(){
+  return `<h1>설정</h1><p class="sub">문제 추가와 초기화</p>
+    <div class="card"><p style="margin:0 0 8px">문제 팩 추가</p>
+      <p class="note" style="margin:0 0 10px">Claude가 만들어준 문제 팩(JSON)을 붙여넣으면 은행에 합쳐집니다. 같은 id는 덮어써요.</p>
+      <textarea id="packInput" placeholder='[{"id":"g61","type":"g","level":1,"kind":"fill","q":"...","a":["..."],"exp":"..."}]'></textarea>
+      <button class="btn secondary" style="margin-top:10px" data-act="addPack">팩 추가</button>
+      <p class="note" style="margin:10px 0 0">추가된 팩: ${(S.packs||[]).length}개 · 문제 ${(S.packs||[]).reduce((a,p)=>a+p.length,0)}개</p>
+    </div>
+    <div class="card"><p style="margin:0 0 8px">아침 퀴즈 문제 수</p>
+      <div class="row">${[14,18,22].map(n=>`<button class="btn ${(S.morningN||18)===n?'':'secondary'}" data-mn="${n}">${n}문제</button>`).join('')}</div>
+      <p class="note" style="margin:10px 0 0">18문제가 대략 20분입니다. 저녁 복습은 아침 오답 + 새 문제로 자동 구성돼요.</p>
+    </div>
+    <div class="card"><p style="margin:0 0 8px">난이도 직접 설정</p>
+      <div class="row">${[1,2,3].map(l=>`<button class="btn ${S.level===l?'':'secondary'}" data-level="${l}">Lv ${l}</button>`).join('')}</div>
+      <p class="note" style="margin:10px 0 0">Lv1 형태 채우기 · Lv2 시제 선택과 오류 수정 · Lv3 문장 통째로 영작</p>
+    </div>
+    <div class="card"><p style="margin:0 0 8px">초기화</p>
+      <p class="note" style="margin:0 0 10px">기록·오답 노트·난이도가 전부 지워집니다. 추가한 문제 팩은 남아요.</p>
+      <button class="btn ghost" data-act="reset">모든 기록 지우기</button>
+    </div>
+    <div class="card"><p style="margin:0 0 8px">기록 백업 / 옮기기</p>
+      <p class="note" style="margin:0 0 10px">기록은 이 브라우저에만 저장됩니다. 폰을 바꾸거나 브라우저 데이터를 지우면 사라져요.</p>
+      <div class="row"><button class="btn secondary" data-act="exportState">내보내기</button><button class="btn secondary" data-act="importState">가져오기</button></div>
+    </div>
+    <p class="note">저장 위치: ${memMode?'저장 불가 (시크릿 모드)':'이 브라우저 (localStorage)'}</p>`;
+}
+
+/* ---------- 이벤트 ---------- */
+function bind(){
+  document.querySelectorAll('[data-act]').forEach(b=>b.onclick=()=>act(b.dataset.act));
+  document.querySelectorAll('[data-choice]').forEach(b=>b.onclick=()=>submit(b.dataset.choice));
+  document.querySelectorAll('[data-mn]').forEach(b=>b.onclick=async()=>{S.morningN=Number(b.dataset.mn);await save();render()});
+  document.querySelectorAll('[data-level]').forEach(b=>b.onclick=async()=>{S.level=Number(b.dataset.level);S.recent=[];await save();toast(`Lv ${S.level}로 설정`);render()});
+  const inp=$('ansInput');
+  if(inp){if(!ui.result)setTimeout(()=>inp.focus(),50);inp.onkeydown=e=>{if(e.key==='Enter'&&!ui.result)submit(inp.value)}}
+}
+async function act(a){
+  if(a==='startMorning'){buildSession('morning');ui.result=null;view='quiz';await save();render()}
+  else if(a==='startEvening'){buildSession('evening');ui.result=null;view='quiz';await save();render()}
+  else if(a==='extra'){buildSession('extra');ui.result=null;view='quiz';await save();render()}
+  else if(a==='resume'){ui.result=null;view='quiz';render()}
+  else if(a==='check'){const inp=$('ansInput');submit(inp?inp.value:'')}
+  else if(a==='next'){const s=S.session;s.idx++;ui.result=null;if(s.idx>=s.qids.length)finishSession();await save();render();window.scrollTo(0,0)}
+  else if(a==='home'){view='home';render()}
+  else if(a==='addPack'){addPack()}
+  else if(a==='exportState'){const t=$('packInput');if(t){t.value=JSON.stringify(S);t.scrollIntoView({block:'center'});toast('아래 칸에 복사해 두세요')}}
+  else if(a==='importState'){const t=$('packInput');if(!t||!t.value.trim()){toast('아래 칸에 백업 내용을 붙여넣으세요');return}
+    try{const o=JSON.parse(t.value);if(!o.history||!o.totals)throw 0;S=Object.assign(defaultState(),o);await save();toast('복원했어요');view='home';render()}catch(e){toast('백업 형식이 아니에요')}}
+  else if(a==='reset'){if(confirm('모든 기록을 지울까요? 되돌릴 수 없어요.')){const packs=S.packs||[];S=defaultState();S.packs=packs;await save();toast('초기화했어요');render()}}
+}
+async function submit(input){
+  if(ui.result)return;
+  const s=S.session,Q=allQ(),q=Q[s.qids[s.idx]];
+  const ok=grade(q,input);
+  const kind=s.reviewSet.includes(q.id)?'review':(s.retestSet||[]).includes(q.id)?'retest':'new';
+  record(q.id,ok,kind);
+  s.results.push({id:q.id,ok});
+  ui.result={ok,input};
+  await save();render();
+}
+async function addPack(){
+  const ta=$('packInput');let arr;
+  try{arr=JSON.parse(ta.value)}catch(e){toast('JSON 형식이 아니에요');return}
+  if(!Array.isArray(arr)){toast('배열 형태여야 해요');return}
+  const bad=arr.find(q=>!q.id||!q.type||!q.level||!q.kind||!q.q||(q.kind==='fill'&&!Array.isArray(q.a))||(q.kind==='mc'&&(!Array.isArray(q.choices)||typeof q.ans!=='number')));
+  if(bad){toast('형식이 맞지 않는 문제가 있어요');return}
+  S.packs=S.packs||[];S.packs.push(arr);await save();toast(`${arr.length}문제 추가`);render();
+}
+
+/* ---------- 시작 ---------- */
+(async()=>{
+  await load();
+  const before=JSON.stringify(S.day);ensureDay();
+  if(JSON.stringify(S.day)!==before)await save();
+  render();
+})();
+</script>
+</body>
+</html>
