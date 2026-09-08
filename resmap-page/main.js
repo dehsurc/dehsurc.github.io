@@ -5,7 +5,6 @@
 
   var root = document.documentElement;
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-  var themeListeners = [];
 
   /* ------------------------------------------------------------------ *
    * 1. Theme
@@ -29,7 +28,7 @@
         'Switch to ' + (theme === 'dark' ? 'light' : 'dark') + ' theme');
     }
     try { localStorage.setItem('resmap-theme', theme); } catch (e) { /* private mode */ }
-    themeListeners.forEach(function (fn) { fn(theme); });
+    window.dispatchEvent(new CustomEvent('resmap:theme', { detail: theme }));
   }
 
   function round(v) { return Math.round(v * 10) / 10; }
@@ -143,129 +142,7 @@
   }
 
   /* ------------------------------------------------------------------ *
-   * 2. Ambient BEV grid
-   *
-   * The page sits on the same kind of grid the model reasons over: cells
-   * light up around the pointer the way the PTF reliability map does. The
-   * static lattice is rendered once to an offscreen canvas and blitted with
-   * a scroll offset; only the ~100 cells near the pointer are redrawn per
-   * frame.
-   * ------------------------------------------------------------------ */
-
-  var canvas = document.getElementById('bev-grid');
-
-  if (canvas && canvas.getContext) {
-    var ctx = canvas.getContext('2d');
-    var base = document.createElement('canvas');
-    var baseCtx = base.getContext('2d');
-
-    var SPACING = 32;      // BEV cell pitch, px
-    var DOT = 1;           // resting dot radius
-    var GLOW = 165;        // pointer influence radius
-    var PARALLAX = 0.05;
-
-    var dpr = 1, vw = 0, vh = 0;
-    var dot = '27, 27, 25';
-    var baseAlpha = 0.11;
-
-    var px = -1e5, py = -1e5;
-    var glow = 0, glowTarget = 0;
-    var queued = false;
-
-    function readTheme() {
-      var styles = getComputedStyle(root);
-      dot = (styles.getPropertyValue('--grid-dot') || '27, 27, 25').trim();
-      baseAlpha = root.dataset.theme === 'dark' ? 0.14 : 0.11;
-    }
-
-    function drawBase() {
-      base.width = Math.ceil(vw * dpr);
-      base.height = Math.ceil((vh + SPACING) * dpr);
-      baseCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      baseCtx.clearRect(0, 0, vw, vh + SPACING);
-      baseCtx.fillStyle = 'rgba(' + dot + ', ' + baseAlpha + ')';
-      for (var y = 0; y <= vh + SPACING; y += SPACING) {
-        for (var x = 0; x <= vw; x += SPACING) {
-          baseCtx.beginPath();
-          baseCtx.arc(x, y, DOT, 0, Math.PI * 2);
-          baseCtx.fill();
-        }
-      }
-    }
-
-    function resize() {
-      dpr = Math.min(window.devicePixelRatio || 1, 2);
-      vw = window.innerWidth;
-      vh = window.innerHeight;
-      canvas.width = Math.ceil(vw * dpr);
-      canvas.height = Math.ceil(vh * dpr);
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      readTheme();
-      drawBase();
-      request();
-    }
-
-    function render() {
-      queued = false;
-      glow += (glowTarget - glow) * 0.18;
-      if (Math.abs(glowTarget - glow) < 0.004) glow = glowTarget;
-
-      var offset = (window.scrollY * PARALLAX) % SPACING;
-
-      ctx.clearRect(0, 0, vw, vh);
-      ctx.drawImage(base, 0, 0, base.width, base.height, 0, -offset, vw, vh + SPACING);
-
-      if (glow > 0.01) {
-        // Only the cells inside the influence radius need repainting.
-        var x0 = Math.floor((px - GLOW) / SPACING) * SPACING;
-        var x1 = px + GLOW;
-        var y1 = py + GLOW;
-        for (var gx = x0; gx <= x1; gx += SPACING) {
-          var startY = Math.floor((py + offset - GLOW) / SPACING) * SPACING;
-          for (var gy = startY; gy <= y1 + offset; gy += SPACING) {
-            var sy = gy - offset;
-            var d = Math.hypot(gx - px, sy - py);
-            if (d > GLOW) continue;
-            var t = (1 - d / GLOW);
-            t = t * t * glow;
-            ctx.fillStyle = 'rgba(' + dot + ', ' + (baseAlpha + t * 0.5) + ')';
-            ctx.beginPath();
-            ctx.arc(gx, sy, DOT + t * 1.7, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        }
-      }
-
-      if (glow !== glowTarget) request();
-    }
-
-    function request() {
-      if (queued) return;
-      queued = true;
-      requestAnimationFrame(render);
-    }
-
-    resize();
-    window.addEventListener('resize', resize);
-    themeListeners.push(function () { readTheme(); drawBase(); request(); });
-
-    if (!reduceMotion.matches) {
-      window.addEventListener('scroll', request, { passive: true });
-      window.addEventListener('pointermove', function (e) {
-        if (e.pointerType === 'touch') return;
-        px = e.clientX; py = e.clientY;
-        glowTarget = 1;
-        request();
-      }, { passive: true });
-      document.addEventListener('pointerleave', function () {
-        glowTarget = 0;
-        request();
-      });
-    }
-  }
-
-  /* ------------------------------------------------------------------ *
-   * 3. Scroll progress
+   * 2. Scroll progress
    * ------------------------------------------------------------------ */
 
   var progress = document.querySelector('.progress i');
@@ -291,7 +168,7 @@
   }
 
   /* ------------------------------------------------------------------ *
-   * 4. Sections rise in as they are reached
+   * 3. Sections rise in as they are reached
    * ------------------------------------------------------------------ */
 
   var sections = Array.prototype.slice.call(document.querySelectorAll('.reveal'));
@@ -311,7 +188,7 @@
   }
 
   /* ------------------------------------------------------------------ *
-   * 5. Nav highlighting
+   * 4. Nav highlighting
    * ------------------------------------------------------------------ */
 
   var links = Array.prototype.slice.call(document.querySelectorAll('.topbar ul a'));
@@ -338,7 +215,7 @@
   }
 
   /* ------------------------------------------------------------------ *
-   * 6. Qualitative scene switcher
+   * 5. Qualitative scene switcher
    * ------------------------------------------------------------------ */
 
   var picker = document.querySelector('.scene-picker');
@@ -362,7 +239,7 @@
   }
 
   /* ------------------------------------------------------------------ *
-   * 7. BibTeX copy
+   * 6. BibTeX copy
    * ------------------------------------------------------------------ */
 
   var copy = document.getElementById('copy-bib');
@@ -381,7 +258,7 @@
   }
 
   /* ------------------------------------------------------------------ *
-   * 8. Placeholders for figures that have not been added yet
+   * 7. Placeholders for figures that have not been added yet
    * ------------------------------------------------------------------ */
 
   document.querySelectorAll('.figure img').forEach(function (img) {

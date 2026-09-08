@@ -44,8 +44,17 @@
 
 <a class="skiplink" href="#abstract">Skip to content</a>
 
-<!-- Ambient BEV cell grid; drawn by main.js, purely decorative. -->
-<canvas id="bev-grid" aria-hidden="true"></canvas>
+<!-- Procedural BEV map behind the page; drawn by drive.js. -->
+<canvas id="map-bg" aria-hidden="true"></canvas>
+
+<!-- Scroll-driven ego view. Landmarks are the page's own sections. -->
+<aside id="drive" hidden>
+  <canvas id="drive-map"></canvas>
+  <button id="drive-label" type="button" aria-label="Jump to the section ahead">
+    <span id="drive-section">Abstract</span>
+    <span id="drive-dist"></span>
+  </button>
+</aside>
 
 <nav class="topbar" aria-label="Sections">
   <div class="topbar-inner">
@@ -491,6 +500,7 @@
   </div>
 </footer>
 
+<script src="drive.js"></script>
 <script src="main.js"></script>
 </body>
 </html>
