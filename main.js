@@ -186,4 +186,21 @@
     }, { rootMargin: '-45% 0px -50% 0px' });
     targets.forEach(function (t) { io.observe(t); });
   }
+  /* ------------------------------------------------------------------ *
+   * 3. Seoul clock
+   *
+   * Where the author is, in the reader's own second hand.
+   * ------------------------------------------------------------------ */
+
+  var clock = document.getElementById('clock');
+
+  if (clock && window.Intl && Intl.DateTimeFormat) {
+    var fmt = new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Asia/Seoul', hour12: false,
+      hour: '2-digit', minute: '2-digit', second: '2-digit'
+    });
+    var tick = function () { clock.textContent = fmt.format(new Date()); };
+    tick();
+    setInterval(tick, 1000);
+  }
 })();
