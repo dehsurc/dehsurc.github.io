@@ -32,8 +32,10 @@
       var dark = saved ? saved === 'dark'
                        : window.matchMedia('(prefers-color-scheme: dark)').matches;
       document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+      document.documentElement.classList.add('js');
     } catch (e) {
       document.documentElement.dataset.theme = 'light';
+      document.documentElement.classList.add('js');
     }
   })();
 </script>
@@ -41,6 +43,9 @@
 <body>
 
 <a class="skiplink" href="#abstract">Skip to content</a>
+
+<!-- Ambient BEV cell grid; drawn by main.js, purely decorative. -->
+<canvas id="bev-grid" aria-hidden="true"></canvas>
 
 <nav class="topbar" aria-label="Sections">
   <div class="topbar-inner">
@@ -77,6 +82,7 @@
       </svg>
     </button>
   </div>
+  <div class="progress" aria-hidden="true"><i></i></div>
 </nav>
 
 <header id="top" class="hero">
@@ -122,7 +128,7 @@
 
 <main>
 
-<section id="abstract">
+<section class="reveal" id="abstract">
   <div class="col">
     <h2><span class="num">1</span>Abstract</h2>
     <p>Despite recent advances in camera-based online HD map construction, these systems remain susceptible to sensor failures because of their reliance on onboard cameras. Satellite images, in contrast, remain available independently of real-time sensing conditions, since they are cached offline. Existing methods that use satellite images, however, primarily leverage them under nominal conditions, without explicitly addressing them as redundancy when a sensor degrades.</p>
@@ -131,7 +137,7 @@
   </div>
 </section>
 
-<section id="idea">
+<section class="reveal" id="idea">
   <div class="col">
     <h2><span class="num">2</span>Satellite images as redundancy, not decoration</h2>
     <p>Auxiliary modalities for online mapping are usually chosen for accuracy. LiDAR is still bolted to the same onboard stack that fails, and SD maps carry topology but not lane-level geometry. Satellite tiles are different in one respect that matters for deployment: they are fetched and cached ahead of time, so a hardware fault, an occlusion, or a lost video link cannot take them away.</p>
@@ -140,7 +146,7 @@
   </div>
 </section>
 
-<section id="method">
+<section class="reveal" id="method">
   <div class="col">
     <h2><span class="num">3</span>Method</h2>
   </div>
@@ -178,7 +184,7 @@
   </div>
 </section>
 
-<section id="results">
+<section class="reveal" id="results">
   <div class="col">
     <h2><span class="num">4</span>Results on nuScenes</h2>
     <p>All models are trained and evaluated on nuScenes with the geographically non-overlapping split, using ego-aligned AID4AD satellite tiles cropped to the BEV region of interest. Except where marked, every baseline is retrained under the same evaluation conditions, following its own paper&rsquo;s schedule.</p>
@@ -286,7 +292,7 @@
   </div>
 </section>
 
-<section id="ablations">
+<section class="reveal" id="ablations">
   <div class="col">
     <h2><span class="num">5</span>Ablations</h2>
     <p>Both ablations are run on the geographically non-overlapping split. In (a) the decoder is fixed to the full OCMQ; in (b) the fusion is fixed to PTF, so that <i>F</i><sub>cam</sub>, <i>F</i><sub>sat</sub>, and <i>F</i><sub>fuse</sub> are identical across rows.</p>
@@ -341,7 +347,7 @@
   </div>
 </section>
 
-<section id="analysis">
+<section class="reveal" id="analysis">
   <div class="col">
     <h2><span class="num">6</span>Analysis</h2>
     <h3>6.1 &nbsp;Where the evidence goes</h3>
@@ -364,7 +370,7 @@
   </div>
 </section>
 
-<section id="qualitative">
+<section class="reveal" id="qualitative">
   <div class="col">
     <h2><span class="num">7</span>Qualitative comparison</h2>
     <p>Surround-view input, the satellite tile, and the predicted vector map for each method, first on clean input and then with the cameras dropped.</p>
@@ -387,7 +393,7 @@
   </div>
 </section>
 
-<section id="supplementary">
+<section class="reveal" id="supplementary">
   <div class="col">
     <h2><span class="num">8</span>Results on the original split</h2>
     <p>The original nuScenes partition has geographically overlapping train and validation regions, so road structures seen in training can reappear at evaluation. We report it as a secondary benchmark, under the same protocol.</p>
@@ -453,7 +459,7 @@
   </div>
 </section>
 
-<section id="cite">
+<section class="reveal" id="cite">
   <div class="col">
     <h2><span class="num">9</span>Paper and citation</h2>
     <!-- EDIT: link the PDF once it is in assets/paper/. -->

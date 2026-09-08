@@ -8,7 +8,8 @@ Online HD Map Construction*. No build step — three files plus assets.
                   comment so numbers can be edited in place
     style.css     all styling; both palettes live in the `:root` and
                   `:root[data-theme="dark"]` blocks
-    main.js       theme toggle, nav highlighting, scene switcher, BibTeX copy
+    main.js       theme toggle, ambient grid, scroll progress, section
+                  reveal, nav highlighting, scene switcher, BibTeX copy
     assets/       figures, videos, PDF (see assets/README.md)
 
 ## Type and theme
@@ -21,10 +22,18 @@ declared in `style.css` against a commit-pinned jsDelivr URL, restricted by
 its ~470 KB weights.
 
 The theme follows the OS by default and is overridden by the toggle in the
-nav bar, remembered in `localStorage`. Switching runs a circular wipe through
-the View Transitions API; browsers without it cross-fade the palette instead,
-and `prefers-reduced-motion` skips straight to the new theme. Figures keep a
-light backing in dark mode so white-background diagrams stay readable.
+nav bar (or the `t` key), remembered in `localStorage`. Switching wipes the
+new palette in from the button through the View Transitions API, picking one
+of seven clip-path shapes at random; browsers without the API cross-fade the
+palette instead, and `prefers-reduced-motion` skips straight to the new
+theme. Figures keep a light backing in dark mode so white-background diagrams
+stay readable.
+
+The background is a canvas lattice at the BEV cell pitch whose cells brighten
+around the pointer, the way the PTF reliability map does. The static lattice
+is rendered once offscreen and blitted with a scroll offset, so each frame
+only repaints the ~100 cells inside the pointer radius; touch pointers and
+`prefers-reduced-motion` get the static lattice.
 
 ## Deploying
 

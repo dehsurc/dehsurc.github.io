@@ -39,7 +39,9 @@
 :root {
   --paper:      #fdfcfa;
   --surface:    #f6f5f2;
-  --bar:        rgba(253, 252, 250, .92);
+  --bar:        #fbfaf7;
+  --row-hover:  rgba(20, 20, 18, .04);
+  --grid-dot:   27, 27, 25;
   --ink:        #1b1b19;
   --ink-soft:   #55534e;
   --ink-faint:  #8a877f;
@@ -64,7 +66,9 @@
 :root[data-theme="dark"] {
   --paper:      #14151a;
   --surface:    #1b1d23;
-  --bar:        rgba(20, 21, 26, .92);
+  --bar:        #191a20;
+  --row-hover:  rgba(255, 255, 255, .05);
+  --grid-dot:   233, 231, 226;
   --ink:        #e9e7e2;
   --ink-soft:   #a7a49c;
   --ink-faint:  #76736c;
@@ -108,6 +112,39 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
 
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
 
+/* ---------- ambient grid ---------- */
+
+#bev-grid {
+  position: fixed; inset: 0;
+  width: 100%; height: 100%;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* ---------- scroll progress ---------- */
+
+.progress {
+  position: absolute; left: 0; right: 0; bottom: -1px;
+  height: 2px;
+  overflow: hidden;
+}
+.progress i {
+  display: block;
+  height: 100%; width: 0;
+  background: var(--accent);
+  transform-origin: 0 50%;
+}
+
+/* ---------- section reveal ---------- */
+
+.js .reveal > .col { opacity: 0; transform: translateY(7px); }
+.js .reveal.in > .col {
+  opacity: 1; transform: none;
+  transition: opacity .55s ease, transform .55s cubic-bezier(.2, .7, .3, 1);
+}
+.js .reveal.in > .col:nth-child(2) { transition-delay: .06s; }
+.js .reveal.in > .col:nth-child(3) { transition-delay: .11s; }
+
 /* ---------- layout ---------- */
 
 .col { width: min(100% - 2.5rem, var(--col)); margin-inline: auto; }
@@ -121,7 +158,6 @@ section + section { border-top: 1px solid var(--rule); }
 .topbar {
   position: sticky; top: 0; z-index: 50;
   background: var(--bar);
-  backdrop-filter: saturate(1.6) blur(8px);
   border-bottom: 1px solid var(--rule);
 }
 .topbar-inner {
@@ -211,6 +247,7 @@ section + section { border-top: 1px solid var(--rule); }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  .js .reveal > .col { opacity: 1; transform: none; }
 }
 
 /* ---------- hero ---------- */
@@ -394,6 +431,9 @@ tr.group th {
   border-bottom: 1px solid var(--rule);
 }
 tbody tr.group:first-child th { padding-top: .55rem; }
+
+tbody tr:not(.group):hover th,
+tbody tr:not(.group):hover td { background-color: var(--row-hover); }
 
 tr.ours { background: var(--ours-bg); }
 tr.ours th { font-weight: 600; }
