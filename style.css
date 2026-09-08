@@ -50,10 +50,11 @@
   --accent-soft: rgba(21, 127, 174, 0.11);
   --bar-bg:  rgba(243, 240, 233, 0.86);
 
-  --sans: "Satoshi", "Freesentation", -apple-system, BlinkMacSystemFont,
-          system-ui, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-  /* Display face, for the name and the three headings under Now. */
-  --display: "Clash Display", "Satoshi", "Freesentation", system-ui, sans-serif;
+  --sans: "Inter", "Freesentation", "Nanum Gothic", -apple-system,
+          BlinkMacSystemFont, system-ui, "Segoe UI", Arial, sans-serif;
+  /* Display face: a fine, high-contrast serif against all that clean sans —
+     the name, the Now headings, the mail address. */
+  --display: "Instrument Serif", "Freesentation", Georgia, "Times New Roman", serif;
   --kr: "Freesentation", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
   /* Labels and figures share the family; only their treatment differs. */
   --mono: var(--sans);
@@ -272,20 +273,20 @@ h1, h2, h3 { font-weight: 700; line-height: 1.25; margin: 0; }
   text-transform: uppercase; color: var(--accent);
 }
 .hero h1 {
-  font-family: var(--display); font-weight: 600;
-  font-size: clamp(2.6rem, 8.4vw, 4.4rem);
-  letter-spacing: -.02em; line-height: 1.05;
+  font-family: var(--display); font-weight: 400;
+  font-size: clamp(3rem, 9.6vw, 5.2rem);
+  letter-spacing: -.005em; line-height: 1.02;
   margin-bottom: 1.2rem;
 }
 .hangul {
   display: block;
-  margin-top: .4rem;
+  margin-top: .6rem;
   font-family: var(--kr); font-size: .82rem; font-weight: 400;
   letter-spacing: .22em; color: var(--faint);
 }
 .lede {
   margin: 0 0 1.9rem;
-  font-size: clamp(1.24rem, 2.4vw, 1.46rem); line-height: 1.45; letter-spacing: -.012em;
+  font-size: clamp(1.2rem, 2.3vw, 1.4rem); line-height: 1.5; letter-spacing: -.014em;
   max-width: 22em;
   color: var(--ink);
 }
@@ -369,7 +370,8 @@ h1, h2, h3 { font-weight: 700; line-height: 1.25; margin: 0; }
 }
 .rail-note {
   margin: .8rem 0 0;
-  font-family: var(--mono); font-size: .72rem; line-height: 1.7;
+  font-family: var(--display); font-style: italic;
+  font-size: .92rem; line-height: 1.5;
   color: var(--faint);
 }
 
@@ -384,8 +386,8 @@ h1, h2, h3 { font-weight: 700; line-height: 1.25; margin: 0; }
 .focus > div:first-child { padding-top: 0; }
 .focus > div:last-child { border-bottom: 0; padding-bottom: 0; }
 .focus dt {
-  font-family: var(--display); font-weight: 500;
-  font-size: 1.16rem; letter-spacing: -.01em;
+  font-family: var(--display); font-weight: 400;
+  font-size: 1.44rem; line-height: 1.25; letter-spacing: 0;
 }
 .focus dd {
   margin: .25rem 0 0; max-width: 40em;
@@ -423,7 +425,7 @@ h1, h2, h3 { font-weight: 700; line-height: 1.25; margin: 0; }
   font-family: var(--mono); font-size: .74rem; font-weight: 600; color: var(--faint);
   padding-top: .2rem;
 }
-.pub h3 { font-size: 1.02rem; font-weight: 700; letter-spacing: -.01em; }
+.pub h3 { font-size: 1.02rem; font-weight: 600; letter-spacing: -.012em; }
 .pub .authors {
   margin: .3rem 0 0; font-size: .87rem; color: var(--soft);
 }
@@ -494,9 +496,9 @@ h1, h2, h3 { font-weight: 700; line-height: 1.25; margin: 0; }
 
 .bigmail {
   display: inline-flex; align-items: center; gap: .5rem;
-  font-family: var(--display); font-weight: 500;
-  font-size: clamp(1.5rem, 4.6vw, 2.5rem);
-  letter-spacing: -.02em; line-height: 1.1;
+  font-family: var(--display); font-weight: 400;
+  font-size: clamp(1.7rem, 5.2vw, 2.9rem);
+  letter-spacing: 0; line-height: 1.1;
   text-decoration: none; color: var(--ink);
   padding-bottom: .35rem;
   background-image: linear-gradient(var(--accent-2), var(--accent-2));
