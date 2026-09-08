@@ -113,18 +113,32 @@
     var y = box.top + box.height / 2;
     var w = window.innerWidth, h = window.innerHeight;
 
-    // Distance to the furthest corner, plus headroom so the shape leaves the
-    // viewport before the easing curve flattens out.
-    var reach = Math.hypot(Math.max(x, w - x), Math.max(y, h - y)) * 1.18;
+    // Dark expands in, light contracts out: going dark the new palette grows
+    // from the button, going light the old one collapses back into it. The
+    // outgoing snapshot has to be lifted above the incoming one for that to
+    // be visible, which is what data-wipe switches in the stylesheet.
+    var contract = next === 'light';
+    root.dataset.wipe = contract ? 'out' : 'in';
+
+    // Distance to the furthest corner. The expanding case overshoots so the
+    // shape leaves the viewport before the easing curve flattens; the
+    // contracting case starts at coverage, since anything larger is unseen.
+    var reach = Math.hypot(Math.max(x, w - x), Math.max(y, h - y)) *
+                (contract ? 1.02 : 1.18);
     var frames = pickShape()(x, y, reach, w, h);
 
     var transition = document.startViewTransition(function () { paint(next); });
 
+    function done() { delete root.dataset.wipe; }
+    transition.finished.then(done, done);
+
     transition.ready.then(function () {
-      root.animate({ clipPath: frames }, {
-        duration: 760,
-        easing: 'cubic-bezier(.3, .7, .2, 1)',
-        pseudoElement: '::view-transition-new(root)'
+      root.animate({ clipPath: contract ? [frames[1], frames[0]] : frames }, {
+        duration: contract ? 700 : 760,
+        easing: contract ? 'cubic-bezier(.8, 0, .7, .3)'
+                         : 'cubic-bezier(.3, .7, .2, 1)',
+        pseudoElement: contract ? '::view-transition-old(root)'
+                                : '::view-transition-new(root)'
       });
     }).catch(function () { /* transition skipped; the theme still applied */ });
   }
