@@ -6,9 +6,22 @@ Online HD Map Construction*. No build step — three files plus assets.
     index.html    content; every table is plain HTML, marked with an
                   `<!-- ==== TABLE n · paper Tab. X — update numbers here ==== -->`
                   comment so numbers can be edited in place
-    style.css     all styling; the palette lives in the `:root` block
-    main.js       nav highlighting, scene switcher, BibTeX copy
+    style.css     all styling; both palettes live in the `:root` and
+                  `:root[data-theme="dark"]` blocks
+    main.js       theme toggle, nav highlighting, scene switcher, BibTeX copy
     assets/       figures, videos, PDF (see assets/README.md)
+
+## Type and theme
+
+Latin is set in Inter and Hangul in Pretendard — Inter comes first in the
+stack and carries no Hangul glyphs, so Korean text falls through to
+Pretendard on its own. Both are loaded from a CDN.
+
+The theme follows the OS by default and is overridden by the toggle in the
+nav bar, remembered in `localStorage`. Switching runs a circular wipe through
+the View Transitions API; browsers without it cross-fade the palette instead,
+and `prefers-reduced-motion` skips straight to the new theme. Figures keep a
+light backing in dark mode so white-background diagrams stay readable.
 
 ## Deploying
 

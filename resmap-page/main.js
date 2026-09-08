@@ -1,12 +1,73 @@
-// ReSMap project page — three small behaviours, nothing else.
+// ReSMap project page — a few small behaviours, nothing else.
 
 (function () {
   'use strict';
 
-  // 1. Highlight the nav entry for the section currently in view.
-  var links = Array.prototype.slice.call(
-    document.querySelectorAll('.topbar ul a')
-  );
+  var root = document.documentElement;
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  // 1. Theme toggle. The palette lives in CSS custom properties, so applying a
+  //    theme is one attribute write; the interesting part is the transition.
+  var toggle = document.getElementById('theme-toggle');
+
+  function label(theme) {
+    return 'Switch to ' + (theme === 'dark' ? 'light' : 'dark') + ' theme';
+  }
+
+  function paint(theme) {
+    root.dataset.theme = theme;
+    if (toggle) {
+      toggle.setAttribute('aria-pressed', String(theme === 'dark'));
+      toggle.setAttribute('aria-label', label(theme));
+    }
+    try { localStorage.setItem('resmap-theme', theme); } catch (e) { /* private mode */ }
+  }
+
+  if (toggle) {
+    paint(root.dataset.theme === 'dark' ? 'dark' : 'light');
+
+    toggle.addEventListener('click', function () {
+      var next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+
+      // Without View Transitions (or with reduced motion), swap and let the
+      // CSS colour transitions carry it.
+      if (!document.startViewTransition || reduceMotion.matches) {
+        paint(next);
+        return;
+      }
+
+      // Otherwise: wipe the new theme in as a circle growing out of the
+      // button, sized so it reaches the furthest corner of the viewport.
+      var box = toggle.getBoundingClientRect();
+      var x = box.left + box.width / 2;
+      var y = box.top + box.height / 2;
+      var radius = Math.hypot(
+        Math.max(x, window.innerWidth - x),
+        Math.max(y, window.innerHeight - y)
+      );
+
+      var transition = document.startViewTransition(function () { paint(next); });
+
+      transition.ready.then(function () {
+        root.animate(
+          {
+            clipPath: [
+              'circle(0px at ' + x + 'px ' + y + 'px)',
+              'circle(' + radius + 'px at ' + x + 'px ' + y + 'px)'
+            ]
+          },
+          {
+            duration: 620,
+            easing: 'cubic-bezier(.22, 1, .36, 1)',
+            pseudoElement: '::view-transition-new(root)'
+          }
+        );
+      }).catch(function () { /* transition skipped; the theme still applied */ });
+    });
+  }
+
+  // 2. Highlight the nav entry for the section currently in view.
+  var links = Array.prototype.slice.call(document.querySelectorAll('.topbar ul a'));
   var targets = links
     .map(function (a) { return document.querySelector(a.getAttribute('href')); })
     .filter(Boolean);
@@ -29,7 +90,7 @@
     targets.forEach(function (t) { observer.observe(t); });
   }
 
-  // 2. Swap the qualitative video when a scene is picked.
+  // 3. Swap the qualitative video when a scene is picked.
   var picker = document.querySelector('.scene-picker');
   var video = document.getElementById('scene-video');
 
@@ -50,24 +111,24 @@
     });
   }
 
-  // 3. Copy the BibTeX entry.
+  // 4. Copy the BibTeX entry.
   var copy = document.getElementById('copy-bib');
   var bib = document.getElementById('bib');
 
   if (copy && bib && navigator.clipboard) {
     copy.addEventListener('click', function () {
       navigator.clipboard.writeText(bib.textContent).then(function () {
-        var label = copy.textContent;
+        var text = copy.textContent;
         copy.textContent = 'Copied';
-        setTimeout(function () { copy.textContent = label; }, 1600);
+        setTimeout(function () { copy.textContent = text; }, 1600);
       });
     });
   } else if (copy) {
     copy.hidden = true;
   }
 
-  // 4. Figures whose file has not been added yet: show what is missing
-  //    instead of a broken-image icon. Remove this once assets are in place.
+  // 5. Figures whose file has not been added yet: show what is missing instead
+  //    of a broken-image icon. Remove this once the assets are in place.
   document.querySelectorAll('.figure img').forEach(function (img) {
     img.addEventListener('error', function () {
       var note = document.createElement('div');
