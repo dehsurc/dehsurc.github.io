@@ -118,7 +118,7 @@
     // outgoing snapshot has to be lifted above the incoming one for that to
     // be visible, which is what data-wipe switches in the stylesheet.
     var contract = next === 'light';
-    root.dataset.wipe = contract ? 'out' : 'in';
+    delete root.dataset.wipe;
 
     // Distance to the furthest corner. The expanding case overshoots so the
     // shape leaves the viewport before the easing curve flattens; the
@@ -127,10 +127,17 @@
                 (contract ? 1.02 : 1.18);
     var frames = pickShape()(x, y, reach, w, h);
 
+    root.dataset.wipe = contract ? 'out' : 'in';
     var transition = document.startViewTransition(function () { paint(next); });
 
-    function done() { delete root.dataset.wipe; }
-    transition.finished.then(done, done);
+    var cleared = false;
+    function done() {
+      if (cleared) return;
+      cleared = true;
+      delete root.dataset.wipe;
+    }
+    if (transition.finished) transition.finished.then(done, done);
+    setTimeout(done, 1400);
 
     transition.ready.then(function () {
       root.animate({ clipPath: contract ? [frames[1], frames[0]] : frames }, {
@@ -156,33 +163,7 @@
   }
 
   /* ------------------------------------------------------------------ *
-   * 2. Scroll progress
-   * ------------------------------------------------------------------ */
-
-  var progress = document.querySelector('.progress i');
-
-  if (progress) {
-    progress.style.width = '100%';
-    var ticking = false;
-
-    var update = function () {
-      ticking = false;
-      var max = document.documentElement.scrollHeight - window.innerHeight;
-      var ratio = max > 0 ? Math.min(1, window.scrollY / max) : 0;
-      progress.style.transform = 'scaleX(' + ratio + ')';
-    };
-
-    window.addEventListener('scroll', function () {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(update);
-    }, { passive: true });
-    window.addEventListener('resize', update);
-    update();
-  }
-
-  /* ------------------------------------------------------------------ *
-   * 3. Sections rise in as they are reached
+   * 2. Sections rise in as they are reached
    * ------------------------------------------------------------------ */
 
   var sections = Array.prototype.slice.call(document.querySelectorAll('.reveal'));
@@ -202,7 +183,7 @@
   }
 
   /* ------------------------------------------------------------------ *
-   * 4. Nav highlighting
+   * 3. Nav highlighting
    * ------------------------------------------------------------------ */
 
   var links = Array.prototype.slice.call(document.querySelectorAll('.topbar ul a'));
@@ -229,7 +210,7 @@
   }
 
   /* ------------------------------------------------------------------ *
-   * 5. Qualitative scene switcher
+   * 4. Qualitative scene switcher
    * ------------------------------------------------------------------ */
 
   var picker = document.querySelector('.scene-picker');
@@ -253,7 +234,7 @@
   }
 
   /* ------------------------------------------------------------------ *
-   * 6. BibTeX copy
+   * 5. BibTeX copy
    * ------------------------------------------------------------------ */
 
   var copy = document.getElementById('copy-bib');
@@ -272,7 +253,7 @@
   }
 
   /* ------------------------------------------------------------------ *
-   * 7. Placeholders for figures that have not been added yet
+   * 6. Placeholders for figures that have not been added yet
    * ------------------------------------------------------------------ */
 
   document.querySelectorAll('.figure img').forEach(function (img) {

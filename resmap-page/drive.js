@@ -1,13 +1,18 @@
-/* ReSMap project page — the map behind the page, and the ego view on top of it.
+/* ReSMap project page — the map behind the page, and the route beside it.
  *
- * One procedural world, drawn twice. As a full-viewport background it is a
- * faint vectorised map that the pointer reveals in its element colours, which
- * is the model's ROI sweeping over a map it is building. In the corner it is
- * a top-down ego view: scrolling the page drives the car forward, and the
- * page's own sections are the landmarks along the route.
+ * Two views of one procedural world, and no assets anywhere.
  *
- * There are no assets. Every polyline here comes out of World.centre() and
- * the hash below, so the same block always generates the same buildings.
+ *   The background is a vectorised HD map: lane dividers, road boundaries and
+ *   pedestrian crossings, and nothing else, because that is what the nuScenes
+ *   map ground truth actually contains. It sits nearly invisible until the
+ *   pointer passes over it, where a 1:2 region of interest — the shape of the
+ *   60 x 30 m crop the model predicts into — redraws the same geometry in the
+ *   usual class colours, with the per-polyline vertices that any MapTR-style
+ *   figure shows.
+ *
+ *   The rail down the right edge is the document as a single route. The car is
+ *   the scroll thumb: it travels down the road as the page scrolls, each
+ *   section is a junction along the way, and dragging the car scrolls.
  */
 
 (function () {
@@ -17,40 +22,25 @@
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
   /* ---------------------------------------------------------------- *
-   * The world, in world px
+   * World
    * ---------------------------------------------------------------- */
 
-  var ROAD_HALF = 132;    // main corridor, centreline to boundary
-  var LANE = 44;          // spacing between lane dividers
-  var BLOCK = 520;        // distance between cross streets
-  var CROSS_HALF = 84;    // cross street half width
-  var GRID_X = 116;       // parcel grid
-  var GRID_Y = 96;
+  var ROAD_HALF = 138;    // centreline to road boundary, world px
+  var LANE = 46;          // spacing between lane dividers
+  var SIDE = 940;         // lateral offset of the parallel corridor
+  var JUNCTION = 640;     // spacing between cross roads
+  var CROSS_HALF = 96;    // cross road half width
+  var VERT = 30;          // polyline vertex spacing
   var PARALLAX = 0.5;     // document px -> world px
 
-  var World = {
-    centre: function (y) {
-      return Math.sin(y / 560) * 58 + Math.sin(y / 1750 + 1.7) * 96;
-    },
-    heading: function (y) {
-      return Math.atan2(this.centre(y + 12) - this.centre(y - 12), 24);
-    }
-  };
-
-  // Stable pseudo-random: the same cell always yields the same building.
-  function hash(a, b) {
-    var x = Math.sin(a * 127.1 + b * 311.7) * 43758.5453;
-    return x - Math.floor(x);
+  function centre(y) {
+    return Math.sin(y / 610) * 54 + Math.sin(y / 1840 + 1.7) * 88;
   }
 
-  // The usual online-mapping palette, so anyone who has looked at a MapTR
-  // figure reads the reveal without a legend.
   var CLASS = {
     boundary: { light: '#2f7d4f', dark: '#5cc084' },
     divider:  { light: '#c2831f', dark: '#e0a94a' },
-    crossing: { light: '#2f6fb5', dark: '#6aa6e8' },
-    parcel:   { light: '#7a7469', dark: '#8e887c' },
-    vehicle:  { light: '#b4453c', dark: '#e08b80' }
+    crossing: { light: '#2f6fb5', dark: '#6aa6e8' }
   };
 
   function dark() { return root.dataset.theme === 'dark'; }
@@ -67,113 +57,105 @@
     ctx.closePath();
   }
 
-  /* Draws the world into ctx.
+  /* Draws the map into ctx.
    *
-   * opts.axis / opts.originScreenY place world (0, opts.originY) on screen,
-   * opts.scale converts world px to screen px, opts.x0/x1 and opts.y0/y1 bound
-   * the region to generate, and opts.paint(kind) returns a stroke or fill for
-   * each element class. opts.detail adds the parked vehicles, which only the
-   * reveal draws. */
-  function drawWorld(ctx, opts) {
-    var s = opts.scale, w = opts.weight;
-    var paint = opts.paint;
+   * o.axis / o.originScreenY place world (0, o.originY) on screen and o.scale
+   * converts world px to screen px; o.x0..o.x1 and o.y0..o.y1 bound what is
+   * generated; o.paint(kind) returns the colour for an element class; o.verts
+   * adds the polyline vertices, which only the region of interest draws. */
+  function drawMap(ctx, o) {
+    var s = o.scale, w = o.weight;
 
-    function sx(wx) { return opts.axis + wx * s; }
-    function sy(wy) { return (wy - opts.originY) * s + opts.originScreenY; }
+    function sx(x) { return o.axis + x * s; }
+    function sy(y) { return (y - o.originY) * s + o.originScreenY; }
 
-    /* ---- parcels: the city blocks the roads run between ---- */
-    ctx.lineWidth = w * 0.9;
-    var cx0 = Math.floor(opts.x0 / GRID_X), cx1 = Math.ceil(opts.x1 / GRID_X);
-    var cy0 = Math.floor(opts.y0 / GRID_Y), cy1 = Math.ceil(opts.y1 / GRID_Y);
+    // One vectorised element: a polyline sampled every VERT world px, with its
+    // vertices marked the way a predicted map element is drawn.
+    function element(kind, at, from, to) {
+      var pts = [], y;
+      for (y = from; y <= to; y += VERT) pts.push([sx(at(y)), sy(y)]);
+      if (pts.length < 2) return;
 
-    for (var gy = cy0; gy <= cy1; gy++) {
-      for (var gx = cx0; gx <= cx1; gx++) {
-        if (hash(gx, gy) > 0.62) continue;                       // vacant lot
-        var bx = gx * GRID_X, by = gy * GRID_Y;
-        var midY = by + GRID_Y / 2;
-        // Keep clear of the corridor and of every cross street.
-        if (Math.abs(bx + GRID_X / 2 - World.centre(midY)) < ROAD_HALF + 46) continue;
-        if (Math.abs(((midY % BLOCK) + BLOCK) % BLOCK - BLOCK / 2) > BLOCK / 2 - CROSS_HALF - 40) continue;
+      ctx.beginPath();
+      ctx.moveTo(pts[0][0], pts[0][1]);
+      for (var i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+      ctx.strokeStyle = o.paint(kind);
+      ctx.lineWidth = kind === 'boundary' ? w * 1.5 : w;
+      ctx.stroke();
 
-        var padX = 10 + hash(gx, gy + 91) * 22;
-        var padY = 10 + hash(gx + 53, gy) * 20;
-        ctx.strokeStyle = paint('parcel');
-        box(ctx, sx(bx + padX), sy(by + padY),
-            (GRID_X - padX * 2) * s, (GRID_Y - padY * 2) * s, 1.5 * s);
-        ctx.stroke();
+      if (!o.verts) return;
+      ctx.fillStyle = o.paint(kind);
+      for (i = 0; i < pts.length; i++) {
+        ctx.beginPath();
+        ctx.arc(pts[i][0], pts[i][1], w * 0.95, 0, Math.PI * 2);
+        ctx.fill();
       }
     }
 
-    /* ---- cross streets ---- */
-    ctx.lineWidth = w * 1.25;
-    var b0 = Math.floor(opts.y0 / BLOCK), b1 = Math.ceil(opts.y1 / BLOCK);
-    for (var b = b0; b <= b1; b++) {
-      var cy = b * BLOCK;
-      ctx.strokeStyle = paint('boundary');
+    function corridor(shift) {
+      var at = function (off) {
+        return function (y) { return centre(y) + shift + off; };
+      };
+      element('boundary', at(-ROAD_HALF), o.y0, o.y1);
+      element('boundary', at(ROAD_HALF), o.y0, o.y1);
+      for (var i = -2; i <= 2; i++) element('divider', at(i * LANE), o.y0, o.y1);
+    }
+
+    corridor(0);
+    if (o.x0 < -SIDE + ROAD_HALF) corridor(-SIDE);
+    if (o.x1 > SIDE - ROAD_HALF) corridor(SIDE);
+
+    /* Cross roads. Their boundaries are horizontal, so they are drawn
+       directly rather than through element(). */
+    var j0 = Math.floor(o.y0 / JUNCTION), j1 = Math.ceil(o.y1 / JUNCTION);
+    for (var j = j0; j <= j1; j++) {
+      var jy = j * JUNCTION;
+      ctx.strokeStyle = o.paint('boundary');
+      ctx.lineWidth = w * 1.5;
       [-CROSS_HALF, CROSS_HALF].forEach(function (off) {
         ctx.beginPath();
-        ctx.moveTo(sx(opts.x0), sy(cy + off));
-        ctx.lineTo(sx(opts.x1), sy(cy + off));
+        ctx.moveTo(sx(o.x0), sy(jy + off));
+        ctx.lineTo(sx(o.x1), sy(jy + off));
         ctx.stroke();
-      });
-
-      // Stop lines and a crossing on each approach to the intersection.
-      var c = World.centre(cy);
-      ctx.strokeStyle = paint('crossing');
-      ctx.lineWidth = w * 1.5;
-      [-1, 1].forEach(function (dir) {
-        var yy = cy + dir * (CROSS_HALF + 26);
-        for (var t = -0.82; t <= 0.83; t += 0.235) {
-          var x = sx(c + t * ROAD_HALF);
+        if (!o.verts) return;
+        ctx.fillStyle = o.paint('boundary');
+        for (var x = Math.ceil(o.x0 / VERT) * VERT; x <= o.x1; x += VERT) {
           ctx.beginPath();
-          ctx.moveTo(x, sy(yy - 17));
-          ctx.lineTo(x, sy(yy + 17));
-          ctx.stroke();
+          ctx.arc(sx(x), sy(jy + off), w * 0.95, 0, Math.PI * 2);
+          ctx.fill();
         }
       });
-      ctx.lineWidth = w * 1.25;
-    }
 
-    /* ---- the main corridor ---- */
-    var step = 16 / s;
-
-    function ribbon(offset, style, width) {
+      ctx.strokeStyle = o.paint('divider');
+      ctx.lineWidth = w;
       ctx.beginPath();
-      var started = false;
-      for (var wy = opts.y0; wy <= opts.y1; wy += step) {
-        var x = sx(World.centre(wy) + offset), y = sy(wy);
-        if (started) ctx.lineTo(x, y); else { ctx.moveTo(x, y); started = true; }
-      }
-      ctx.strokeStyle = style;
-      ctx.lineWidth = width;
+      ctx.moveTo(sx(o.x0), sy(jy));
+      ctx.lineTo(sx(o.x1), sy(jy));
       ctx.stroke();
-    }
 
-    ribbon(-ROAD_HALF, paint('boundary'), w * 1.4);
-    ribbon(ROAD_HALF, paint('boundary'), w * 1.4);
-    for (var i = -2; i <= 2; i++) {
-      if (i === 0) continue;
-      ribbon(i * LANE, paint('divider'), w * 0.9);
-    }
-    ribbon(0, paint('divider'), w * 1.15);
-
-    /* ---- detected vehicles: reveal pass only ---- */
-    if (!opts.detail) return;
-
-    ctx.lineWidth = w * 1.2;
-    for (var v = Math.floor(opts.y0 / 210); v <= Math.ceil(opts.y1 / 210); v++) {
-      if (hash(v, 7.3) > 0.5) continue;
-      var vy = v * 210 + hash(v, 11.1) * 90;
-      var lane = Math.round((hash(v, 3.7) - 0.5) * 4) * (LANE * 0.75);
-      var vx = World.centre(vy) + lane;
-      ctx.strokeStyle = paint('vehicle');
-      box(ctx, sx(vx - 17), sy(vy - 34), 34 * s, 68 * s, 3 * s);
-      ctx.stroke();
+      /* Pedestrian crossings. In the map ground truth these are polygons, not
+         painted stripes, so they are drawn as closed quads across each arm. */
+      ctx.strokeStyle = o.paint('crossing');
+      ctx.lineWidth = w * 1.1;
+      [-SIDE, 0, SIDE].forEach(function (shift) {
+        if (shift < o.x0 - ROAD_HALF || shift > o.x1 + ROAD_HALF) return;
+        [-1, 1].forEach(function (dir) {
+          var yy = jy + dir * (CROSS_HALF + 30);
+          var c = centre(yy) + shift;
+          ctx.beginPath();
+          ctx.moveTo(sx(c - ROAD_HALF), sy(yy - 22));
+          ctx.lineTo(sx(c + ROAD_HALF), sy(yy - 22));
+          ctx.lineTo(sx(c + ROAD_HALF), sy(yy + 22));
+          ctx.lineTo(sx(c - ROAD_HALF), sy(yy + 22));
+          ctx.closePath();
+          ctx.stroke();
+        });
+      });
     }
   }
 
   /* ---------------------------------------------------------------- *
-   * Background: faint map, revealed in colour around the pointer
+   * Background, with the region of interest under the pointer
    * ---------------------------------------------------------------- */
 
   var bg = document.getElementById('map-bg');
@@ -182,26 +164,20 @@
     var ctx = bg.getContext('2d');
     var lens = document.createElement('canvas');
     var lensCtx = lens.getContext('2d');
-    // The faint pass only changes when the page scrolls, so it is cached and
-    // blitted while the pointer moves over it.
     var slab = document.createElement('canvas');
     var slabCtx = slab.getContext('2d');
     var slabY = null, slabDirty = true;
 
-    var R = 235;                 // reveal radius, css px
-    var PEAK = 0.92;             // how strongly the reveal tints
+    // 30 x 60 m, at the aspect the model predicts into: narrow across the
+    // road, long along it.
+    var ROI_W = 210, ROI_H = 400, PAD = 26;
+    var LW = ROI_W + PAD * 2, LH = ROI_H + PAD * 2;
+    var PEAK = 0.95;
+
     var dpr = 1, vw = 0, vh = 0;
     var px = -1e5, py = -1e5;
-    var glow = 0, target = 0;
-    var queued = false;
-    var docY = 0;
-
-    function frame(axis, screenY, x0, x1, y0, y1, weight) {
-      return {
-        axis: axis, scale: 1, originY: docY * PARALLAX, originScreenY: screenY,
-        x0: x0, x1: x1, y0: y0, y1: y1, weight: weight
-      };
-    }
+    var glow = 0, tgt = 0;
+    var queued = false, docY = 0;
 
     function resize() {
       dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -210,7 +186,8 @@
       bg.width = slab.width = Math.ceil(vw * dpr);
       bg.height = slab.height = Math.ceil(vh * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      lens.width = lens.height = Math.ceil(R * 2 * dpr);
+      lens.width = Math.ceil(LW * dpr);
+      lens.height = Math.ceil(LH * dpr);
       slabDirty = true;
       request();
     }
@@ -218,20 +195,21 @@
     function render() {
       queued = false;
       docY = window.scrollY;
-      glow += (target - glow) * 0.16;
-      if (Math.abs(target - glow) < 0.005) glow = target;
+      glow += (tgt - glow) * 0.17;
+      if (Math.abs(tgt - glow) < 0.005) glow = tgt;
 
       var wy0 = docY * PARALLAX, ink = neutral();
 
       if (slabDirty || slabY !== docY) {
-        var g = frame(vw / 2, 0, -vw / 2 - 60, vw / 2 + 60, wy0 - 60, wy0 + vh + 60, 1);
-        g.paint = function () {
-          return 'rgba(' + ink + ', ' + (dark() ? 0.13 : 0.10) + ')';
-        };
         slabCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
         slabCtx.clearRect(0, 0, vw, vh);
         slabCtx.lineCap = 'round';
-        drawWorld(slabCtx, g);
+        drawMap(slabCtx, {
+          axis: vw / 2, scale: 1, originY: wy0, originScreenY: 0,
+          x0: -vw / 2 - 80, x1: vw / 2 + 80, y0: wy0 - 80, y1: wy0 + vh + 80,
+          weight: 1,
+          paint: function () { return 'rgba(' + ink + ', ' + (dark() ? 0.14 : 0.11) + ')'; }
+        });
         slabY = docY;
         slabDirty = false;
       }
@@ -240,38 +218,50 @@
       ctx.drawImage(slab, 0, 0, slab.width, slab.height, 0, 0, vw, vh);
 
       if (glow > 0.02) {
-        var axis = vw / 2 - (px - R);
-        var l = frame(axis, -(py - R),
-                      -axis - 40, 2 * R - axis + 40,
-                      wy0 + py - R - 40, wy0 + py + R + 40, 1.5);
-        l.paint = function (kind) { return colour(kind); };
-        l.detail = true;
+        var left = px - LW / 2, top = py - LH / 2;
+        var axis = vw / 2 - left;
 
         lensCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        lensCtx.clearRect(0, 0, R * 2, R * 2);
+        lensCtx.clearRect(0, 0, LW, LH);
         lensCtx.lineCap = 'round';
-        drawWorld(lensCtx, l);
+        drawMap(lensCtx, {
+          axis: axis, scale: 1, originY: wy0, originScreenY: -top,
+          x0: -axis - 40, x1: LW - axis + 40,
+          y0: wy0 + top - 40, y1: wy0 + top + LH + 40,
+          weight: 1.5, verts: true,
+          paint: function (kind) { return colour(kind); }
+        });
 
-        var fade = lensCtx.createRadialGradient(R, R, R * 0.30, R, R, R);
-        fade.addColorStop(0, 'rgba(0,0,0,' + glow * PEAK + ')');
-        fade.addColorStop(0.70, 'rgba(0,0,0,' + glow * PEAK * 0.66 + ')');
-        fade.addColorStop(1, 'rgba(0,0,0,0)');
+        // Soft-edged rectangular mask: the crop, not a spotlight.
         lensCtx.globalCompositeOperation = 'destination-in';
-        lensCtx.fillStyle = fade;
-        lensCtx.fillRect(0, 0, R * 2, R * 2);
+        if ('filter' in lensCtx) lensCtx.filter = 'blur(15px)';
+        lensCtx.fillStyle = 'rgba(0,0,0,' + glow * PEAK + ')';
+        box(lensCtx, PAD, PAD, ROI_W, ROI_H, 10);
+        lensCtx.fill();
+        if ('filter' in lensCtx) lensCtx.filter = 'none';
         lensCtx.globalCompositeOperation = 'source-over';
 
-        ctx.drawImage(lens, 0, 0, lens.width, lens.height, px - R, py - R, R * 2, R * 2);
+        ctx.drawImage(lens, 0, 0, lens.width, lens.height, left, top, LW, LH);
 
-        // The ROI itself, so the interaction is legible rather than ambient.
-        ctx.beginPath();
-        ctx.arc(px, py, R * 0.93, 0, Math.PI * 2);
-        ctx.strokeStyle = 'rgba(' + ink + ', ' + glow * 0.16 + ')';
+        // Crop marks, so the region of interest reads as a range and not a glow.
+        var x0 = px - ROI_W / 2, y0 = py - ROI_H / 2, t = 16;
+        ctx.strokeStyle = 'rgba(' + ink + ', ' + glow * 0.34 + ')';
         ctx.lineWidth = 1;
-        ctx.stroke();
+        [[x0, y0, 1, 1], [x0 + ROI_W, y0, -1, 1],
+         [x0, y0 + ROI_H, 1, -1], [x0 + ROI_W, y0 + ROI_H, -1, -1]]
+          .forEach(function (c) {
+            ctx.beginPath();
+            ctx.moveTo(c[0] + c[2] * t, c[1]);
+            ctx.lineTo(c[0], c[1]);
+            ctx.lineTo(c[0], c[1] + c[3] * t);
+            ctx.stroke();
+          });
+        ctx.font = '500 10px ui-sans-serif, system-ui, sans-serif';
+        ctx.fillStyle = 'rgba(' + ink + ', ' + glow * 0.42 + ')';
+        ctx.fillText('60 × 30 m', x0, y0 - 7);
       }
 
-      if (glow !== target) request();
+      if (glow !== tgt) request();
     }
 
     function request() {
@@ -288,181 +278,188 @@
     if (!reduceMotion.matches) {
       window.addEventListener('pointermove', function (e) {
         if (e.pointerType === 'touch') return;
-        px = e.clientX; py = e.clientY;
-        target = 1;
+        px = e.clientX; py = e.clientY; tgt = 1;
         request();
       }, { passive: true });
-      document.addEventListener('pointerleave', function () { target = 0; request(); });
+      document.addEventListener('pointerleave', function () { tgt = 0; request(); });
     }
   }
 
   /* ---------------------------------------------------------------- *
-   * Ego view: scrolling drives the car
-   *
-   * The car points down the panel, because down the page is forward. The
-   * road ahead is therefore below it and what has been read is above, and
-   * scrolling brings the world up to meet the car rather than away from it.
+   * The route: the document as one road, the car as the scroll thumb
    * ---------------------------------------------------------------- */
 
-  var panel = document.getElementById('drive');
-  var map = document.getElementById('drive-map');
+  var rail = document.getElementById('rail');
+  var canvas = document.getElementById('rail-map');
 
-  if (panel && map && map.getContext) {
-    var mctx = map.getContext('2d');
-    var nameEl = document.getElementById('drive-section');
-    var distEl = document.getElementById('drive-dist');
-    var jump = document.getElementById('drive-label');
+  if (rail && canvas && canvas.getContext) {
+    var rctx = canvas.getContext('2d');
+    var tip = document.getElementById('rail-tip');
+    var tipName = document.getElementById('rail-name');
+    var tipPct = document.getElementById('rail-pct');
 
-    var W = 150, H = 200;
-    var SCALE = 0.17;            // world px -> panel px
-    var EGO_Y = 0.30;            // the car sits this far down; ahead is below
-    var mdpr = 1;
-    var landmarks = [];
-    var ahead = null;
+    var RW = 46;            // rail width, css px
+    var CAP = 30;           // clear space at each end so the car never clips
+    var MIN_VIEWPORT = 900;
+
+    var rdpr = 1, RH = 0;
+    var stops = [];
+    var dragging = false, hovering = false;
     var pending = false;
-    var lastY = window.scrollY, speed = 0;
-    var accent = null;   // reading a custom property forces style, so cache it
+    var accent = '#0e4a84';
 
-    function readAccent() {
-      accent = (getComputedStyle(root).getPropertyValue('--accent') || '').trim() || '#0e4a84';
+    function maxScroll() {
+      return Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
     }
+    function progress() {
+      return Math.min(1, Math.max(0, window.scrollY / maxScroll()));
+    }
+    function carY(p) { return CAP + p * (RH - CAP * 2); }
 
     function measure() {
-      landmarks = Array.prototype.slice
+      var max = maxScroll();
+      stops = Array.prototype.slice
         .call(document.querySelectorAll('main section[id]'))
         .map(function (s) {
           var link = document.querySelector('.topbar a[href="#' + s.id + '"]');
           var h2 = s.querySelector('h2');
+          var top = s.getBoundingClientRect().top + window.scrollY;
           return {
             id: s.id,
-            y: s.getBoundingClientRect().top + window.scrollY,
+            p: Math.min(1, Math.max(0, top / max)),
             name: link ? link.textContent
                        : (h2 ? h2.textContent.replace(/^\s*\d+\s*/, '') : s.id)
           };
         });
     }
 
+    function readAccent() {
+      accent = (getComputedStyle(root).getPropertyValue('--accent') || '').trim() || '#0e4a84';
+    }
+
     function resize() {
-      mdpr = Math.min(window.devicePixelRatio || 1, 2);
-      map.width = Math.ceil(W * mdpr);
-      map.height = Math.ceil(H * mdpr);
-      map.style.width = W + 'px';
-      map.style.height = H + 'px';
-      mctx.setTransform(mdpr, 0, 0, mdpr, 0, 0);
-      panel.hidden = window.innerWidth < 900;
+      var on = window.innerWidth >= MIN_VIEWPORT;
+      rail.hidden = !on;
+      root.classList.toggle('has-rail', on);
+      if (!on) return;
+
+      rdpr = Math.min(window.devicePixelRatio || 1, 2);
+      RH = window.innerHeight;
+      canvas.width = Math.ceil(RW * rdpr);
+      canvas.height = Math.ceil(RH * rdpr);
+      canvas.style.width = RW + 'px';
+      canvas.style.height = RH + 'px';
+      rctx.setTransform(rdpr, 0, 0, rdpr, 0, 0);
+      readAccent();
       measure();
       draw();
     }
 
-    // Top-down vehicle, nose toward +y: body, cabin, headlights and a beam.
-    function drawCar(x, y, angle, accent) {
-      var len = 30, wide = 14;
-      mctx.save();
-      mctx.translate(x, y);
-      mctx.rotate(-angle);
+    // Top-down vehicle, nose down the rail, because down the page is forward.
+    function drawCar(y) {
+      var len = 26, wide = 13, x = RW / 2;
+      rctx.save();
+      rctx.translate(x, y);
 
-      var beam = mctx.createLinearGradient(0, len * 0.5, 0, len * 2.8);
-      beam.addColorStop(0, 'rgba(255, 214, 130, .34)');
+      var beam = rctx.createLinearGradient(0, len * 0.5, 0, len * 3.2);
+      beam.addColorStop(0, 'rgba(255, 214, 130, .32)');
       beam.addColorStop(1, 'rgba(255, 214, 130, 0)');
-      mctx.fillStyle = beam;
-      mctx.beginPath();
-      mctx.moveTo(-wide * 0.34, len * 0.5);
-      mctx.lineTo(-wide * 1.7, len * 2.8);
-      mctx.lineTo(wide * 1.7, len * 2.8);
-      mctx.lineTo(wide * 0.34, len * 0.5);
-      mctx.closePath();
-      mctx.fill();
+      rctx.fillStyle = beam;
+      rctx.beginPath();
+      rctx.moveTo(-wide * 0.34, len * 0.5);
+      rctx.lineTo(-wide * 1.25, len * 3.2);
+      rctx.lineTo(wide * 1.25, len * 3.2);
+      rctx.lineTo(wide * 0.34, len * 0.5);
+      rctx.closePath();
+      rctx.fill();
 
-      mctx.fillStyle = accent;
-      box(mctx, -wide / 2, -len / 2, wide, len, 3.5);
-      mctx.fill();
+      rctx.fillStyle = accent;
+      box(rctx, -wide / 2, -len / 2, wide, len, 3);
+      rctx.fill();
 
-      mctx.fillStyle = 'rgba(255, 255, 255, .6)';
-      box(mctx, -wide / 2 + 2.5, -len * 0.02, wide - 5, len * 0.26, 1.8);
-      mctx.fill();
+      rctx.fillStyle = 'rgba(255,255,255,.62)';
+      box(rctx, -wide / 2 + 2.2, -len * 0.04, wide - 4.4, len * 0.28, 1.5);
+      rctx.fill();
 
-      mctx.fillStyle = 'rgba(255, 236, 186, .95)';
-      mctx.fillRect(-wide / 2 + 1.8, len / 2 - 3.4, 3.2, 2.2);
-      mctx.fillRect(wide / 2 - 5, len / 2 - 3.4, 3.2, 2.2);
-      mctx.restore();
+      rctx.fillStyle = 'rgba(255,236,186,.95)';
+      rctx.fillRect(-wide / 2 + 1.6, len / 2 - 3, 3, 2);
+      rctx.fillRect(wide / 2 - 4.6, len / 2 - 3, 3, 2);
+      rctx.restore();
     }
 
     function draw() {
       pending = false;
-      if (panel.hidden) return;
+      if (rail.hidden) return;
 
-      var doc = window.scrollY;
-      speed = speed * 0.82 + (doc - lastY) * 0.18;
-      lastY = doc;
+      var p = progress(), ink = neutral();
+      var cy = carY(p);
+      var mid = RW / 2, half = RW * 0.30, lane = RW * 0.11;
 
-      var ego = doc * PARALLAX;
-      var top = ego - (H * EGO_Y) / SCALE;
-      var bottom = ego + (H * (1 - EGO_Y)) / SCALE;
-      var halfW = (W / 2) / SCALE;
-      if (accent === null) readAccent();
+      rctx.clearRect(0, 0, RW, RH);
+      rctx.lineCap = 'round';
 
-      mctx.clearRect(0, 0, W, H);
-      mctx.lineCap = 'round';
+      // Road boundaries and lane dividers, running the height of the viewport.
+      rctx.lineWidth = 1.3;
+      rctx.strokeStyle = colour('boundary');
+      rctx.globalAlpha = 0.55;
+      [-half, half].forEach(function (off) {
+        rctx.beginPath();
+        rctx.moveTo(mid + off, CAP * 0.4);
+        rctx.lineTo(mid + off, RH - CAP * 0.4);
+        rctx.stroke();
+      });
+      rctx.lineWidth = 1;
+      rctx.strokeStyle = colour('divider');
+      rctx.globalAlpha = 0.4;
+      [-lane, lane].forEach(function (off) {
+        rctx.beginPath();
+        rctx.moveTo(mid + off, CAP * 0.4);
+        rctx.lineTo(mid + off, RH - CAP * 0.4);
+        rctx.stroke();
+      });
+      rctx.globalAlpha = 1;
 
-      drawWorld(mctx, {
-        axis: W / 2, scale: SCALE, originY: ego, originScreenY: H * EGO_Y,
-        x0: -halfW - 60, x1: halfW + 60, y0: top - 120, y1: bottom + 120,
-        weight: 1, detail: true,
-        paint: function (kind) { return colour(kind); }
+      // Every section is a junction along the route.
+      stops.forEach(function (s) {
+        var y = carY(s.p);
+        var passed = s.p <= p + 0.002;
+        rctx.strokeStyle = colour('crossing');
+        rctx.globalAlpha = passed ? 0.32 : 0.7;
+        rctx.lineWidth = 1;
+        rctx.beginPath();
+        rctx.moveTo(mid - half, y);
+        rctx.lineTo(mid + half, y);
+        rctx.stroke();
+        rctx.globalAlpha = 1;
+
+        rctx.fillStyle = 'rgba(' + ink + ', ' + (passed ? 0.22 : 0.42) + ')';
+        rctx.beginPath();
+        rctx.arc(mid + half + 4, y, 1.7, 0, Math.PI * 2);
+        rctx.fill();
       });
 
-      // Landmarks: one tick per section, dimmer once passed.
-      var ink = neutral();
-      ahead = null;
-      landmarks.forEach(function (m) {
-        var my = m.y * PARALLAX;
-        var y = (my - ego) * SCALE + H * EGO_Y;
-        var passed = m.y <= doc + 2;
-        if (!passed && !ahead) ahead = m;
-        if (y < -6 || y > H + 6) return;
-        var x = W / 2 + World.centre(my) * SCALE;
-        mctx.strokeStyle = 'rgba(' + ink + ', ' + (passed ? 0.22 : 0.46) + ')';
-        mctx.lineWidth = 1;
-        mctx.beginPath();
-        mctx.moveTo(x - W * 0.30, y);
-        mctx.lineTo(x + W * 0.30, y);
-        mctx.stroke();
-        mctx.fillStyle = 'rgba(' + ink + ', ' + (passed ? 0.3 : 0.6) + ')';
-        mctx.beginPath();
-        mctx.arc(x + W * 0.30, y, 1.6, 0, Math.PI * 2);
-        mctx.fill();
-      });
+      // The stretch already driven.
+      rctx.strokeStyle = accent;
+      rctx.globalAlpha = 0.22;
+      rctx.lineWidth = 2;
+      rctx.beginPath();
+      rctx.moveTo(mid, CAP * 0.4);
+      rctx.lineTo(mid, cy);
+      rctx.stroke();
+      rctx.globalAlpha = 1;
 
-      // Motion streaks trailing behind the car, so the direction reads.
-      var trail = Math.min(30, Math.abs(speed) * 0.75);
-      if (trail > 1.5) {
-        var back = speed > 0 ? -1 : 1;
-        for (var t = 0; t < 4; t++) {
-          var off = 10 + t * 9;
-          var yy = H * EGO_Y + back * off;
-          var xx = W / 2 + World.centre(ego + back * off / SCALE) * SCALE;
-          mctx.strokeStyle = 'rgba(' + ink + ', ' + (0.22 * (1 - t / 4)) + ')';
-          mctx.lineWidth = 1.4;
-          mctx.beginPath();
-          mctx.moveTo(xx - 4 + t * 2, yy);
-          mctx.lineTo(xx - 4 + t * 2, yy + back * trail * 0.4);
-          mctx.stroke();
-        }
+      drawCar(cy);
+
+      if (tip && (hovering || dragging)) {
+        var here = stops[0];
+        stops.forEach(function (s) { if (s.p <= p + 0.002) here = s; });
+        tipName.textContent = here ? here.name : '';
+        tipPct.textContent = Math.round(p * 100) + '%';
+        tip.hidden = false;
+        tip.style.top = Math.round(cy) + 'px';
+      } else if (tip) {
+        tip.hidden = true;
       }
-
-      drawCar(W / 2 + World.centre(ego) * SCALE, H * EGO_Y, World.heading(ego), accent);
-
-      if (ahead) {
-        nameEl.textContent = ahead.name;
-        distEl.textContent = Math.round((ahead.y - doc) / 10) + ' m';
-        jump.disabled = false;
-      } else {
-        nameEl.textContent = 'End of route';
-        distEl.textContent = '';
-        jump.disabled = true;
-      }
-
-      if (Math.abs(speed) > 0.4) request();
     }
 
     function request() {
@@ -471,55 +468,38 @@
       requestAnimationFrame(draw);
     }
 
-    jump.addEventListener('click', function () {
-      if (ahead) document.getElementById(ahead.id).scrollIntoView({ behavior: 'smooth' });
-    });
+    /* Dragging the car is dragging the thumb: the pointer's position on the
+       rail is the position in the document, one to one. */
+    function seek(clientY) {
+      var rect = canvas.getBoundingClientRect();
+      var p = (clientY - rect.top - CAP) / (RH - CAP * 2);
+      window.scrollTo(0, Math.min(1, Math.max(0, p)) * maxScroll());
+    }
 
-    /* Dragging the car scrubs the page. Panel px convert back through the
-       same projection the map is drawn with, so the car tracks the pointer
-       exactly rather than at some invented sensitivity. */
-    var dragging = false, grabY = 0, grabScroll = 0, travelled = 0;
-
-    map.addEventListener('pointerdown', function (e) {
+    canvas.addEventListener('pointerdown', function (e) {
       dragging = true;
-      travelled = 0;
-      grabY = e.clientY;
-      grabScroll = window.scrollY;
-      panel.classList.add('dragging');
-      if (map.setPointerCapture) map.setPointerCapture(e.pointerId);
+      rail.classList.add('dragging');
+      if (canvas.setPointerCapture) canvas.setPointerCapture(e.pointerId);
+      seek(e.clientY);
       e.preventDefault();
     });
-
-    map.addEventListener('pointermove', function (e) {
-      if (!dragging) return;
-      var dy = e.clientY - grabY;
-      travelled = Math.max(travelled, Math.abs(dy));
-      window.scrollTo(0, Math.max(0, grabScroll + (dy / SCALE) / PARALLAX));
+    canvas.addEventListener('pointermove', function (e) {
+      if (dragging) seek(e.clientY);
     });
-
     function release(e) {
       if (!dragging) return;
       dragging = false;
-      panel.classList.remove('dragging');
-      if (map.releasePointerCapture && e && e.pointerId !== undefined) {
-        try { map.releasePointerCapture(e.pointerId); } catch (err) { /* already gone */ }
+      rail.classList.remove('dragging');
+      if (canvas.releasePointerCapture && e && e.pointerId !== undefined) {
+        try { canvas.releasePointerCapture(e.pointerId); } catch (err) { /* gone */ }
       }
+      request();
     }
-    map.addEventListener('pointerup', release);
-    map.addEventListener('pointercancel', release);
+    canvas.addEventListener('pointerup', release);
+    canvas.addEventListener('pointercancel', release);
 
-    // A tap, rather than a drag, jumps to the nearest landmark.
-    map.addEventListener('click', function (e) {
-      if (travelled > 4) return;
-      var rect = map.getBoundingClientRect();
-      var wanted = window.scrollY + (((e.clientY - rect.top) - H * EGO_Y) / SCALE) / PARALLAX;
-      var best = null, bestD = Infinity;
-      landmarks.forEach(function (m) {
-        var d = Math.abs(m.y - wanted);
-        if (d < bestD) { bestD = d; best = m; }
-      });
-      if (best) document.getElementById(best.id).scrollIntoView({ behavior: 'smooth' });
-    });
+    rail.addEventListener('pointerenter', function () { hovering = true; request(); });
+    rail.addEventListener('pointerleave', function () { hovering = false; request(); });
 
     resize();
     window.addEventListener('resize', resize);

@@ -57,9 +57,10 @@
           "Malgun Gothic", sans-serif;
   --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
-  --col:  47rem;   /* prose measure, ~74ch */
-  --wide: 76rem;   /* figures and tables */
-  --gutter: 2.5rem;
+  --col:  52rem;   /* prose measure */
+  --wide: 90rem;   /* figures and tables */
+  --gutter: 3rem;
+  --rail: 46px;
 
   color-scheme: light;
 }
@@ -91,7 +92,7 @@ body {
   margin: 0;
   background: var(--paper);
   color: var(--ink);
-  font: 400 17px/1.7 var(--sans);
+  font: 400 18px/1.7 var(--sans);
   letter-spacing: -.004em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -122,69 +123,44 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
   pointer-events: none;
 }
 
-/* ---------- ego view ---------- */
+/* ---------- the route rail ---------- */
 
-#drive {
+/* The rail reserves its own gutter, the way a scrollbar does, so it never
+   sits over the content. */
+.has-rail body { padding-right: var(--rail); }
+
+#rail {
   position: fixed;
-  right: 1.4rem; bottom: 1.4rem;
-  z-index: 40;
-  width: 150px;
-  border: 1px solid var(--rule);
-  border-radius: 4px;
+  top: 0; right: 0; bottom: 0;
+  width: var(--rail);
+  z-index: 45;
+  border-left: 1px solid var(--rule);
   background: var(--bar);
-  overflow: hidden;
-  user-select: none;
 }
-#drive[hidden] { display: none; }
+#rail[hidden] { display: none; }
 
-#drive-map { display: block; cursor: grab; touch-action: none; }
-#drive.dragging #drive-map { cursor: grabbing; }
+#rail-map { display: block; cursor: grab; touch-action: none; }
+#rail.dragging #rail-map { cursor: grabbing; }
 
-#drive-hint {
-  display: block;
-  padding: 0 .55rem .4rem;
-  font-size: 10.5px; line-height: 1.3;
-  color: var(--ink-faint);
+#rail-tip {
+  position: absolute;
+  right: calc(var(--rail) + 8px);
+  transform: translateY(-50%);
+  display: flex; align-items: baseline; gap: .5rem;
+  max-width: 15rem;
+  padding: .3rem .55rem;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  background: var(--paper);
+  white-space: nowrap;
+  pointer-events: none;
 }
-#drive.dragging #drive-hint { color: var(--accent); }
-
-#drive-label {
-  display: flex; align-items: baseline; justify-content: space-between; gap: .5rem;
-  width: 100%;
-  padding: .42rem .55rem;
-  border: 0; border-top: 1px solid var(--rule);
-  background: none;
-  font: inherit;
-  color: var(--ink);
-  text-align: left;
-  cursor: pointer;
-}
-#drive-label:hover { background: var(--row-hover); }
-#drive-label:disabled { cursor: default; color: var(--ink-faint); }
-
-#drive-section {
-  font-size: 12px; font-weight: 500;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-#drive-dist {
-  flex: none;
+#rail-tip[hidden] { display: none; }
+#rail-name { font-size: 12px; font-weight: 500; }
+#rail-pct {
   font-size: 11px;
   font-variant-numeric: tabular-nums;
   color: var(--ink-faint);
-}
-
-/* ---------- scroll progress ---------- */
-
-.progress {
-  position: absolute; left: 0; right: 0; bottom: -1px;
-  height: 2px;
-  overflow: hidden;
-}
-.progress i {
-  display: block;
-  height: 100%; width: 0;
-  background: var(--accent);
-  transform-origin: 0 50%;
 }
 
 /* ---------- section reveal ---------- */
@@ -306,9 +282,7 @@ section + section { border-top: 1px solid var(--rule); }
   .js .reveal > .col { opacity: 1; transform: none; }
 }
 
-@media (max-width: 56rem) {
-  #drive { display: none; }
-}
+
 
 /* ---------- hero ---------- */
 
@@ -554,8 +528,8 @@ footer .small { margin-top: .4rem; }
 /* ---------- narrow screens ---------- */
 
 @media (max-width: 46rem) {
-  :root { --gutter: 2rem; }
-  body { font-size: 16px; }
+  :root { --gutter: 1.75rem; }
+  body { font-size: 16.5px; }
   h1 { font-size: 1.6rem; }
   .hero { padding-top: 2.4rem; }
   .headline { grid-template-columns: 1fr; gap: .95rem; }

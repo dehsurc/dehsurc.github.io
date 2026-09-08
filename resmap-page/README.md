@@ -31,36 +31,29 @@ theme. The two directions are not symmetric: going dark the new palette grows
 out of the button, going light the old one collapses back into it. Figures keep a light backing in dark mode so white-background diagrams
 stay readable.
 
-## The map behind the page
+## The map behind the page, and the route beside it
 
-`drive.js` generates one road — two sines in `World.centre()`, no assets —
-and draws it twice.
+`drive.js` generates one world — no assets — and draws it twice.
 
-The world is a corridor of city blocks: a meandering main road with lane
-dividers and boundaries, cross streets every `BLOCK`, crossings and stop lines
-on each approach, and parcels filling what is left. Buildings come from
-`hash()`, so a given block always generates the same ones.
+The background is a vectorised HD map and only contains what the nuScenes map
+ground truth contains: lane dividers, road boundaries and pedestrian crossings
+as closed polygons. It is drawn nearly invisible until the pointer passes over
+it, where a 1:2 region of interest — the shape of the 60 x 30 m crop the model
+predicts into, with crop marks and a label — redraws the same geometry in the
+class colours, with the per-polyline vertices a MapTR-style figure shows. The
+faint pass is cached to an offscreen canvas and redrawn only on scroll; the
+coloured pass renders at ROI size, so the per-frame cost is flat in display
+size.
 
-Behind the page it is drawn faint. The pointer is the ROI: inside its radius
-the same geometry is redrawn in the usual online-mapping colours (boundary
-green, divider amber, crossing blue, parcels grey) plus detected vehicles that
-only the reveal shows, composited through a soft radial mask. The faint pass is
-cached to an offscreen canvas and only redrawn when the page scrolls; the
-coloured pass renders at lens size, not viewport size, so the per-frame cost
-does not grow with the display.
+The rail down the right edge is the whole document as one route. The car is the
+scroll thumb: it travels down the road as the page scrolls, each section is a
+junction along the way, and pressing or dragging anywhere on the rail scrolls
+one-to-one. The rail reserves its own gutter the way a scrollbar does, so it
+never sits over the content, and it hides below 900 px.
 
-In the corner it is an ego view. The car points down the panel because down the
-page is forward, so what has been read is behind it and the road ahead is below.
-Scrolling drives it; **dragging the car scrubs the page**, converting panel px
-back through the same projection the map is drawn with. The page's sections are
-the landmarks along the route — the panel names the next one and its distance,
-and tapping the road jumps to the nearest.
-
-Knobs: `R` (reveal radius) and `PEAK` (tint strength) for the background,
-`SCALE` and `EGO_Y` for the ego view, `ROAD_HALF` / `LANE` / `BLOCK` / `GRID_X`
-/ `GRID_Y` for the world, `PARALLAX` for how fast it passes. Touch pointers and
-`prefers-reduced-motion` get the faint map with no reveal; the ego view hides
-below 56rem.
+Knobs: `ROI_W` / `ROI_H` / `PEAK` for the region of interest, `ROAD_HALF` /
+`LANE` / `SIDE` / `JUNCTION` / `VERT` for the world, `PARALLAX` for how fast it
+passes, `RW` / `CAP` / `MIN_VIEWPORT` for the rail.
 
 ## Deploying
 
