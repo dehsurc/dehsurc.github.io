@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ReSMap &middot; Recasting Satellite Priors for Robust Online HD Map Construction</title>
+<meta name="description" content="ReSMap treats geo-aligned satellite imagery as offline-cached redundancy for online HD map construction, and stays accurate when the onboard cameras fail.">
+
+<link rel="canonical" href="https://dehsurc.github.io/resmap-page/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="ReSMap: Recasting Satellite Priors for Robust and Accurate Online HD Map Construction">
+<meta property="og:description" content="Satellite imagery as offline-cached redundancy for online HD map construction.">
+<meta property="og:url" content="https://dehsurc.github.io/resmap-page/">
+<meta property="og:image" content="https://dehsurc.github.io/resmap-page/assets/figures/social.jpg">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<a class="skiplink" href="#abstract">Skip to content</a>
+
+<nav class="topbar" aria-label="Sections">
+  <div class="topbar-inner">
+    <a class="mark" href="#top">ReSMap</a>
+    <ul>
+      <li><a href="#abstract">Abstract</a></li>
+      <li><a href="#idea">Idea</a></li>
+      <li><a href="#method">Method</a></li>
+      <li><a href="#results">Results</a></li>
+      <li><a href="#ablations">Ablations</a></li>
+      <li><a href="#analysis">Analysis</a></li>
+      <li><a href="#qualitative">Qualitative</a></li>
+      <li><a href="#cite">Paper</a></li>
+    </ul>
+  </div>
+</nav>
+
+<header id="top" class="hero">
+  <div class="col">
+    <p class="venue">Preprint &middot; under review</p>
+    <h1>ReSMap: Recasting Satellite Priors for Robust and Accurate Online HD Map Construction</h1>
+
+    <p class="authors">
+      <a href="mailto:tnrud17@hanyang.ac.kr">Kyungmin Kim</a><sup>*&dagger;</sup>,
+      <a href="mailto:maroona@hanyang.ac.kr">Sumin Lee</a><sup>*</sup>,
+      <a href="mailto:sungoh0036@hanyang.ac.kr">Sungoh Jeong</a>,
+      <a href="mailto:ldh991014@hanyang.ac.kr">DoHyun Lim</a>,
+      <a href="mailto:dkdldb713@hanyang.ac.kr">Seonghyun Park</a>,
+      <a href="mailto:soonminh@hanyang.ac.kr">Soonmin Hwang</a>
+    </p>
+    <p class="affil">Hanyang University</p>
+    <p class="notes"><sup>*</sup>Equal contribution. &nbsp; <sup>&dagger;</sup>Corresponding author.</p>
+
+    <!-- EDIT: replace the placeholder hrefs once arXiv / code are public. -->
+    <p class="links">
+      <a class="button" href="#" aria-disabled="true">Paper <span class="soon">(soon)</span></a>
+      <a class="button" href="#" aria-disabled="true">arXiv <span class="soon">(soon)</span></a>
+      <a class="button" href="#" aria-disabled="true">Code <span class="soon">(soon)</span></a>
+      <a class="button" href="#cite">BibTeX</a>
+    </p>
+  </div>
+
+  <div class="col wide">
+    <figure class="figure">
+      <img src="assets/figures/teaser.png" alt="ReSMap keeps predicting the local HD map after the onboard cameras are zeroed out, by reallocating evidence onto the satellite branch.">
+      <figcaption>When the onboard cameras fail, camera-only and prior-based baselines lose the map. ReSMap reallocates its evidence onto the geo-aligned satellite tile, which is cached offline and therefore unaffected by the failure.</figcaption>
+    </figure>
+  </div>
+
+  <div class="col">
+    <ul class="headline">
+      <li><b>53.0</b> <span>mAP on the nuScenes geographic split at 60&thinsp;&times;&thinsp;30&nbsp;m, +10.5 over the best prior method</span></li>
+      <li><b>40.9</b> <span>mAP with all six cameras dropped &mdash; above every baseline&rsquo;s clean-input score</span></li>
+      <li><b>16.1</b> <span>FPS on a single RTX&nbsp;4090, faster than the camera-only baseline</span></li>
+    </ul>
+  </div>
+</header>
+
+<main>
+
+<section id="abstract">
+  <div class="col">
+    <h2><span class="num">1</span>Abstract</h2>
+    <p>Despite recent advances in camera-based online HD map construction, these systems remain susceptible to sensor failures because of their reliance on onboard cameras. Satellite images, in contrast, remain available independently of real-time sensing conditions, since they are cached offline. Existing methods that use satellite images, however, primarily leverage them under nominal conditions, without explicitly addressing them as redundancy when a sensor degrades.</p>
+    <p>We propose <b>ReSMap</b>, a redundancy-aware camera&ndash;satellite fusion framework for robust online HD map construction. A <b>Predict-then-Fuse (PTF)</b> module fuses camera and satellite BEV features using each branch&rsquo;s own prediction confidence as a per-pixel reliability weight, with no learned router. An <b>Object-Centric Cooperative Multi-modal Query (OCMQ)</b> decoder then propagates this isolation to the query level: each modality cross-attends only to its own BEV, and per-modality updates are merged through a learned per-token gate.</p>
+    <p>ReSMap achieves state-of-the-art performance on nuScenes across all splits and range settings. More importantly, it also sets a new state of the art under camera-failure scenarios, demonstrating that satellite images serve not only as a strong prior but as practical redundancy for robust online HD mapping.</p>
+  </div>
+</section>
+
+<section id="idea">
+  <div class="col">
+    <h2><span class="num">2</span>Satellite images as redundancy, not decoration</h2>
+    <p>Auxiliary modalities for online mapping are usually chosen for accuracy. LiDAR is still bolted to the same onboard stack that fails, and SD maps carry topology but not lane-level geometry. Satellite tiles are different in one respect that matters for deployment: they are fetched and cached ahead of time, so a hardware fault, an occlusion, or a lost video link cannot take them away.</p>
+    <p>Existing camera&ndash;satellite methods nevertheless fuse the two streams as if both were always trustworthy. Channel concatenation, masked cross-attention, and learned routers all let corrupted camera evidence leak through residual paths, and none of them decides <em>per BEV location</em> how much each modality should contribute &mdash; which is exactly what is needed, because the more reliable modality often changes along a single polyline.</p>
+    <p>ReSMap therefore asks each branch how much it trusts its own reading of every BEV cell, and uses that answer &mdash; not a learned comparison &mdash; as the fusion weight. The same isolation is carried into the decoder, so that a failing camera cannot contaminate queries that the satellite branch could still explain.</p>
+  </div>
+</section>
+
+<section id="method">
+  <div class="col">
+    <h2><span class="num">3</span>Method</h2>
+  </div>
+
+  <div class="col wide">
+    <figure class="figure">
+      <img src="assets/figures/overview.png" alt="ReSMap architecture: camera and satellite encoders produce separate BEV features, the PTF gate fuses them by per-pixel confidence, and the OCMQ decoder merges per-modality query updates.">
+      <figcaption><b>Overview.</b> Camera and satellite encoders produce separate BEV features. The PTF gate fuses them by per-pixel segmentation confidence; the OCMQ decoder keeps one shared object-query pool but computes camera-, satellite-, and fused-conditioned updates inside each layer.</figcaption>
+    </figure>
+  </div>
+
+  <div class="col">
+    <h3>3.1 &nbsp;Predict-then-Fuse</h3>
+    <p>Per-branch BEV segmentation decoders produce modality-specific logits from <i>F</i><sub>cam</sub> and <i>F</i><sub>sat</sub>. The maximum class-wise sigmoid confidence of each branch becomes a scalar per-pixel reliability map <i>r</i><sub>m</sub>, shared across channels and detached from the gradient, so the fusion never learns a modality-comparison weight of its own:</p>
+    <p class="eq"><i>F</i><sub>fuse</sub>(<i>x</i>) = [ <i>r</i><sub>cam</sub>(<i>x</i>)&thinsp;<i>F</i><sub>cam</sub>(<i>x</i>) + <i>r</i><sub>sat</sub>(<i>x</i>)&thinsp;<i>F</i><sub>sat</sub>(<i>x</i>) ] / [ <i>r</i><sub>cam</sub>(<i>x</i>) + <i>r</i><sub>sat</sub>(<i>x</i>) + &epsilon; ]</p>
+    <p>We call this the <b>Self-Confidence Gate</b>. The fallback is a closed-form property rather than a learned behaviour: as <i>r</i><sub>cam</sub> &rarr; 0, the fused feature converges to the satellite feature. Because the gating signal is a prediction confidence and not a raw-image statistic, it also holds up under failures never seen in training, such as cameras zeroed at inference.</p>
+
+    <h3>3.2 &nbsp;Object-Centric Cooperative Multi-modal Query decoder</h3>
+    <p>A standard DETR-style map decoder undoes this isolation: every query reads from a shared key/value pool that already mixes the three BEVs. The naive fix &mdash; one query pool per modality &mdash; is worse, because Hungarian matching then routes each ground-truth instance to whichever pool already explains it best, entangling classes with modalities. Dividers become a camera-only skill, boundaries a camera-only skill, crossings a fusion-only skill; when a modality fails, no other branch was ever supervised to take over.</p>
+    <p>OCMQ keeps a <b>single</b> object-query pool, so the matcher sees one unified set, and creates modality-specific updates only inside each decoder layer:</p>
+    <ol class="steps">
+      <li><b>Modality embedding and intra-group self-attention.</b> The query set is replicated three times, each copy offset by a learnable modality embedding and refined by its own self-attention block.</li>
+      <li><b>Per-modality deformable cross-attention.</b> Each conditioned query set attends only to the BEV tensor of its own modality, so BEV-level corruption cannot leak across streams within a layer.</li>
+      <li><b>Gated query merging.</b> A per-token softmax gate <i>&omega;</i><sub>m</sub> scores the three updates and merges them back into one query. There is deliberately no residual to the previous-layer query &mdash; a residual would let a down-weighted modality re-enter and accumulate over layers.</li>
+      <li><b>Inter-object self-attention and refinement.</b> The merged queries exchange information across objects, followed by an FFN, as in a standard decoder layer.</li>
+    </ol>
+    <p>Every class therefore receives gradients from all three modalities, while inference-time contamination is still controlled per token.</p>
+  </div>
+
+  <div class="col wide">
+    <figure class="figure">
+      <img src="assets/figures/ocmq.png" alt="Comparison of a naive per-branch query design against the OCMQ design under Hungarian matching.">
+      <figcaption><b>Why one query pool.</b> With independent per-modality pools (left), bipartite matching routes each ground-truth element to the strongest modality only. OCMQ (right) merges per-modality updates through a per-token gate, so every class absorbs camera, satellite, and fused gradients.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="results">
+  <div class="col">
+    <h2><span class="num">4</span>Results on nuScenes</h2>
+    <p>All models are trained and evaluated on nuScenes with the geographically non-overlapping split, using ego-aligned AID4AD satellite tiles cropped to the BEV region of interest. Except where marked, every baseline is retrained under the same evaluation conditions, following its own paper&rsquo;s schedule.</p>
+
+    <h3>4.1 &nbsp;Clean conditions</h3>
+  </div>
+
+  <div class="col wide">
+    <!-- ==== TABLE 1 · paper Tab. 1 — update numbers here ==== -->
+    <figure class="table-block">
+      <div class="scroll">
+      <table>
+        <caption class="sr-only">Online HD map construction performance on the geographically non-overlapping split of nuScenes.</caption>
+        <colgroup><col><col><col><col><col><col><col><col><col><col></colgroup>
+        <thead>
+          <tr>
+            <th scope="col">Method</th><th scope="col">Venue</th><th scope="col">Mod.</th><th scope="col">Temp.</th><th scope="col">Ep.</th>
+            <th scope="col" class="n">AP<sub>p</sub></th><th scope="col" class="n">AP<sub>d</sub></th><th scope="col" class="n">AP<sub>b</sub></th><th scope="col" class="n">mAP</th><th scope="col" class="n">FPS</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="group"><th colspan="10" scope="colgroup">60&thinsp;&times;&thinsp;30&nbsp;m</th></tr>
+          <tr><th scope="row">MapTracker<sup>&dagger;</sup></th><td>ECCV&rsquo;24</td><td>C</td><td>&#10003;</td><td>72</td><td class="n">45.9</td><td class="n">30.0</td><td class="n">45.1</td><td class="n">40.3</td><td class="n">13.5</td></tr>
+          <tr><th scope="row">MapTRv2</th><td>IJCV&rsquo;24</td><td>C+L</td><td></td><td>110</td><td class="n">18.8</td><td class="n">29.5</td><td class="n">61.7</td><td class="n">36.6</td><td class="n">7.3</td></tr>
+          <tr><th scope="row">DAMap</th><td>ICCV&rsquo;25</td><td>C+L</td><td></td><td>110</td><td class="n">19.2</td><td class="n">32.8</td><td class="n b">66.1</td><td class="n">39.4</td><td class="n">7.2</td></tr>
+          <tr><th scope="row">SDTagNet</th><td>NeurIPS&rsquo;25</td><td>C+SD</td><td></td><td>110</td><td class="n">11.7</td><td class="n">25.3</td><td class="n">40.5</td><td class="n">25.8</td><td class="n">9.6</td></tr>
+          <tr><th scope="row">PriorDrive<sup>&Dagger;</sup></th><td>AAAI&rsquo;26</td><td>C+SD</td><td>&#10003;</td><td>110</td><td class="n">44.7</td><td class="n b">35.5</td><td class="n">47.3</td><td class="n">42.5</td><td class="n">8.2</td></tr>
+          <tr><th scope="row">SatforHDMap</th><td>ICRA&rsquo;24</td><td>C+SA</td><td></td><td>110</td><td class="n">44.1</td><td class="n">12.1</td><td class="n">24.8</td><td class="n">27.0</td><td class="n">14.1</td></tr>
+          <tr class="ours"><th scope="row">ReSMap (ours)</th><td>&mdash;</td><td>C+SA</td><td></td><td>24</td><td class="n">70.6</td><td class="n">24.2</td><td class="n">46.2</td><td class="n">47.0</td><td class="n b">16.1</td></tr>
+          <tr class="ours"><th scope="row">ReSMap (ours)</th><td>&mdash;</td><td>C+SA</td><td>&#10003;</td><td>24</td><td class="n b">76.1</td><td class="n">26.7</td><td class="n">56.3</td><td class="n b">53.0</td><td class="n">10.2</td></tr>
+
+          <tr class="group"><th colspan="10" scope="colgroup">100&thinsp;&times;&thinsp;50&nbsp;m</th></tr>
+          <tr><th scope="row">MapTracker<sup>&dagger;</sup></th><td>ECCV&rsquo;24</td><td>C</td><td>&#10003;</td><td>70</td><td class="n">45.9</td><td class="n">24.3</td><td class="n">38.4</td><td class="n">36.2</td><td class="n">13.4</td></tr>
+          <tr><th scope="row">MapTRv2</th><td>IJCV&rsquo;24</td><td>C+L</td><td></td><td>24</td><td class="n">16.6</td><td class="n">27.6</td><td class="n">45.0</td><td class="n">29.8</td><td class="n">7.6</td></tr>
+          <tr><th scope="row">DAMap</th><td>ICCV&rsquo;25</td><td>C+L</td><td></td><td>24</td><td class="n">13.7</td><td class="n">27.6</td><td class="n">48.7</td><td class="n">30.0</td><td class="n">7.2</td></tr>
+          <tr><th scope="row">SDTagNet</th><td>NeurIPS&rsquo;25</td><td>C+SD</td><td></td><td>30</td><td class="n">11.9</td><td class="n">25.5</td><td class="n">30.8</td><td class="n">22.5</td><td class="n">8.4</td></tr>
+          <tr><th scope="row">SatforHDMap</th><td>ICRA&rsquo;24</td><td>C+SA</td><td></td><td>24</td><td class="n">40.0</td><td class="n">9.9</td><td class="n">10.4</td><td class="n">20.1</td><td class="n">14.2</td></tr>
+          <tr class="ours"><th scope="row">ReSMap (ours)</th><td>&mdash;</td><td>C+SA</td><td></td><td>24</td><td class="n">74.5</td><td class="n">30.2</td><td class="n">44.9</td><td class="n">49.9</td><td class="n b">15.9</td></tr>
+          <tr class="ours"><th scope="row">ReSMap (ours)</th><td>&mdash;</td><td>C+SA</td><td>&#10003;</td><td>24</td><td class="n b">77.6</td><td class="n b">35.0</td><td class="n b">51.3</td><td class="n b">54.7</td><td class="n">10.2</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <figcaption><b>Table 1.</b> Online HD map construction on the geographically non-overlapping split. C, L, SD, SA denote camera, LiDAR, SD map, and satellite images; <i>Temp.</i> marks temporal memory or historical-prediction priors. FPS is measured on a single RTX&nbsp;4090. <sup>&dagger;</sup>Consistent-GT supervision. <sup>&Dagger;</sup>Numbers taken from the original paper. Best per column in bold.</figcaption>
+    </figure>
+  </div>
+
+  <div class="col">
+    <p>At 60&thinsp;&times;&thinsp;30&nbsp;m, ReSMap reaches 53.0 mAP with temporal modelling and 47.0 without, in 24 epochs &mdash; ahead of the camera-only MapTracker by 12.7 mAP, the LiDAR-fused DAMap by 13.6, and the SD-fused PriorDrive by 10.5. At 100&thinsp;&times;&thinsp;50&nbsp;m, where camera evidence thins out with distance, the margin widens to 18.5 / 24.7 / 32.2 mAP, and the temporal variant is best on all three classes. The satellite branch costs little at inference: 16.1 FPS is faster than the camera-only baseline and roughly twice the LiDAR- and SD-fused models.</p>
+
+    <h3>4.2 &nbsp;Camera failure</h3>
+    <p>Robustness is measured by zeroing the front camera, the three front cameras, and all six cameras at inference time, replacing each dropped view with a blackout image.</p>
+  </div>
+
+  <div class="col wide">
+    <!-- ==== TABLE 2 · paper Tab. 2 — update numbers here ==== -->
+    <figure class="table-block">
+      <div class="scroll">
+      <table>
+        <caption class="sr-only">Robustness under camera dropout on the geographically non-overlapping split of nuScenes.</caption>
+        <thead>
+          <tr>
+            <th scope="col">Method</th><th scope="col">Mod.</th><th scope="col">Temp.</th><th scope="col">Ep.</th>
+            <th scope="col" class="n">Clean</th><th scope="col" class="n">Front-1</th><th scope="col" class="n">Front-3</th><th scope="col" class="n">All</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><th scope="row">MapTracker<sup>&dagger;</sup></th><td>C</td><td>&#10003;</td><td>70</td><td class="n">40.3</td><td class="n">23.0 <span class="dn">&minus;42.9%</span></td><td class="n">10.8 <span class="dn">&minus;73.2%</span></td><td class="n">0.1 <span class="dn">&minus;99.8%</span></td></tr>
+          <tr><th scope="row">MapTRv2</th><td>C+L</td><td></td><td>110</td><td class="n">36.6</td><td class="n">32.2 <span class="dn">&minus;12.0%</span></td><td class="n">29.5 <span class="dn">&minus;19.4%</span></td><td class="n">23.8 <span class="dn">&minus;35.0%</span></td></tr>
+          <tr><th scope="row">DAMap</th><td>C+L</td><td></td><td>110</td><td class="n">39.4</td><td class="n">35.8 <span class="dn">&minus;9.1%</span></td><td class="n">34.2 <span class="dn">&minus;13.2%</span></td><td class="n">29.2 <span class="dn">&minus;25.9%</span></td></tr>
+          <tr><th scope="row">SDTagNet</th><td>C+SD</td><td></td><td>110</td><td class="n">25.8</td><td class="n">19.8 <span class="dn">&minus;23.3%</span></td><td class="n">14.5 <span class="dn">&minus;43.8%</span></td><td class="n">4.0 <span class="dn">&minus;84.5%</span></td></tr>
+          <tr><th scope="row">SatforHDMap</th><td>C+SA</td><td></td><td>110</td><td class="n">27.0</td><td class="n">21.5 <span class="dn">&minus;20.4%</span></td><td class="n">21.3 <span class="dn">&minus;21.1%</span></td><td class="n">14.3 <span class="dn">&minus;47.0%</span></td></tr>
+          <tr class="ours"><th scope="row">ReSMap (ours)</th><td>C+SA</td><td></td><td>24</td><td class="n">47.0</td><td class="n">45.1 <span class="dn">&minus;4.0%</span></td><td class="n">43.4 <span class="dn">&minus;7.7%</span></td><td class="n b">40.9 <span class="dn">&minus;13.0%</span></td></tr>
+          <tr class="ours"><th scope="row">ReSMap (ours)</th><td>C+SA</td><td>&#10003;</td><td>24</td><td class="n b">53.0</td><td class="n b">50.0 <span class="dn">&minus;5.7%</span></td><td class="n b">44.4 <span class="dn">&minus;16.2%</span></td><td class="n">36.0 <span class="dn">&minus;32.1%</span></td></tr>
+        </tbody>
+      </table>
+      </div>
+      <figcaption><b>Table 2.</b> Camera dropout at 60&thinsp;&times;&thinsp;30&nbsp;m on the geographically non-overlapping split. Front-1, Front-3, and All zero out the front camera, the three front cameras, and all six cameras at inference. Each cell shows mAP and the relative change from clean. Best per column in bold.</figcaption>
+    </figure>
+  </div>
+
+  <div class="col">
+    <p>The non-temporal ReSMap degrades by 4.0%, 7.7%, and 13.0% &mdash; the smallest drop at every level. The all-camera case isolates the redundancy claim most clearly: with no camera evidence at all, ReSMap still returns <b>40.9 mAP</b>, higher than the <em>clean-input</em> score of every baseline in the table, while MapTracker collapses by 99.8% and even the LiDAR-fused DAMap loses a quarter of its accuracy.</p>
+    <p>The temporal variant is the stronger model on clean input but the weaker one under severe failure. This is not a contradiction: temporal aggregation is applied to the camera BEV, so corrupted frames enter the memory queue and keep contaminating the fused stream for several frames. We diagnose this directly in <a href="#analysis">&sect;6</a>.</p>
+
+    <h3>4.3 &nbsp;Corrupted satellite tiles</h3>
+    <p>Satellite tiles can be stale or misaligned in practice, through GPS/INS drift or latency in the localisation stack. We inject two such corruptions at inference with probability <i>p</i>&thinsp;=&thinsp;0.2 per sample.</p>
+  </div>
+
+  <div class="col wide">
+    <!-- ==== TABLE 3 · paper Tab. 8 — update numbers here ==== -->
+    <figure class="table-block">
+      <div class="scroll">
+      <table>
+        <thead>
+          <tr><th scope="col">Method</th><th scope="col">Temp.</th><th scope="col" class="n">Clean</th><th scope="col" class="n">Temporal swap</th><th scope="col" class="n">Geometric noise</th></tr>
+        </thead>
+        <tbody>
+          <tr class="ours"><th scope="row">ReSMap (ours)</th><td></td><td class="n">47.0</td><td class="n">43.0 <span class="dn">&minus;8.4%</span></td><td class="n">42.0 <span class="dn">&minus;10.6%</span></td></tr>
+          <tr class="ours"><th scope="row">ReSMap (ours)</th><td>&#10003;</td><td class="n">53.0</td><td class="n">49.9 <span class="dn">&minus;5.9%</span></td><td class="n">49.3 <span class="dn">&minus;7.0%</span></td></tr>
+        </tbody>
+      </table>
+      </div>
+      <figcaption><b>Table 3.</b> Satellite corruption at 60&thinsp;&times;&thinsp;30&nbsp;m, <i>p</i>&thinsp;=&thinsp;0.2. <i>Temporal swap</i> feeds the <i>t</i>&thinsp;&plusmn;&thinsp;1 tile in place of the <i>t</i>-frame tile. <i>Geometric noise</i> shifts the tile by a Gaussian offset (&sigma;<sub>t</sub>&thinsp;=&thinsp;1&nbsp;m) and/or rotates it (&sigma;<sub>r</sub>&thinsp;=&thinsp;5&deg;), one of {shift, rotate, both} drawn per corrupted sample.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="ablations">
+  <div class="col">
+    <h2><span class="num">5</span>Ablations</h2>
+    <p>Both ablations are run on the geographically non-overlapping split. In (a) the decoder is fixed to the full OCMQ; in (b) the fusion is fixed to PTF, so that <i>F</i><sub>cam</sub>, <i>F</i><sub>sat</sub>, and <i>F</i><sub>fuse</sub> are identical across rows.</p>
+  </div>
+
+  <div class="col wide">
+    <div class="two-up">
+      <!-- ==== TABLE 4a · paper Tab. 3(a) — update numbers here ==== -->
+      <figure class="table-block">
+        <div class="scroll">
+        <table>
+          <thead>
+            <tr><th scope="col">BEV fusion</th><th scope="col" class="n">Clean</th><th scope="col" class="n">Front-1</th><th scope="col" class="n">All</th></tr>
+          </thead>
+          <tbody>
+            <tr><th scope="row">Cross-attention</th><td class="n">45.5</td><td class="n">34.2 <span class="dn">&minus;24.8%</span></td><td class="n">0.9 <span class="dn">&minus;98.0%</span></td></tr>
+            <tr><th scope="row">ConvFuser</th><td class="n">52.6</td><td class="n">48.6 <span class="dn">&minus;7.6%</span></td><td class="n">35.9 <span class="dn">&minus;31.7%</span></td></tr>
+            <tr><th scope="row">CIT + DDF</th><td class="n">52.3</td><td class="n">47.9 <span class="dn">&minus;8.4%</span></td><td class="n">30.4 <span class="dn">&minus;41.9%</span></td></tr>
+            <tr class="ours"><th scope="row">PTF (ours)</th><td class="n b">53.5</td><td class="n b">50.9 <span class="dn">&minus;4.9%</span></td><td class="n b">40.3 <span class="dn">&minus;24.7%</span></td></tr>
+          </tbody>
+        </table>
+        </div>
+        <figcaption><b>Table 4a.</b> BEV fusion method, reported as BEV segmentation mIoU. Best per column in bold.</figcaption>
+      </figure>
+
+      <!-- ==== TABLE 4b · paper Tab. 3(b) — update numbers here ==== -->
+      <figure class="table-block">
+        <div class="scroll">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Per-mod. CA</th><th scope="col">Mod. emb. + IntraSA</th><th scope="col">Merging</th>
+              <th scope="col" class="n">Clean</th><th scope="col" class="n">Front-1</th><th scope="col" class="n">All</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>&ndash;</td><td>&ndash;</td><td>&ndash;</td><td class="n">51.2</td><td class="n">46.4 <span class="dn">&minus;9.4%</span></td><td class="n">28.4 <span class="dn">&minus;44.5%</span></td></tr>
+            <tr><td>&#10003;</td><td>&ndash;</td><td>mean</td><td class="n">52.2</td><td class="n">48.2 <span class="dn">&minus;7.7%</span></td><td class="n">29.3 <span class="dn">&minus;43.9%</span></td></tr>
+            <tr><td>&#10003;</td><td>&#10003;</td><td>mean</td><td class="n">51.4</td><td class="n">46.5 <span class="dn">&minus;9.5%</span></td><td class="n">31.0 <span class="dn">&minus;39.7%</span></td></tr>
+            <tr class="ours"><td>&#10003;</td><td>&#10003;</td><td>gated</td><td class="n b">53.0</td><td class="n b">50.0 <span class="dn">&minus;5.7%</span></td><td class="n b">36.0 <span class="dn">&minus;32.1%</span></td></tr>
+          </tbody>
+        </table>
+        </div>
+        <figcaption><b>Table 4b.</b> Decoder design, reported as mAP. Components are turned on additively. Best per column in bold.</figcaption>
+      </figure>
+    </div>
+  </div>
+
+  <div class="col">
+    <p>Cross-attention fusion is the least robust of the four: it reaches 45.5 clean mIoU and essentially nothing under all-camera drop, because corrupted queries still reach the fused representation through residual paths. ConvFuser and CIT&thinsp;+&thinsp;DDF are stable on clean input but neither suppresses the unreliable branch explicitly. PTF is best in every column.</p>
+    <p>On the decoder side, per-modality cross-attention restores BEV-level isolation and lifts Front-1, but barely moves the all-camera case; adding modality embeddings helps there and hurts elsewhere, because the uniform mean still drags clean tokens toward the weakest modality. Only the learned gate is best in all three columns.</p>
+  </div>
+</section>
+
+<section id="analysis">
+  <div class="col">
+    <h2><span class="num">6</span>Analysis</h2>
+    <h3>6.1 &nbsp;Where the evidence goes</h3>
+  </div>
+
+  <div class="col wide">
+    <figure class="figure">
+      <img src="assets/figures/gate.png" alt="Per-pixel and per-query gate response under camera dropout.">
+      <figcaption><b>Gate response under camera dropout.</b> Left: over active BEV cells, removing all cameras collapses <i>r</i><sub>cam</sub> while <i>r</i><sub>sat</sub> rises to cover the same regions. Right: the same routing appears at the query level &mdash; the per-token gate shifts negatively for 98% of queries, with the largest drops on those that were most camera-reliant in the clean run.</figcaption>
+    </figure>
+  </div>
+
+  <div class="col">
+    <h3>6.2 &nbsp;Why the non-temporal variant survives severe failure</h3>
+    <p>Running both variants over the full validation split (5&thinsp;981 frames) and restricting the statistics to active cells makes the mechanism explicit. Under all-camera drop, the temporal <i>r</i><sub>cam</sub> falls from 0.751 to 0.166 (&minus;77.9% relative) while the non-temporal one falls from 0.686 to 0.278 (&minus;59.5%). More tellingly, the temporal fused stream is <em>contaminated</em> rather than redirected: <i>r</i><sub>fuse</sub> drops 35.6% and the feature norm &#8214;<i>F</i><sub>fuse</sub>&#8214; contracts 19.1%, against 18.3% and 6.2% for the non-temporal variant.</p>
+    <p>The satellite reliability is essentially unchanged across all six conditions (0.473 vs. 0.456), so the difference is not a satellite-side artefact. Temporal aggregation is applied only to the camera BEV, so corrupted evidence accumulates in the BEV history and enters <i>F</i><sub>fuse</sub> before OCMQ ever sees it &mdash; and a per-token gate cannot repair a fused BEV whose evidence is already corrupted.</p>
+
+    <h3>6.3 &nbsp;Class&ndash;modality entanglement</h3>
+    <p>Trained with independent per-modality query pools, each branch specialises: the camera branch is strongest on lane dividers and boundaries, the satellite branch on pedestrian crossings, and the fused branch carries the overall mAP almost entirely through AP<sub>p</sub>. That model loses 15.9 mAP when the three front cameras are dropped, and its largest single-class drop (AP<sub>b</sub>, &minus;28.9) is precisely the class the camera branch had monopolised &mdash; no other branch was ever supervised on it, so nothing can compensate, even though the PTF gate has already reallocated its weight. This is the observation that motivates OCMQ&rsquo;s single shared pool.</p>
+  </div>
+</section>
+
+<section id="qualitative">
+  <div class="col">
+    <h2><span class="num">7</span>Qualitative comparison</h2>
+    <p>Surround-view input, the satellite tile, and the predicted vector map for each method, first on clean input and then with the cameras dropped.</p>
+  </div>
+
+  <div class="col wide">
+    <!-- EDIT: add one <button> per scene and drop the matching mp4 in assets/video/. -->
+    <div class="scene-picker" role="tablist" aria-label="Scene">
+      <button role="tab" aria-selected="true" data-scene="scene-0369">scene-0369</button>
+      <button role="tab" aria-selected="false" data-scene="scene-0100">scene-0100</button>
+      <button role="tab" aria-selected="false" data-scene="scene-0796">scene-0796</button>
+    </div>
+    <figure class="figure">
+      <video id="scene-video" controls muted loop playsinline preload="metadata"
+             poster="assets/video/scene-0369.jpg">
+        <source src="assets/video/scene-0369.mp4" type="video/mp4">
+      </video>
+      <figcaption id="scene-caption">Left to right: MapTracker, SatforHDMap, ReSMap, ground truth. The cameras are zeroed from the halfway point of each clip.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="supplementary">
+  <div class="col">
+    <h2><span class="num">8</span>Results on the original split</h2>
+    <p>The original nuScenes partition has geographically overlapping train and validation regions, so road structures seen in training can reappear at evaluation. We report it as a secondary benchmark, under the same protocol.</p>
+  </div>
+
+  <div class="col wide">
+    <!-- ==== TABLE 5 · paper Tab. 6 — update numbers here ==== -->
+    <figure class="table-block">
+      <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Method</th><th scope="col">Venue</th><th scope="col">Mod.</th><th scope="col">Temp.</th><th scope="col">Ep.</th>
+            <th scope="col" class="n">AP<sub>p</sub></th><th scope="col" class="n">AP<sub>d</sub></th><th scope="col" class="n">AP<sub>b</sub></th><th scope="col" class="n">mAP</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><th scope="row">InteractionMap<sup>&Dagger;</sup></th><td>CVPR&rsquo;25</td><td>C</td><td>&#10003;</td><td>110</td><td class="n">75.2</td><td class="n">75.0</td><td class="n">76.1</td><td class="n">75.5</td></tr>
+          <tr><th scope="row">MapTracker<sup>&dagger;</sup></th><td>ECCV&rsquo;24</td><td>C</td><td>&#10003;</td><td>72</td><td class="n">80.0</td><td class="n">74.1</td><td class="n">74.1</td><td class="n">76.1</td></tr>
+          <tr><th scope="row">MapTRv2</th><td>IJCV&rsquo;24</td><td>C+L</td><td></td><td>24</td><td class="n">65.6</td><td class="n">66.5</td><td class="n">74.8</td><td class="n">69.0</td></tr>
+          <tr><th scope="row">Mask2Map<sup>&Dagger;</sup></th><td>ECCV&rsquo;24</td><td>C+L</td><td></td><td>24</td><td class="n">76.5</td><td class="n">76.6</td><td class="n b">82.1</td><td class="n">78.4</td></tr>
+          <tr><th scope="row">DAMap</th><td>ICCV&rsquo;25</td><td>C+L</td><td></td><td>24</td><td class="n">67.7</td><td class="n">72.4</td><td class="n">77.1</td><td class="n">72.5</td></tr>
+          <tr><th scope="row">SDTagNet</th><td>NeurIPS&rsquo;25</td><td>C+SD</td><td></td><td>30</td><td class="n">61.5</td><td class="n">63.1</td><td class="n">61.4</td><td class="n">62.0</td></tr>
+          <tr><th scope="row">PriorDrive<sup>&Dagger;</sup></th><td>AAAI&rsquo;26</td><td>C+SD</td><td>&#10003;</td><td>110</td><td class="n">78.0</td><td class="n b">82.0</td><td class="n">81.6</td><td class="n">80.5</td></tr>
+          <tr><th scope="row">SatforHDMap</th><td>ICRA&rsquo;24</td><td>C+SA</td><td></td><td>24</td><td class="n">54.9</td><td class="n">50.3</td><td class="n">60.5</td><td class="n">55.2</td></tr>
+          <tr><th scope="row">SatMap<sup>&Dagger;</sup></th><td>arXiv&rsquo;26</td><td>C+SA</td><td></td><td>110</td><td class="n">73.9</td><td class="n">72.2</td><td class="n">72.2</td><td class="n">72.7</td></tr>
+          <tr><th scope="row">SatMapTR<sup>&Dagger;</sup></th><td>arXiv&rsquo;25</td><td>C+SA</td><td></td><td>24</td><td class="n">73.9</td><td class="n">72.3</td><td class="n">75.1</td><td class="n">73.8</td></tr>
+          <tr class="ours"><th scope="row">ReSMap (ours)</th><td>&mdash;</td><td>C+SA</td><td></td><td>24</td><td class="n">91.2</td><td class="n">78.8</td><td class="n">78.5</td><td class="n">82.8</td></tr>
+          <tr class="ours"><th scope="row">ReSMap (ours)</th><td>&mdash;</td><td>C+SA</td><td>&#10003;</td><td>24</td><td class="n b">91.5</td><td class="n">81.5</td><td class="n">81.8</td><td class="n b">84.9</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <figcaption><b>Table 5.</b> Original split of nuScenes at 60&thinsp;&times;&thinsp;30&nbsp;m. Without temporal memory ReSMap already exceeds PriorDrive by 2.3 mAP, despite PriorDrive using a temporally aggregated SD-map prior and 110 training epochs; with temporal memory the margin grows to 4.4 mAP.</figcaption>
+    </figure>
+  </div>
+
+  <div class="col wide">
+    <!-- ==== TABLE 6 · paper Tab. 7 — update numbers here ==== -->
+    <figure class="table-block">
+      <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Method</th><th scope="col">Mod.</th><th scope="col">Temp.</th><th scope="col">Ep.</th>
+            <th scope="col" class="n">Clean</th><th scope="col" class="n">Front-1</th><th scope="col" class="n">Front-3</th><th scope="col" class="n">All</th>
+            <th scope="col" class="n">mRR &uarr;</th><th scope="col" class="n">mCE &darr;</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><th scope="row">MapTracker<sup>&dagger;</sup></th><td>C</td><td>&#10003;</td><td>70</td><td class="n">76.1</td><td class="n">41.1 <span class="dn">&minus;46.0%</span></td><td class="n">17.0 <span class="dn">&minus;77.7%</span></td><td class="n">0.1 <span class="dn">&minus;99.9%</span></td><td class="n">69.1</td><td class="n">61.2</td></tr>
+          <tr><th scope="row">SafeMap<sup>&Dagger;</sup></th><td>C</td><td></td><td>24</td><td class="n">52.5</td><td class="n">42.4 <span class="dn">&minus;19.2%</span></td><td class="n">&ndash;</td><td class="n">&ndash;</td><td class="n">51.2</td><td class="n">90.6</td></tr>
+          <tr><th scope="row">MapTRv2</th><td>C+L</td><td></td><td>24</td><td class="n">69.0</td><td class="n">62.3 <span class="dn">&minus;9.7%</span></td><td class="n">55.5 <span class="dn">&minus;19.6%</span></td><td class="n">41.3 <span class="dn">&minus;40.1%</span></td><td class="n">80.7</td><td class="n">55.4</td></tr>
+          <tr><th scope="row">DAMap</th><td>C+L</td><td></td><td>24</td><td class="n">72.5</td><td class="n">62.4 <span class="dn">&minus;13.9%</span></td><td class="n">54.8 <span class="dn">&minus;24.4%</span></td><td class="n">35.3 <span class="dn">&minus;51.3%</span></td><td class="n">79.3</td><td class="n">55.8</td></tr>
+          <tr><th scope="row">SDTagNet</th><td>C+SD</td><td></td><td>30</td><td class="n">62.0</td><td class="n">47.1 <span class="dn">&minus;24.0%</span></td><td class="n">38.7 <span class="dn">&minus;37.6%</span></td><td class="n">14.5 <span class="dn">&minus;76.6%</span></td><td class="n">68.6</td><td class="n">75.6</td></tr>
+          <tr><th scope="row">SatforHDMap</th><td>C+SA</td><td></td><td>24</td><td class="n">55.2</td><td class="n">48.7 <span class="dn">&minus;11.8%</span></td><td class="n">48.2 <span class="dn">&minus;12.7%</span></td><td class="n">31.8 <span class="dn">&minus;42.4%</span></td><td class="n">92.1</td><td class="n">66.8</td></tr>
+          <tr class="ours"><th scope="row">ReSMap (ours)</th><td>C+SA</td><td></td><td>24</td><td class="n">82.9</td><td class="n">81.2 <span class="dn">&minus;2.1%</span></td><td class="n b">80.3 <span class="dn">&minus;3.1%</span></td><td class="n b">78.7 <span class="dn">&minus;5.1%</span></td><td class="n b">97.8</td><td class="n">27.7</td></tr>
+          <tr class="ours"><th scope="row">ReSMap (ours)</th><td>C+SA</td><td>&#10003;</td><td>24</td><td class="n b">84.9</td><td class="n b">82.0 <span class="dn">&minus;3.4%</span></td><td class="n">77.9 <span class="dn">&minus;8.2%</span></td><td class="n">62.5 <span class="dn">&minus;26.4%</span></td><td class="n">94.4</td><td class="n b">26.4</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <figcaption><b>Table 6.</b> Robustness on the original split at 60&thinsp;&times;&thinsp;30&nbsp;m, with the MapBench summary metrics mRR (mean resilience rate) and mCE (mean corruption error). SafeMap reports single-view drop only.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="cite">
+  <div class="col">
+    <h2><span class="num">9</span>Paper and citation</h2>
+    <!-- EDIT: link the PDF once it is in assets/paper/. -->
+    <p class="links">
+      <a class="button" href="#" aria-disabled="true">PDF <span class="soon">(soon)</span></a>
+      <a class="button" href="#" aria-disabled="true">Supplementary <span class="soon">(soon)</span></a>
+    </p>
+    <div class="bibtex">
+      <button id="copy-bib" type="button">Copy</button>
+      <pre id="bib">@article{kim2026resmap,
+  title   = {ReSMap: Recasting Satellite Priors for Robust and
+             Accurate Online HD Map Construction},
+  author  = {Kim, Kyungmin and Lee, Sumin and Jeong, Sungoh and
+             Lim, DoHyun and Park, Seonghyun and Hwang, Soonmin},
+  journal = {arXiv preprint},
+  year    = {2026}
+}</pre>
+    </div>
+    <p class="small">The citation key and venue are provisional until the paper appears. Satellite imagery follows the ego-aligned tiles released with AID4AD; nuScenes is used under its non-commercial licence.</p>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="col">
+    <p><b>ReSMap</b> &middot; Kyungmin Kim, Sumin Lee, Sungoh Jeong, DoHyun Lim, Seonghyun Park, Soonmin Hwang &middot; Hanyang University</p>
+    <p class="small">Correspondence: <a href="mailto:tnrud17@hanyang.ac.kr">tnrud17@hanyang.ac.kr</a></p>
+  </div>
+</footer>
+
+<script src="main.js"></script>
+</body>
+</html>
