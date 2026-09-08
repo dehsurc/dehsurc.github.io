@@ -36,19 +36,19 @@
 }
 
 :root {
-  --paper:   #f3f0e9;
-  --sheet:   #fbf9f4;
-  --ink:     #121417;
-  --soft:    #56544d;
-  --faint:   #837f76;
-  --rule:    #d8d3c5;
-  --hair:    #e6e1d4;
-  --grid:    #e5e0d1;
-  --grid-major: #e9e3d4;
+  --paper:   #f5f5f6;
+  --sheet:   #fbfbfc;
+  --ink:     #101113;
+  --soft:    #54565b;
+  --faint:   #83868c;
+  --rule:    #d7d8dc;
+  --hair:    #e6e7ea;
+  --grid:    #e3e4e8;
+  --grid-major: #e8e9ed;
   --accent:  #1b2f66;          /* IRCV navy */
   --accent-2: #157fae;         /* the lab's brighter blue, for marks and ticks */
   --accent-soft: rgba(21, 127, 174, 0.11);
-  --bar-bg:  rgba(243, 240, 233, 0.86);
+  --bar-bg:  rgba(245, 245, 246, 0.86);
 
   --sans: "Inter", "Freesentation", "Nanum Gothic", -apple-system,
           BlinkMacSystemFont, system-ui, "Segoe UI", Arial, sans-serif;
@@ -66,19 +66,19 @@
 }
 
 :root[data-theme="dark"] {
-  --paper:   #101114;
-  --sheet:   #16181c;
-  --ink:     #ece8de;
-  --soft:    #a8a59d;
-  --faint:   #807d76;
-  --rule:    #2c2e33;
-  --hair:    #232529;
-  --grid:    #191b1f;
-  --grid-major: #1d2025;
+  --paper:   #0f1012;
+  --sheet:   #16171a;
+  --ink:     #eceded;
+  --soft:    #a3a5aa;
+  --faint:   #7b7e84;
+  --rule:    #2b2c31;
+  --hair:    #222327;
+  --grid:    #191a1d;
+  --grid-major: #1d1e22;
   --accent:  #8fb6e8;
   --accent-2: #63b6d8;
   --accent-soft: rgba(143, 182, 232, 0.14);
-  --bar-bg:  rgba(16, 17, 20, 0.86);
+  --bar-bg:  rgba(15, 16, 18, 0.86);
   color-scheme: dark;
 }
 
@@ -322,7 +322,6 @@ h1, h2, h3 { font-weight: 700; line-height: 1.25; margin: 0; }
 }
 .portrait img {
   display: block; width: 100%; height: auto;
-  filter: saturate(.92) contrast(1.02);
 }
 /* Corner ticks, like a registration frame on a plate. */
 .portrait::before, .portrait::after {
