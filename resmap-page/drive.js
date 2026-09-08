@@ -160,23 +160,10 @@
       sign = v('--sign', '#16673c');
     }
 
-    /* One theme toggle, moved into whichever chrome is showing. The top bar is
-       the narrow-screen fallback for the rail, so the button has to follow. */
-    var toggle = document.getElementById('theme-toggle');
-    var railTop = rail.querySelector('.rail-top');
-    var barHome = toggle && toggle.parentNode;
-
-    function housetoggle(on) {
-      if (!toggle) return;
-      var home = on ? railTop : barHome;
-      if (home && toggle.parentNode !== home) home.appendChild(toggle);
-    }
-
     function resize() {
       var on = window.innerWidth >= MIN_VIEWPORT;
       rail.hidden = !on;
       root.classList.toggle('has-rail', on);
-      housetoggle(on);
       if (!on) return;
 
       readWidth();
@@ -395,21 +382,34 @@
      * One rAF loop advancing a float scroll position, with scroll-behavior
      * forced to auto for the duration. A chain of smooth scrollTo calls
      * restarts itself every frame, which is what made the earlier play control
-     * stutter. Speed eases toward whatever the pedals asked for, so pulling
-     * away and stopping both have some weight to them.
+     * stutter. Speed eases toward whatever the pedals ask for, and braking is
+     * given more authority than the accelerator, so pulling away and stopping
+     * both have some weight.
      */
     var gas = document.getElementById('pedal-gas');
     var brake = document.getElementById('pedal-brake');
-    var segs = Array.prototype.slice.call(rail.querySelectorAll('.speedo i'));
+    var readout = document.getElementById('speed-val');
+    var speedFill = document.getElementById('speed-fill');
 
-    var GEARS = [0, 130, 215, 340];   // px per second
-    var gear = 0, speed = 0, target = 0;
-    var driveRaf = 0, driveLast = 0, drivePos = 0, wasBehaviour = '';
+    var PULL_AWAY = 240;    // px/s on the first press
+    var STEP = 130;         // px/s added per press
+    var RAMP = 640;         // px/s added per second while held
+    var MAX = 620;          // px/s
+    var KMH = 0.36;         // the rail runs at 10 px to the metre
 
-    function showGear() {
-      rail.classList.toggle('driving', gear > 0);
-      segs.forEach(function (seg, i) { seg.classList.toggle('lit', i < gear); });
-      if (gas) gas.setAttribute('aria-pressed', String(gear > 0));
+    var speed = 0, target = 0;
+    var holdGas = false, holdBrake = false;
+    var driveRaf = 0, driveLast = 0, drivePos = 0, wasBehaviour = '', shown = -1;
+
+    function showSpeed() {
+      var kmh = Math.round(speed * KMH);
+      if (kmh !== shown) {
+        shown = kmh;
+        if (readout) readout.textContent = String(kmh);
+      }
+      if (speedFill) speedFill.style.width = Math.min(100, (speed / MAX) * 100) + '%';
+      rail.classList.toggle('driving', speed > 1);
+      if (gas) gas.setAttribute('aria-pressed', String(speed > 1));
     }
 
     function engage() {
@@ -425,29 +425,27 @@
       if (driveRaf) { cancelAnimationFrame(driveRaf); driveRaf = 0; }
       root.style.scrollBehavior = wasBehaviour || '';
       speed = 0;
-    }
-
-    function setGear(n) {
-      gear = Math.max(0, Math.min(GEARS.length - 1, n));
-      target = GEARS[gear];
-      showGear();
-      if (target > 0) engage();
+      showSpeed();
     }
 
     function driveStep(now) {
       var dt = driveLast ? Math.min(0.05, (now - driveLast) / 1000) : 0;
       driveLast = now;
 
-      // Braking has more authority than the accelerator, as it should.
-      var k = target < speed ? 7.5 : 3.2;
+      if (holdGas) target = Math.min(MAX, target + RAMP * dt);
+      if (holdBrake) target = 0;
+
+      var k = target < speed ? 7.5 : 3.4;
       speed += (target - speed) * Math.min(1, dt * k);
+      showSpeed();
+
       if (target === 0 && speed < 2) { disengage(); return; }
 
       drivePos += speed * dt;
       var max = maxScroll();
       if (drivePos >= max) {
         window.scrollTo(0, max);
-        setGear(0);
+        target = 0;
         disengage();
         return;
       }
@@ -455,24 +453,33 @@
       driveRaf = requestAnimationFrame(driveStep);
     }
 
+    function pressGas() {
+      // Pressed at the end of the route, pull away from the top again.
+      if (speed < 1 && window.scrollY >= maxScroll() - 2) window.scrollTo(0, 0);
+      target = target < 1 ? PULL_AWAY : Math.min(MAX, target + STEP);
+      holdGas = true;
+      engage();
+    }
+    function pressBrake() { holdBrake = true; target = 0; engage(); }
+    function letGo() { holdGas = false; holdBrake = false; }
+
     if (gas) {
-      gas.addEventListener('click', function () {
-        // Pressed at the end of the route, pull away from the top again.
-        if (gear === 0 && window.scrollY >= maxScroll() - 2) window.scrollTo(0, 0);
-        setGear(gear + 1);
-      });
+      gas.addEventListener('pointerdown', function (e) { e.preventDefault(); pressGas(); });
     }
     if (brake) {
-      brake.addEventListener('click', function () { setGear(0); });
+      brake.addEventListener('pointerdown', function (e) { e.preventDefault(); pressBrake(); });
     }
+    ['pointerup', 'pointercancel', 'blur'].forEach(function (type) {
+      window.addEventListener(type, letGo);
+    });
 
     // Taking the wheel yourself lifts off completely, with no coasting.
     function lift(e) {
-      if (!gear && !speed) return;
+      if (!speed && !target) return;
       if (gas && gas.contains(e.target)) return;
       if (brake && brake.contains(e.target)) return;
-      gear = 0; target = 0;
-      showGear();
+      letGo();
+      target = 0;
       disengage();
     }
     ['wheel', 'touchstart', 'pointerdown'].forEach(function (type) {
@@ -482,7 +489,7 @@
       if (e.key !== 'Tab') lift(e);
     });
 
-    showGear();
+    showSpeed();
 
     resize();
     window.addEventListener('resize', resize);

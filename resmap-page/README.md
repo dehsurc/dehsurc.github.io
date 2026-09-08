@@ -70,18 +70,17 @@ which is what stops the previous sign from staying lit.
 Every section needs an entry in the top bar's link list, since that is where
 the signs take their short names from.
 
-The rail is also the page's chrome. While it is up the top bar is hidden
-entirely: the theme toggle moves into the rail's head, so there is only ever
-one such button, and the foot carries the pedals.
+The rail's foot carries the pedals and a speedometer. **Accel** pulls away at
+240 px/s, adds 130 on each further press, and keeps climbing to 620 while it is
+held down; **Brake** lifts off and coasts to a stop. The rail runs at ten pixels
+to the metre, so the readout is a plausible km/h.
 
-**Accel** pulls away and steps up through three gears (130, 215, 340 px/s);
-**Brake** lifts off and coasts to a stop; the three bars above them are the
-gear. Speed eases toward whatever the pedals asked for, with braking given
-more authority than the accelerator, so both have some weight. It is one rAF
-loop advancing a float scroll position with `scroll-behavior` forced to auto
-for the duration; a chain of smooth `scrollTo` calls restarts itself every
-frame, which is what made the earlier play control stutter. Any scroll, key or
-pointer of your own lifts off completely.
+Speed eases toward whatever the pedals ask for, with braking given more
+authority than the accelerator, so pulling away and stopping both have some
+weight. It is one rAF loop advancing a float scroll position with
+`scroll-behavior` forced to auto for the duration; a chain of smooth `scrollTo`
+calls restarts itself every frame, which is what made the earlier play control
+stutter. Any scroll, key or pointer of your own lifts off completely.
 
 Signs are guide-sign green, the colour they are on the road, with the section
 number set like an exit number. Pressing or dragging on the carriageway seeks

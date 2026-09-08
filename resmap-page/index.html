@@ -22,7 +22,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700&display=swap">
-<link rel="stylesheet" href="style.css?v=12">
+<link rel="stylesheet" href="style.css?v=13">
 
 <!-- Set the theme before first paint so there is no flash. -->
 <script>
@@ -46,13 +46,15 @@
 
 <!-- The route: the whole document as one road, the car as the scroll thumb. -->
 <div id="rail" hidden>
-  <div class="rail-top"></div>
   <div class="rail-road" id="rail-road">
     <canvas id="rail-map"></canvas>
     <div id="rail-signs"></div>
   </div>
   <div class="rail-bottom">
-    <div class="speedo" aria-hidden="true"><i></i><i></i><i></i></div>
+    <div class="speedo">
+      <b id="speed-val">0</b><span>km/h</span>
+      <i class="speed-bar"><u id="speed-fill"></u></i>
+    </div>
     <div class="pedals">
       <button id="pedal-brake" class="pedal brake" type="button" aria-label="Brake">
         <svg viewBox="0 0 16 16" aria-hidden="true">
@@ -558,8 +560,8 @@
   </div>
 </footer>
 
-<script src="failure.js?v=12"></script>
-<script src="drive.js?v=12"></script>
-<script src="main.js?v=12"></script>
+<script src="failure.js?v=13"></script>
+<script src="drive.js?v=13"></script>
+<script src="main.js?v=13"></script>
 </body>
 </html>
