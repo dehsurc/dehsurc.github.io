@@ -59,7 +59,7 @@
   --col:  52rem;   /* prose measure */
   --wide: 90rem;   /* figures and tables */
   --gutter: 3rem;
-  --rail: 160px;
+  --rail: 172px;
 
   color-scheme: light;
 }
@@ -142,14 +142,14 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
   padding: 0;
   border: 0;
   background: none;
-  color: var(--ink-faint);
-  font: inherit; font-size: 12px;
+  color: var(--ink-soft);
+  font: inherit; font-size: 13px; font-weight: 500;
   cursor: pointer;
   transition: color .15s ease;
 }
 #fail-play:hover { color: var(--ink); }
 #fail-play[aria-pressed="true"] { color: var(--accent); }
-#fail-play svg { width: 8px; height: 8px; fill: currentColor; }
+#fail-play svg { width: 10px; height: 10px; fill: currentColor; }
 #fail-play[hidden] { display: none; }
 
 .stage-grid {
@@ -250,29 +250,42 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
 
 .sign {
   position: absolute;
-  right: 60px;
+  right: 64px;
   transform: translateY(-50%);
-  max-width: 88px;
-  padding: .2rem .4rem;
+  display: flex; align-items: baseline; gap: .3rem;
+  max-width: 100px;
+  padding: .24rem .42rem;
   border: 1px solid var(--rule-dark);
-  border-radius: 2px;
-  background: var(--paper);
+  border-radius: 3px;
+  /* The inner hairline is what makes a plate read as a sign rather than a tag. */
+  box-shadow: inset 0 0 0 1px var(--paper);
+  background: var(--surface);
   color: var(--ink-soft);
-  font: inherit; font-size: 11px; line-height: 1.25;
-  text-align: right;
+  font: inherit; font-size: 10.5px; line-height: 1.2;
+  letter-spacing: .005em;
   white-space: nowrap;
   overflow: hidden; text-overflow: ellipsis;
   cursor: pointer;
   pointer-events: auto;
-  transition: color .15s ease, border-color .15s ease;
+  transition: color .15s ease, background .15s ease, border-color .15s ease;
+}
+.sign b {
+  flex: none;
+  font-size: 9px; font-weight: 600;
+  font-variant-numeric: lining-nums;
+  color: var(--ink-faint);
 }
 .sign:hover { color: var(--ink); border-color: var(--ink); }
-.sign.passed { color: var(--ink-faint); border-color: var(--rule); }
+.sign:hover b { color: var(--ink-soft); }
+.sign.passed { color: var(--ink-faint); border-color: var(--rule); background: none; }
 .sign.here {
-  color: var(--accent);
+  background: var(--accent);
   border-color: var(--accent);
-  font-weight: 600;
+  color: #fff;
+  font-weight: 500;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .42);
 }
+.sign.here b { color: rgba(255, 255, 255, .72); }
 
 /* ---------- section reveal ---------- */
 

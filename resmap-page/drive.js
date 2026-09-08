@@ -2,13 +2,13 @@
  *
  * The rail down the right edge is the document as a single road. The car is
  * the scroll thumb: it travels down as the page scrolls, each section is a
- * junction along the way, and pressing or dragging anywhere on the rail seeks
- * one to one.
+ * junction with a sign naming it, and pressing or dragging on the carriageway
+ * seeks one to one.
  *
- * There was a procedurally generated HD map behind the page as well. It is
- * gone: the geometry was invented, so it visibly repeated, and a region of
- * interest over invented geometry reveals nothing worth revealing. If the map
- * comes back it should be real polylines from a real scene.
+ * The road is drawn as a road, not as an HD map: a filled carriageway, solid
+ * edge lines, a broken centre line, a painted crossing at each junction. This
+ * is a navigation aid, and it has to read as one at a glance. Map-fidelity
+ * belongs in the figures, over real data.
  */
 
 (function () {
@@ -17,15 +17,9 @@
   var root = document.documentElement;
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-  var CLASS = {
-    boundary: { light: '#2f7d4f', dark: '#5cc084' },
-    divider:  { light: '#c2831f', dark: '#e0a94a' },
-    crossing: { light: '#2f6fb5', dark: '#6aa6e8' }
-  };
-
-  function dark() { return root.dataset.theme === 'dark'; }
-  function colour(kind) { return CLASS[kind][dark() ? 'dark' : 'light']; }
-  function neutral() { return dark() ? '233, 231, 226' : '27, 27, 25'; }
+  function neutral() {
+    return root.dataset.theme === 'dark' ? '229, 231, 234' : '21, 23, 27';
+  }
 
   function box(ctx, x, y, w, h, r) {
     ctx.beginPath();
@@ -50,16 +44,18 @@
 
     // The rail's width lives in style.css as --rail, so the reserved gutter and
     // the drawing can never drift apart.
-    var RW = 160, ROAD_X = 132, ROAD_HALF = 16, ELBOW = 108;
+    var RW = 172, ROAD_X = 142, ROAD_HALF = 18, ELBOW = 120;
     var CAP = 34;           // clear space at each end so the car never clips
-    var SIGN_GAP = 25;      // minimum vertical spacing between signs
-    var SIGN_RIGHT = 60;    // signs end this far from the rail's right edge
+    var SIGN_GAP = 26;      // minimum vertical spacing between signs
+    var SIGN_RIGHT = 64;    // signs end this far from the rail's right edge
+    var LOOKAHEAD = 0.35;   // a section counts as current once its heading is
+                            // this far up the viewport, not only at the very top
     var MIN_VIEWPORT = 900;
 
     function readWidth() {
       var v = parseFloat(getComputedStyle(root).getPropertyValue('--rail'));
       if (v > 0) RW = v;
-      ROAD_X = RW - 28;
+      ROAD_X = RW - 30;
       ELBOW = RW - SIGN_RIGHT + 8;
     }
 
@@ -67,7 +63,7 @@
     var stops = [];
     var dragging = false;
     var pending = false;
-    var accent = '#0e4a84';
+    var accent = '#0e4a84', pavement = '#f4f5f7', paint = '#b4b9c1';
 
     function maxScroll() {
       return Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
@@ -90,6 +86,7 @@
           var top = s.getBoundingClientRect().top + window.scrollY;
           return {
             id: s.id,
+            y: top,
             p: Math.min(1, Math.max(0, top / max)),
             name: link ? link.textContent
                        : (h2 ? h2.textContent.replace(/^\s*\d+\s*/, '') : s.id)
@@ -97,11 +94,14 @@
         });
 
       signBox.textContent = '';
-      stops.forEach(function (stop) {
+      stops.forEach(function (stop, i) {
         var b = document.createElement('button');
         b.type = 'button';
         b.className = 'sign';
-        b.textContent = stop.name;
+        var num = document.createElement('b');
+        num.textContent = i + 1;
+        b.appendChild(num);
+        b.appendChild(document.createTextNode(stop.name));
         b.addEventListener('click', function () {
           var el = document.getElementById(stop.id);
           if (el) el.scrollIntoView({ behavior: 'smooth' });
@@ -136,8 +136,15 @@
       for (i = 0; i < n; i++) stops[i].el.style.top = Math.round(stops[i].signY) + 'px';
     }
 
-    function readAccent() {
-      accent = (getComputedStyle(root).getPropertyValue('--accent') || '').trim() || '#0e4a84';
+    function readPalette() {
+      var cs = getComputedStyle(root);
+      function v(name, fallback) {
+        var got = (cs.getPropertyValue(name) || '').trim();
+        return got || fallback;
+      }
+      accent = v('--accent', '#0e4a84');
+      pavement = v('--surface', '#f4f5f7');
+      paint = v('--rule-dark', '#b4b9c1');
     }
 
     function resize() {
@@ -154,7 +161,7 @@
       canvas.style.width = RW + 'px';
       canvas.style.height = RH + 'px';
       rctx.setTransform(rdpr, 0, 0, rdpr, 0, 0);
-      readAccent();
+      readPalette();
       measure();
       draw();
     }
@@ -197,78 +204,78 @@
 
       var p = progress(), ink = neutral();
       var cy = carY(p);
-      var lane = ROAD_HALF * 0.38;
+      var top = CAP * 0.4, bot = RH - CAP * 0.4;
+      var left = ROAD_X - ROAD_HALF, right = ROAD_X + ROAD_HALF;
 
       rctx.clearRect(0, 0, RW, RH);
-      rctx.lineCap = 'round';
+      rctx.lineCap = 'butt';
 
-      // Road boundaries and lane dividers, running the height of the viewport.
-      rctx.lineWidth = 1.3;
-      rctx.strokeStyle = colour('boundary');
-      rctx.globalAlpha = 0.55;
-      [-ROAD_HALF, ROAD_HALF].forEach(function (off) {
-        rctx.beginPath();
-        rctx.moveTo(ROAD_X + off, CAP * 0.4);
-        rctx.lineTo(ROAD_X + off, RH - CAP * 0.4);
-        rctx.stroke();
-      });
-      rctx.lineWidth = 1;
-      rctx.strokeStyle = colour('divider');
-      rctx.globalAlpha = 0.4;
-      [-lane, lane].forEach(function (off) {
-        rctx.beginPath();
-        rctx.moveTo(ROAD_X + off, CAP * 0.4);
-        rctx.lineTo(ROAD_X + off, RH - CAP * 0.4);
-        rctx.stroke();
-      });
+      // Carriageway. A filled band with solid edge lines and a broken centre
+      // line reads as a road at a glance; four hairlines did not.
+      rctx.fillStyle = pavement;
+      rctx.fillRect(left, top, ROAD_HALF * 2, bot - top);
+
+      rctx.fillStyle = accent;
+      rctx.globalAlpha = 0.1;
+      rctx.fillRect(left, top, ROAD_HALF * 2, Math.max(0, cy - top));
       rctx.globalAlpha = 1;
 
-      // Junctions, and the post running from each sign out to its junction.
-      var here = null;
-      stops.forEach(function (s) {
-        if (s.p <= p + 0.002) here = s;
+      rctx.strokeStyle = paint;
+      rctx.lineWidth = 1.4;
+      [left + 2.5, right - 2.5].forEach(function (x) {
+        rctx.beginPath();
+        rctx.moveTo(x, top);
+        rctx.lineTo(x, bot);
+        rctx.stroke();
       });
 
+      rctx.lineWidth = 1.2;
+      rctx.setLineDash([7, 7]);
+      rctx.beginPath();
+      rctx.moveTo(ROAD_X, top);
+      rctx.lineTo(ROAD_X, bot);
+      rctx.stroke();
+      rctx.setLineDash([]);
+
+      // Junctions: a crossing painted across the carriageway, plus the arm out
+      // to the sign that names the section.
+      var probe = window.scrollY + window.innerHeight * LOOKAHEAD;
+      var here = null;
+      stops.forEach(function (s) { if (s.y <= probe) here = s; });
+      if (!here && stops.length) here = stops[0];
+
+      rctx.lineCap = 'butt';
       stops.forEach(function (s) {
         var y = carY(s.p);
-        var passed = s.p <= p + 0.002;
+        var passed = s.y <= probe;
         var current = s === here;
 
-        rctx.strokeStyle = colour('crossing');
-        rctx.globalAlpha = current ? 0.85 : (passed ? 0.3 : 0.62);
-        rctx.lineWidth = current ? 1.6 : 1;
-        rctx.beginPath();
-        rctx.moveTo(ROAD_X - ROAD_HALF, y);
-        rctx.lineTo(ROAD_X + ROAD_HALF, y);
-        rctx.stroke();
+        rctx.strokeStyle = current ? accent : paint;
+        rctx.globalAlpha = current ? 0.95 : (passed ? 0.5 : 0.8);
+        rctx.lineWidth = 2.6;
+        for (var b = 0; b < 4; b++) {
+          var x = left + 5 + b * ((ROAD_HALF * 2 - 10) / 3.35);
+          rctx.beginPath();
+          rctx.moveTo(x, y - 4);
+          rctx.lineTo(x, y + 4);
+          rctx.stroke();
+        }
 
-        // Leader line from the junction out to its sign, elbowed rather than
-        // drawn straight, since de-collision can move a plate a long way from
-        // the tick it belongs to.
         var sy = s.signY === undefined ? y : s.signY;
-        rctx.strokeStyle = 'rgba(' + ink + ', ' + (current ? 0.38 : 0.17) + ')';
-        rctx.globalAlpha = 1;
+        rctx.strokeStyle = current ? accent : 'rgba(' + ink + ', 0.2)';
+        rctx.globalAlpha = current ? 0.5 : 1;
         rctx.lineWidth = 1;
         rctx.beginPath();
-        rctx.moveTo(ROAD_X - ROAD_HALF - 2, y);
+        rctx.moveTo(left - 2, y);
         rctx.lineTo(ELBOW, y);
         rctx.lineTo(ELBOW, sy);
         rctx.lineTo(RW - SIGN_RIGHT - 2, sy);
         rctx.stroke();
+        rctx.globalAlpha = 1;
 
         if (s.el) s.el.classList.toggle('here', current);
         if (s.el) s.el.classList.toggle('passed', passed && !current);
       });
-
-      // The stretch already driven.
-      rctx.strokeStyle = accent;
-      rctx.globalAlpha = 0.22;
-      rctx.lineWidth = 2;
-      rctx.beginPath();
-      rctx.moveTo(ROAD_X, CAP * 0.4);
-      rctx.lineTo(ROAD_X, cy);
-      rctx.stroke();
-      rctx.globalAlpha = 1;
 
       drawCar(cy);
     }
@@ -326,6 +333,6 @@
     window.addEventListener('resize', resize);
     window.addEventListener('load', function () { measure(); draw(); });
     window.addEventListener('scroll', request, { passive: true });
-    window.addEventListener('resmap:theme', function () { readAccent(); draw(); });
+    window.addEventListener('resmap:theme', function () { readPalette(); draw(); });
   }
 })();

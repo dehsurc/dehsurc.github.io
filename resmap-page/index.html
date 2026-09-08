@@ -22,7 +22,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700&display=swap">
-<link rel="stylesheet" href="style.css?v=8">
+<link rel="stylesheet" href="style.css?v=9">
 
 <!-- Set the theme before first paint so there is no flash. -->
 <script>
@@ -63,6 +63,7 @@
       <li><a href="#ablations">Ablations</a></li>
       <li><a href="#analysis">Analysis</a></li>
       <li><a href="#qualitative">Qualitative</a></li>
+      <li><a href="#supplementary">Original split</a></li>
       <li><a href="#cite">Paper</a></li>
     </ul>
     </div>
@@ -142,7 +143,7 @@
 
 <section class="reveal" id="idea">
   <div class="col">
-    <h2><span class="num">2</span>Satellite images as redundancy, not decoration</h2>
+    <h2><span class="num">2</span>Satellite as redundancy</h2>
     <p>Auxiliary modalities for online mapping are usually chosen for accuracy. LiDAR is still bolted to the same onboard stack that fails, and SD maps carry topology but not lane-level geometry. Satellite tiles are different in one respect that matters for deployment: they are fetched and cached ahead of time, so a hardware fault, an occlusion, or a lost video link cannot take them away.</p>
     <p>Existing camera&ndash;satellite methods nevertheless fuse the two streams as if both were always trustworthy. Channel concatenation, masked cross-attention, and learned routers all let corrupted camera evidence leak through residual paths, and none of them decides <em>per BEV location</em> how much each modality should contribute, which is exactly what is needed, because the more reliable modality often changes along a single polyline.</p>
     <p>ReSMap therefore asks each branch how much it trusts its own reading of every BEV cell, and uses that answer, not a learned comparison, as the fusion weight. The same isolation is carried into the decoder, so that a failing camera cannot contaminate queries that the satellite branch could still explain.</p>
@@ -189,7 +190,7 @@
 
 <section class="reveal" id="failure">
   <div class="col">
-    <h2><span class="num">4</span>Fail the cameras yourself</h2>
+    <h2><span class="num">4</span>Failure walkthrough</h2>
     <p>The claim, in one sentence: a satellite tile is fetched and cached before the drive, so no onboard fault can take it away. Scroll on, and the surround cameras drop out a group at a time. Every number below is measured. They are the figures reported in <a href="#results">Table 2</a>, read one drop level at a time.</p>
   </div>
 
@@ -234,8 +235,8 @@
 
 <section class="reveal" id="results">
   <div class="col">
-    <h2><span class="num">5</span>Results on nuScenes</h2>
-    <p>All models are trained and evaluated on nuScenes with the geographically non-overlapping split, using ego-aligned AID4AD satellite tiles cropped to the BEV region of interest. Except where marked, every baseline is retrained under the same evaluation conditions, following its own paper&rsquo;s schedule.</p>
+    <h2><span class="num">5</span>Results</h2>
+    <p>Everything below is nuScenes. Models are trained and evaluated on the geographically non-overlapping split, using ego-aligned AID4AD satellite tiles cropped to the BEV region of interest. Except where marked, every baseline is retrained under the same evaluation conditions, following its own paper&rsquo;s schedule.</p>
 
     <h3>5.1 &nbsp;Clean conditions</h3>
   </div>
@@ -420,7 +421,7 @@
 
 <section class="reveal" id="qualitative">
   <div class="col">
-    <h2><span class="num">8</span>Qualitative comparison</h2>
+    <h2><span class="num">8</span>Qualitative results</h2>
     <p>Surround-view input, the satellite tile, and the predicted vector map for each method, first on clean input and then with the cameras dropped.</p>
   </div>
 
@@ -443,7 +444,7 @@
 
 <section class="reveal" id="supplementary">
   <div class="col">
-    <h2><span class="num">9</span>Results on the original split</h2>
+    <h2><span class="num">9</span>Original split</h2>
     <p>The original nuScenes partition has geographically overlapping train and validation regions, so road structures seen in training can reappear at evaluation. We report it as a secondary benchmark, under the same protocol.</p>
   </div>
 
@@ -509,7 +510,7 @@
 
 <section class="reveal" id="cite">
   <div class="col">
-    <h2><span class="num">10</span>Paper and citation</h2>
+    <h2><span class="num">10</span>Paper</h2>
     <!-- EDIT: link the PDF once it is in assets/paper/. -->
     <p class="links">
       <a class="button" href="#" aria-disabled="true">PDF <span class="soon">(soon)</span></a>
@@ -539,8 +540,8 @@
   </div>
 </footer>
 
-<script src="failure.js?v=8"></script>
-<script src="drive.js?v=8"></script>
-<script src="main.js?v=8"></script>
+<script src="failure.js?v=9"></script>
+<script src="drive.js?v=9"></script>
+<script src="main.js?v=9"></script>
 </body>
 </html>

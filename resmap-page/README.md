@@ -53,12 +53,21 @@ is the mAP at full bar width. Below 62rem the stage unpins and stacks.
 ## The route rail
 
 `drive.js` draws the rail down the right edge: the whole document as one road,
-with the car as the scroll thumb. It descends as the page scrolls, and each
+with the car as the scroll thumb. The road is drawn as a road, not as an HD
+map: a filled carriageway, solid edge lines, a broken centre line and a painted
+crossing at each junction. It is a navigation aid and has to read as one at a
+glance; map fidelity belongs in the figures, over real data. It descends as the page scrolls, and each
 section is a junction with a **road sign** beside it ,  the signs are the
 navigation, which is why the top bar drops its links while the rail is up.
-Sections bunch together wherever the document has several short ones in a row,
-so the plates are pushed apart to a legible spacing and an elbowed leader line
-runs back to the junction they actually mark.
+Each plate carries its section number the way a guide sign carries an exit
+number. Sections bunch together wherever the document has several short ones in
+a row, so the plates are pushed apart to a legible spacing and an elbowed arm
+runs back to the junction they actually mark. A section counts as current once
+its heading is `LOOKAHEAD` up the viewport rather than only at the very top,
+which is what stops the previous sign from staying lit.
+
+Every section needs an entry in the top bar's link list, since that is where
+the signs take their short names from.
 
 Pressing or dragging on the road strip seeks one to one; seeking is explicitly
 instant, because `html` carries `scroll-behavior: smooth` and a smooth scroll
