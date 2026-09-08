@@ -5,10 +5,10 @@
  * junction with a sign naming it, and pressing or dragging on the carriageway
  * seeks one to one.
  *
- * The road is drawn as a road, not as an HD map: a filled carriageway, solid
- * edge lines, a broken centre line, a painted crossing at each junction. This
- * is a navigation aid, and it has to read as one at a glance. Map-fidelity
- * belongs in the figures, over real data.
+ * Ahead of the car the road is bare surface with faint markings. Behind it the
+ * same elements are drawn in their map class colours, with vertices, because
+ * the car is building the map as it drives. That is the subject of the paper,
+ * and it makes the progress indicator mean something.
  */
 
 (function () {
@@ -19,6 +19,17 @@
 
   function neutral() {
     return root.dataset.theme === 'dark' ? '229, 231, 234' : '21, 23, 27';
+  }
+
+  /* Map element colours, in the convention every online-mapping figure uses:
+     boundary green, divider amber, pedestrian crossing blue. */
+  var CLASS = {
+    boundary: { light: '#3f9c63', dark: '#63c98c' },
+    divider:  { light: '#c2831f', dark: '#e0a94a' },
+    crossing: { light: '#3277bd', dark: '#6aa6e8' }
+  };
+  function colour(kind) {
+    return CLASS[kind][root.dataset.theme === 'dark' ? 'dark' : 'light'];
   }
 
   function box(ctx, x, y, w, h, r) {
@@ -221,53 +232,25 @@
       var cy = carY(p);
       var top = CAP * 0.4, bot = RH - CAP * 0.4;
       var left = ROAD_X - ROAD_HALF, right = ROAD_X + ROAD_HALF;
+      var edgeL = left + 2.5, edgeR = right - 2.5;
+      var VERT = 22;          // vertex spacing on a drawn polyline
 
       rctx.clearRect(0, 0, RW, RH);
       rctx.lineCap = 'butt';
 
-      // Carriageway. A filled band with solid edge lines and a broken centre
-      // line reads as a road at a glance; four hairlines did not.
+      // Carriageway.
       rctx.fillStyle = pavement;
       rctx.fillRect(left, top, ROAD_HALF * 2, bot - top);
 
-      rctx.fillStyle = accent;
-      rctx.globalAlpha = 0.1;
-      rctx.fillRect(left, top, ROAD_HALF * 2, Math.max(0, cy - top));
-      rctx.globalAlpha = 1;
-
-      rctx.strokeStyle = paint;
-      rctx.lineWidth = 1.4;
-      [left + 2.5, right - 2.5].forEach(function (x) {
-        rctx.beginPath();
-        rctx.moveTo(x, top);
-        rctx.lineTo(x, bot);
-        rctx.stroke();
-      });
-
-      rctx.lineWidth = 1.2;
-      rctx.setLineDash([7, 7]);
-      rctx.beginPath();
-      rctx.moveTo(ROAD_X, top);
-      rctx.lineTo(ROAD_X, bot);
-      rctx.stroke();
-      rctx.setLineDash([]);
-
-      // Junctions: a crossing painted across the carriageway, plus the arm out
-      // to the sign that names the section.
       var probe = window.scrollY + window.innerHeight * LOOKAHEAD;
       var here = null;
       stops.forEach(function (s) { if (s.y <= probe) here = s; });
       if (!here && stops.length) here = stops[0];
 
-      rctx.lineCap = 'butt';
-      stops.forEach(function (s) {
-        var y = carY(s.p);
-        var passed = s.y <= probe;
-        var current = s === here;
-
-        rctx.strokeStyle = current ? sign : paint;
-        rctx.globalAlpha = current ? 0.95 : (passed ? 0.5 : 0.8);
-        rctx.lineWidth = 2.6;
+      function crossing(y, style, width, alpha) {
+        rctx.strokeStyle = style;
+        rctx.globalAlpha = alpha;
+        rctx.lineWidth = width;
         for (var b = 0; b < 4; b++) {
           var x = left + 5 + b * ((ROAD_HALF * 2 - 10) / 3.35);
           rctx.beginPath();
@@ -275,8 +258,71 @@
           rctx.lineTo(x, y + 4);
           rctx.stroke();
         }
+        rctx.globalAlpha = 1;
+      }
 
+      /* Ahead of the car the road is unmapped: bare surface, faint markings. */
+      rctx.strokeStyle = paint;
+      rctx.globalAlpha = 0.45;
+      rctx.lineWidth = 1.2;
+      [edgeL, edgeR].forEach(function (x) {
+        rctx.beginPath();
+        rctx.moveTo(x, top);
+        rctx.lineTo(x, bot);
+        rctx.stroke();
+      });
+      rctx.setLineDash([7, 7]);
+      rctx.beginPath();
+      rctx.moveTo(ROAD_X, top);
+      rctx.lineTo(ROAD_X, bot);
+      rctx.stroke();
+      rctx.setLineDash([]);
+      rctx.globalAlpha = 1;
+      stops.forEach(function (s) { crossing(carY(s.p), paint, 2.4, 0.45); });
+
+      /* Behind it the map has been built: the same elements in their class
+         colours, with the per-polyline vertices a predicted map is drawn with.
+         The car is drawing the map as it goes, which is the whole subject of
+         the paper. */
+      rctx.save();
+      rctx.beginPath();
+      rctx.rect(0, 0, RW, Math.max(0, cy + 2));
+      rctx.clip();
+
+      rctx.strokeStyle = colour('boundary');
+      rctx.fillStyle = colour('boundary');
+      rctx.lineWidth = 1.6;
+      [edgeL, edgeR].forEach(function (x) {
+        rctx.beginPath();
+        rctx.moveTo(x, top);
+        rctx.lineTo(x, bot);
+        rctx.stroke();
+        for (var y = top; y <= bot; y += VERT) {
+          rctx.beginPath();
+          rctx.arc(x, y, 1.2, 0, Math.PI * 2);
+          rctx.fill();
+        }
+      });
+
+      rctx.strokeStyle = colour('divider');
+      rctx.lineWidth = 1.3;
+      rctx.setLineDash([7, 7]);
+      rctx.beginPath();
+      rctx.moveTo(ROAD_X, top);
+      rctx.lineTo(ROAD_X, bot);
+      rctx.stroke();
+      rctx.setLineDash([]);
+
+      stops.forEach(function (s) { crossing(carY(s.p), colour('crossing'), 2.6, 1); });
+      rctx.restore();
+
+      /* Junction arms out to the signs. */
+      stops.forEach(function (s) {
+        var y = carY(s.p);
+        var passed = s.y <= probe;
+        var current = s === here;
         var sy = s.signY === undefined ? y : s.signY;
+
         rctx.strokeStyle = current ? sign : 'rgba(' + ink + ', 0.2)';
         rctx.globalAlpha = current ? 0.75 : 1;
         rctx.lineWidth = 1;

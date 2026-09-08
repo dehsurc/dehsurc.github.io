@@ -53,10 +53,11 @@ is the mAP at full bar width. Below 62rem the stage unpins and stacks.
 ## The route rail
 
 `drive.js` draws the rail down the right edge: the whole document as one road,
-with the car as the scroll thumb. The road is drawn as a road, not as an HD
-map: a filled carriageway, solid edge lines, a broken centre line and a painted
-crossing at each junction. It is a navigation aid and has to read as one at a
-glance; map fidelity belongs in the figures, over real data. It descends as the page scrolls, and each
+with the car as the scroll thumb. Ahead of the car the road is bare surface
+with faint markings. Behind it the same elements are drawn in their map class
+colours, with the per-polyline vertices a predicted map is drawn with, because
+the car is building the map as it drives. That is the subject of the paper, and
+it is what makes the progress indicator mean something. It descends as the page scrolls, and each
 section is a junction with a **road sign** beside it ,  the signs are the
 navigation, which is why the top bar drops its links while the rail is up.
 Each plate carries its section number the way a guide sign carries an exit
