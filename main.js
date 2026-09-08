@@ -117,15 +117,35 @@
     var reach = Math.hypot(Math.max(x, w - x), Math.max(y, h - y)) * 1.18;
     var frames = pickShape()(x, y, reach, w, h);
 
+    // The two directions are time-reverses of each other. Going dark, the new
+    // theme opens out of the button; coming back to light, the dark snapshot
+    // closes into it instead, so the shape gathers rather than spreads. That
+    // means clipping the outgoing snapshot, which has to sit on top for the
+    // duration — see the [data-wipe] rules in style.css.
+    var closing = next === 'light';
+    if (closing) {
+      root.dataset.wipe = 'in';
+      frames = frames.slice().reverse();
+    }
+
+    function done() { delete root.dataset.wipe; }
+
     var transition = document.startViewTransition(function () { paint(next); });
 
     transition.ready.then(function () {
       root.animate({ clipPath: frames }, {
-        duration: 760,
-        easing: 'cubic-bezier(.3, .7, .2, 1)',
-        pseudoElement: '::view-transition-new(root)'
+        duration: closing ? 680 : 760,
+        // Opening leads with speed and settles; closing has to move off the
+        // mark just as promptly or it reads as lag, so it gets a symmetric
+        // curve rather than the literal mirror of the opening one.
+        easing: closing ? 'cubic-bezier(.55, 0, .35, 1)'
+                        : 'cubic-bezier(.3, .7, .2, 1)',
+        pseudoElement: closing ? '::view-transition-old(root)'
+                               : '::view-transition-new(root)'
       });
     }).catch(function () { /* transition skipped; the theme still applied */ });
+
+    transition.finished.then(done, done);
   }
 
   if (toggle) {
