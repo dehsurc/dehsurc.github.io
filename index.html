@@ -17,10 +17,13 @@
 <meta name="theme-color" content="#101114" media="(prefers-color-scheme: dark)">
 
 <!-- Survey-cross favicon, drawn inline so there is no extra request. -->
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23f3f0e9'/%3E%3Cg stroke='%23a4432b' stroke-width='2.4'%3E%3Cline x1='16' y1='5' x2='16' y2='27'/%3E%3Cline x1='5' y1='16' x2='27' y2='16'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23f3f0e9'/%3E%3Cg stroke='%23182a5e' stroke-width='2.4'%3E%3Cline x1='16' y1='5' x2='16' y2='27'/%3E%3Cline x1='5' y1='16' x2='27' y2='16'/%3E%3C/g%3E%3C/svg%3E">
 
-<!-- Latin is Segoe UI (local); Hangul comes from Freesentation, as on the ReSMap page. -->
+<!-- Latin in Instrument Sans; Hangul falls through to Freesentation, as on the ReSMap page. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="style.css">
 
 <script>
@@ -45,7 +48,6 @@
     <ul>
       <li><a href="#now">Now</a></li>
       <li><a href="#publications">Publications</a></li>
-      <li><a href="#work">Work</a></li>
       <li><a href="#education">Education</a></li>
       <li><a href="#contact">Contact</a></li>
     </ul>
@@ -75,12 +77,8 @@
   <div class="hero-text">
     <p class="eyebrow">Ph.D. Candidate &middot; IRCV Lab</p>
     <h1>Kyungmin Kim<span class="hangul">김경민</span></h1>
-    <p class="lede">
-      I build perception systems for autonomous driving that keep working when the
-      sensors do not &mdash; mostly online HD map construction, structured scene
-      representation, and the training recipes that make end-to-end driving models
-      learnable.
-    </p>
+    <p class="lede">I build perception for autonomous driving that keeps working when
+      the sensors do not.</p>
     <dl class="legend">
       <div>
         <dt>Affiliation</dt>
@@ -91,7 +89,11 @@
         <dd><a href="https://ircv.hanyang.ac.kr/" target="_blank" rel="noopener">IRCV</a>, advised by <a href="mailto:soonminh@hanyang.ac.kr">Prof. Soonmin Hwang</a></dd>
       </div>
       <div>
-        <dt>Position</dt>
+        <dt>Also at</dt>
+        <dd>Kakao Mobility, assistant &mdash; since Aug 2026</dd>
+      </div>
+      <div>
+        <dt>Based in</dt>
         <dd>Seoul, Republic of Korea &nbsp;<span class="coord">37.5573&deg;&thinsp;N &nbsp;127.0453&deg;&thinsp;E</span></dd>
       </div>
       <div>
@@ -114,19 +116,24 @@
     <h2>Now</h2>
   </div>
   <div class="body">
-    <p>
-      My current work asks what a driving stack should fall back on when a camera goes
-      dark. In <a href="resmap-page/">ReSMap</a> the answer is geo-aligned satellite
-      imagery: it is cached offline, so no onboard fault can take it away, and a
-      confidence-gated fusion lets the map survive losing all six cameras.
-    </p>
-    <p>
-      Alongside that I look at how multi-task driving models actually spend their
-      capacity &mdash; which modality a fusion network leans on, whether a forecaster is
-      right for the right reasons, and how module-wise distillation transfers a
-      perception backbone into an end-to-end planner without the tasks fighting each
-      other for gradients.
-    </p>
+    <dl class="focus">
+      <div>
+        <dt>Perception that survives its sensors</dt>
+        <dd>Satellite tiles are cached offline, so an onboard fault cannot take them away.
+          <a href="resmap-page/">ReSMap</a> fuses them with the cameras by per-pixel confidence
+          and keeps mapping with all six cameras dropped.</dd>
+      </div>
+      <div>
+        <dt>Where a model spends its capacity</dt>
+        <dd>Which modality a fusion network actually leans on, and whether a motion
+          forecaster is right for the right reasons.</dd>
+      </div>
+      <div>
+        <dt>Training the whole stack</dt>
+        <dd>Module-wise distillation and gradient-conflict mitigation for end-to-end
+          driving models.</dd>
+      </div>
+    </dl>
     <ul class="tags">
       <li>Online HD mapping</li>
       <li>Scene representation</li>
@@ -196,77 +203,9 @@
   </div>
 </section>
 
-<section id="work" class="row">
-  <div class="rail">
-    <span class="idx">[02.00]</span>
-    <h2>Work</h2>
-    <p class="rail-note">Positions, funded projects, and industry collaborations.</p>
-  </div>
-  <div class="body">
-    <ul class="entries">
-      <li>
-        <span class="when">2026.08 &ndash; <span class="on">present</span></span>
-        <div class="entry">
-          <h3>Assistant</h3>
-          <p class="org">Kakao Mobility</p>
-        </div>
-      </li>
-      <li>
-        <span class="when">2026.01 &ndash; 2027.01</span>
-        <div class="entry">
-          <h3>End-to-end driving via module-wise knowledge distillation</h3>
-          <p class="org">RideFlux</p>
-        </div>
-      </li>
-      <li>
-        <span class="when">2025.07 &ndash; 2028.12</span>
-        <div class="entry">
-          <h3>Reference data and core technology for end-to-end autonomous driving</h3>
-          <p class="org">MOTIE &middot; topology reasoning, lane centerline detection, dataset design</p>
-        </div>
-      </li>
-      <li>
-        <span class="when">2025.01 &ndash; 2026.01</span>
-        <div class="entry">
-          <h3>LiDAR hazard detection for in-factory forklifts <span class="role">project lead</span></h3>
-          <p class="org">SL Corporation &middot; SLAM, calibration, system integration</p>
-        </div>
-      </li>
-      <li>
-        <span class="when">2024.09 &ndash; 2025.08</span>
-        <div class="entry">
-          <h3>Beyond-G Global Innovation Center</h3>
-          <p class="org">NRF &middot; V2X cooperative perception, LiDAR registration</p>
-        </div>
-      </li>
-      <li>
-        <span class="when">2023.02 &ndash; 2025.08</span>
-        <div class="entry">
-          <h3>Test procedure standards for V2I-based connected automated driving</h3>
-          <p class="org">MOTIE &middot; scenario design and simulation pipelines</p>
-        </div>
-      </li>
-      <li>
-        <span class="when">2023.02 &ndash; 2025.02</span>
-        <div class="entry">
-          <h3>Perception, prediction, and intelligent control for autonomous driving</h3>
-          <p class="org">MOTIE &middot; lane-change intention prediction, interaction-aware planning</p>
-        </div>
-      </li>
-      <li>
-        <span class="when">2022.07 &ndash; 2022.08</span>
-        <div class="entry">
-          <h3>Research intern</h3>
-          <p class="org">STARMATA &middot; puddle mapping in LiDAR point clouds on unpaved roads</p>
-        </div>
-      </li>
-    </ul>
-  </div>
-</section>
-
 <section id="education" class="row">
   <div class="rail">
-    <span class="idx">[03.00]</span>
+    <span class="idx">[02.00]</span>
     <h2>Education</h2>
   </div>
   <div class="body">
@@ -291,7 +230,7 @@
 
 <section id="toolkit" class="row">
   <div class="rail">
-    <span class="idx">[04.00]</span>
+    <span class="idx">[03.00]</span>
     <h2>Toolkit</h2>
   </div>
   <div class="body">
@@ -306,11 +245,10 @@
 
 <section id="contact" class="row">
   <div class="rail">
-    <span class="idx">[05.00]</span>
+    <span class="idx">[04.00]</span>
     <h2>Contact</h2>
   </div>
   <div class="body">
-    <p>Email is the reliable channel &mdash; happy to talk about mapping, redundancy, or anything driving-adjacent.</p>
     <ul class="elsewhere">
       <li>
         <a href="mailto:tnrud17@hanyang.ac.kr">
