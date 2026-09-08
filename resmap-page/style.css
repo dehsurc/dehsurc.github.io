@@ -1,6 +1,40 @@
 /* ReSMap project page — hand-rolled, no framework.
-   Latin is set in Inter; Hangul falls through to Pretendard, which sits
-   after Inter in the stack because Inter carries no Hangul glyphs. */
+   Latin is set in Inter; Hangul in Freesentation. Inter sits first in the
+   stack and carries no Hangul glyphs, so Korean resolves to Freesentation
+   on its own. */
+
+/* Freesentation, pinned to a commit so the URL cannot shift under us.
+   Only the four weights the page uses, and only over the Korean ranges: the
+   files are ~470 KB each and unsubsetted, so restricting unicode-range means
+   a page with no Hangul on it downloads none of them. */
+@font-face {
+  font-family: "Freesentation";
+  src: url("https://cdn.jsdelivr.net/gh/Freesentation/freesentation@98f6b841fca55a23fbb0f9eb91acda0e16a676ea/woff2/Freesentation-4Regular.woff2") format("woff2");
+  font-weight: 400; font-display: swap;
+  unicode-range: U+1100-11FF, U+3000-303F, U+3130-318F, U+A960-A97F,
+                 U+AC00-D7A3, U+D7B0-D7FF, U+FF01-FF60;
+}
+@font-face {
+  font-family: "Freesentation";
+  src: url("https://cdn.jsdelivr.net/gh/Freesentation/freesentation@98f6b841fca55a23fbb0f9eb91acda0e16a676ea/woff2/Freesentation-5Medium.woff2") format("woff2");
+  font-weight: 500; font-display: swap;
+  unicode-range: U+1100-11FF, U+3000-303F, U+3130-318F, U+A960-A97F,
+                 U+AC00-D7A3, U+D7B0-D7FF, U+FF01-FF60;
+}
+@font-face {
+  font-family: "Freesentation";
+  src: url("https://cdn.jsdelivr.net/gh/Freesentation/freesentation@98f6b841fca55a23fbb0f9eb91acda0e16a676ea/woff2/Freesentation-6SemiBold.woff2") format("woff2");
+  font-weight: 600; font-display: swap;
+  unicode-range: U+1100-11FF, U+3000-303F, U+3130-318F, U+A960-A97F,
+                 U+AC00-D7A3, U+D7B0-D7FF, U+FF01-FF60;
+}
+@font-face {
+  font-family: "Freesentation";
+  src: url("https://cdn.jsdelivr.net/gh/Freesentation/freesentation@98f6b841fca55a23fbb0f9eb91acda0e16a676ea/woff2/Freesentation-7Bold.woff2") format("woff2");
+  font-weight: 700; font-display: swap;
+  unicode-range: U+1100-11FF, U+3000-303F, U+3130-318F, U+A960-A97F,
+                 U+AC00-D7A3, U+D7B0-D7FF, U+FF01-FF60;
+}
 
 :root {
   --paper:      #fdfcfa;
@@ -16,9 +50,9 @@
   --drop:       #a2453c;
   --figure-bg:  #ffffff;
 
-  --sans: "Inter", "Pretendard Variable", Pretendard, -apple-system,
-          BlinkMacSystemFont, system-ui, "Segoe UI", Roboto,
-          "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --sans: "Inter", "Freesentation", -apple-system, BlinkMacSystemFont,
+          system-ui, "Segoe UI", Roboto, "Apple SD Gothic Neo",
+          "Malgun Gothic", sans-serif;
   --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
   --col:  40rem;   /* prose measure */

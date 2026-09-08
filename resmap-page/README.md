@@ -13,9 +13,12 @@ Online HD Map Construction*. No build step — three files plus assets.
 
 ## Type and theme
 
-Latin is set in Inter and Hangul in Pretendard — Inter comes first in the
+Latin is set in Inter and Hangul in Freesentation — Inter comes first in the
 stack and carries no Hangul glyphs, so Korean text falls through to
-Pretendard on its own. Both are loaded from a CDN.
+Freesentation on its own. Inter comes from Google Fonts; Freesentation is
+declared in `style.css` against a commit-pinned jsDelivr URL, restricted by
+`unicode-range` to the Korean blocks so an all-English page downloads none of
+its ~470 KB weights.
 
 The theme follows the OS by default and is overridden by the toggle in the
 nav bar, remembered in `localStorage`. Switching runs a circular wipe through
