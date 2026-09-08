@@ -22,7 +22,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700&display=swap">
-<link rel="stylesheet" href="style.css?v=9">
+<link rel="stylesheet" href="style.css?v=10">
 
 <!-- Set the theme before first paint so there is no flash. -->
 <script>
@@ -46,8 +46,19 @@
 
 <!-- The route: the whole document as one road, the car as the scroll thumb. -->
 <div id="rail" hidden>
-  <canvas id="rail-map"></canvas>
-  <div id="rail-signs"></div>
+  <div class="rail-top">
+    <a class="rail-mark" href="#top">ReSMap</a>
+  </div>
+  <div class="rail-road" id="rail-road">
+    <canvas id="rail-map"></canvas>
+    <div id="rail-signs"></div>
+  </div>
+  <div class="rail-bottom">
+    <button id="rail-go" type="button" aria-pressed="false">
+      <svg viewBox="0 0 12 12" aria-hidden="true"><path id="rail-go-icon" d="M3 2l7 4-7 4z"/></svg>
+      <span id="rail-go-label">Drive</span>
+    </button>
+  </div>
 </div>
 
 <nav class="topbar" aria-label="Sections">
@@ -200,10 +211,6 @@
         <div class="stage-head">
           <span class="stage-step" id="fail-step">Clean</span>
           <span class="stage-sub" id="fail-sub">all six cameras reporting</span>
-          <button id="fail-play" type="button" aria-pressed="false">
-            <svg viewBox="0 0 12 12" aria-hidden="true"><path id="fail-play-icon" d="M3 2l7 4-7 4z"/></svg>
-            <span id="fail-play-label">Play</span>
-          </button>
         </div>
 
         <div class="stage-grid">
@@ -540,8 +547,8 @@
   </div>
 </footer>
 
-<script src="failure.js?v=9"></script>
-<script src="drive.js?v=9"></script>
-<script src="main.js?v=9"></script>
+<script src="failure.js?v=10"></script>
+<script src="drive.js?v=10"></script>
+<script src="main.js?v=10"></script>
 </body>
 </html>

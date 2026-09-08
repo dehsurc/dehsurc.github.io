@@ -69,7 +69,18 @@ which is what stops the previous sign from staying lit.
 Every section needs an entry in the top bar's link list, since that is where
 the signs take their short names from.
 
-Pressing or dragging on the road strip seeks one to one; seeking is explicitly
+The rail is also the page's chrome. While it is up the top bar is hidden
+entirely and the rail carries the wordmark, the theme toggle (moved into it, so
+there is only ever one such button) and **Drive**, which scrolls the whole page
+at a steady 210 px/s. Drive runs one rAF loop advancing a float scroll
+position, with `scroll-behavior` forced to auto for the duration; a chain of
+smooth `scrollTo` calls restarts itself every frame, which is what made the
+earlier stage-by-stage play stutter. Any scroll, key or pointer of your own
+stops it.
+
+Signs are guide-sign green, the colour they are on the road, with the section
+number set like an exit number. Pressing or dragging on the carriageway seeks
+one to one; seeking is explicitly
 instant, because `html` carries `scroll-behavior: smooth` and a smooth scroll
 restarted on every pointermove lurches instead of tracking. The rail reserves
 its own gutter the way a scrollbar does, so it never sits over the content, and

@@ -37,8 +37,9 @@
 
   var rail = document.getElementById('rail');
   var canvas = document.getElementById('rail-map');
+  var roadBox = document.getElementById('rail-road');
 
-  if (rail && canvas && canvas.getContext) {
+  if (rail && canvas && roadBox && canvas.getContext) {
     var rctx = canvas.getContext('2d');
     var signBox = document.getElementById('rail-signs');
 
@@ -63,7 +64,7 @@
     var stops = [];
     var dragging = false;
     var pending = false;
-    var accent = '#0e4a84', pavement = '#f4f5f7', paint = '#b4b9c1';
+    var accent = '#0e4a84', pavement = '#f4f5f7', paint = '#b4b9c1', sign = '#16673c';
 
     function maxScroll() {
       return Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
@@ -145,17 +146,31 @@
       accent = v('--accent', '#0e4a84');
       pavement = v('--surface', '#f4f5f7');
       paint = v('--rule-dark', '#b4b9c1');
+      sign = v('--sign', '#16673c');
+    }
+
+    /* One theme toggle, moved into whichever chrome is showing. The top bar is
+       the narrow-screen fallback for the rail, so the button has to follow. */
+    var toggle = document.getElementById('theme-toggle');
+    var railTop = rail.querySelector('.rail-top');
+    var barHome = toggle && toggle.parentNode;
+
+    function housetoggle(on) {
+      if (!toggle) return;
+      var home = on ? railTop : barHome;
+      if (home && toggle.parentNode !== home) home.appendChild(toggle);
     }
 
     function resize() {
       var on = window.innerWidth >= MIN_VIEWPORT;
       rail.hidden = !on;
       root.classList.toggle('has-rail', on);
+      housetoggle(on);
       if (!on) return;
 
       readWidth();
       rdpr = Math.min(window.devicePixelRatio || 1, 2);
-      RH = window.innerHeight;
+      RH = roadBox.clientHeight || window.innerHeight;
       canvas.width = Math.ceil(RW * rdpr);
       canvas.height = Math.ceil(RH * rdpr);
       canvas.style.width = RW + 'px';
@@ -250,7 +265,7 @@
         var passed = s.y <= probe;
         var current = s === here;
 
-        rctx.strokeStyle = current ? accent : paint;
+        rctx.strokeStyle = current ? sign : paint;
         rctx.globalAlpha = current ? 0.95 : (passed ? 0.5 : 0.8);
         rctx.lineWidth = 2.6;
         for (var b = 0; b < 4; b++) {
@@ -262,8 +277,8 @@
         }
 
         var sy = s.signY === undefined ? y : s.signY;
-        rctx.strokeStyle = current ? accent : 'rgba(' + ink + ', 0.2)';
-        rctx.globalAlpha = current ? 0.5 : 1;
+        rctx.strokeStyle = current ? sign : 'rgba(' + ink + ', 0.2)';
+        rctx.globalAlpha = current ? 0.75 : 1;
         rctx.lineWidth = 1;
         rctx.beginPath();
         rctx.moveTo(left - 2, y);
@@ -328,6 +343,76 @@
     }
     canvas.addEventListener('pointerup', release);
     canvas.addEventListener('pointercancel', release);
+
+    /* Drive.
+     *
+     * A single rAF loop advancing a float scroll position, not a chain of
+     * smooth scrollTo calls: those restart each other and that is exactly what
+     * made the old stage-by-stage play stutter. CSS scroll-behavior is forced
+     * to auto for the duration, or every frame would queue its own smooth
+     * scroll on top of the last. */
+    var go = document.getElementById('rail-go');
+    var goLabel = document.getElementById('rail-go-label');
+    var goIcon = document.getElementById('rail-go-icon');
+    var GO_D = 'M3 2l7 4-7 4z';
+    var STOP_D = 'M3 3h6v6H3z';
+    var SPEED = 210;        // px per second
+
+    var driving = false, driveRaf = 0, drivePos = 0, driveLast = 0, wasBehaviour = '';
+
+    function setDriving(on) {
+      driving = on;
+      rail.classList.toggle('driving', on);
+      if (go) {
+        go.setAttribute('aria-pressed', String(on));
+        goLabel.textContent = on ? 'Stop' : 'Drive';
+        goIcon.setAttribute('d', on ? STOP_D : GO_D);
+      }
+      if (on) {
+        wasBehaviour = root.style.scrollBehavior;
+        root.style.scrollBehavior = 'auto';
+        driveLast = 0;
+        driveRaf = requestAnimationFrame(driveStep);
+      } else {
+        if (driveRaf) { cancelAnimationFrame(driveRaf); driveRaf = 0; }
+        root.style.scrollBehavior = wasBehaviour || '';
+      }
+    }
+
+    function driveStep(now) {
+      if (!driving) return;
+      var dt = driveLast ? Math.min(0.05, (now - driveLast) / 1000) : 0;
+      driveLast = now;
+
+      drivePos += SPEED * dt;
+      var max = maxScroll();
+      if (drivePos >= max) {
+        window.scrollTo(0, max);
+        setDriving(false);
+        return;
+      }
+      window.scrollTo(0, drivePos);
+      driveRaf = requestAnimationFrame(driveStep);
+    }
+
+    if (go) {
+      go.addEventListener('click', function () {
+        if (driving) { setDriving(false); return; }
+        // Finished routes start over from the top.
+        drivePos = window.scrollY >= maxScroll() - 2 ? 0 : window.scrollY;
+        if (drivePos === 0) window.scrollTo(0, 0);
+        setDriving(true);
+      });
+
+      ['wheel', 'touchstart', 'pointerdown'].forEach(function (type) {
+        window.addEventListener(type, function (e) {
+          if (driving && !go.contains(e.target)) setDriving(false);
+        }, { passive: true });
+      });
+      window.addEventListener('keydown', function (e) {
+        if (driving && e.key !== 'Tab') setDriving(false);
+      });
+    }
 
     resize();
     window.addEventListener('resize', resize);

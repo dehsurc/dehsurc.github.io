@@ -6,6 +6,9 @@
  * with the satellite tile behind it. The bars on the right are the numbers
  * from Table 2, interpolated between the levels so the motion is continuous
  * while every stop on it is a real measurement.
+ *
+ * Nothing here plays itself. The Drive control on the rail scrolls the whole
+ * page, and this stage rides that scroll like any other part of it.
  */
 
 (function () {
@@ -193,71 +196,4 @@
   window.addEventListener('resize', request);
   window.addEventListener('load', update);
 
-  /* ---- play it through ----
-   *
-   * Scrolling by hand is the primary control. This hops the page to the next
-   * stage and waits, rather than creeping the scroll a pixel at a time: the
-   * jump between two measured levels is the part worth seeing, and a smooth
-   * scrollTo is the one scroll primitive that behaves the same everywhere.
-   * It never starts on its own, because a page that scrolls itself unasked is
-   * hostile, and any scroll, key or pointer of your own stops it. */
-
-  var play = document.getElementById('fail-play');
-  var playLabel = document.getElementById('fail-play-label');
-  var playIcon = document.getElementById('fail-play-icon');
-
-  var PLAY_D = 'M3 2l7 4-7 4z';                 // triangle
-  var STOP_D = 'M3 3h6v6H3z';                   // square
-  var DWELL = 2400;                             // ms held on each stage
-
-  if (play && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    var running = false, timer = 0;
-
-    function stageTop() { return track.getBoundingClientRect().top + window.scrollY; }
-    function travelPx() {
-      var stage = track.firstElementChild;
-      return Math.max(1, track.offsetHeight - stage.offsetHeight);
-    }
-    function scrollForStage(i) {
-      return stageTop() + (i / (STAGES.length - 1)) * travelPx();
-    }
-
-    function setRunning(on) {
-      running = on;
-      play.setAttribute('aria-pressed', String(on));
-      playLabel.textContent = on ? 'Stop' : 'Play';
-      playIcon.setAttribute('d', on ? STOP_D : PLAY_D);
-      if (!on && timer) { clearTimeout(timer); timer = 0; }
-    }
-
-    function hop(i) {
-      if (!running) return;
-      if (i > STAGES.length - 1) { setRunning(false); return; }
-      window.scrollTo({ top: scrollForStage(i), behavior: 'smooth' });
-      timer = setTimeout(function () { hop(i + 1); }, DWELL);
-    }
-
-    play.addEventListener('click', function () {
-      if (running) { setRunning(false); return; }
-
-      // Resume from the stage after the one currently showing, or start over
-      // if the walkthrough is already finished.
-      var here = -track.getBoundingClientRect().top / travelPx();
-      var from = (here >= 0.995 || here < 0) ? 0 : Math.floor(here * (STAGES.length - 1)) + 1;
-
-      setRunning(true);
-      hop(from);
-    });
-
-    ['wheel', 'touchstart', 'pointerdown'].forEach(function (type) {
-      window.addEventListener(type, function (e) {
-        if (running && !play.contains(e.target)) setRunning(false);
-      }, { passive: true });
-    });
-    window.addEventListener('keydown', function (e) {
-      if (running && e.key !== 'Tab') setRunning(false);
-    });
-  } else if (play) {
-    play.hidden = true;
-  }
 })();
