@@ -50,6 +50,8 @@
   --ours-bg:    #eef3f9;
   --drop:       #b23a30;
   --sign:       #12512f;
+  --go:         #1f8a4c;
+  --stop:       #b53228;
   --sign-ink:   #ffffff;
   --figure-bg:  #ffffff;
 
@@ -80,6 +82,8 @@
   --ours-bg:    #172029;
   --drop:       #ef8b7f;
   --sign:       #17663c;
+  --go:         #2ba85e;
+  --stop:       #dd5e4e;
   --sign-ink:   #f2fbf5;
   --figure-bg:  #f5f6f7;
 
@@ -236,20 +240,15 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
 }
 #rail[hidden] { display: none; }
 
+/* The theme control sits alone up here. The wordmark is already the first
+   thing on the page; a second one in the chrome earns nothing. */
 .rail-top {
   flex: none;
-  display: flex; align-items: center; justify-content: space-between;
-  gap: .5rem;
-  height: 3rem;
-  padding: 0 .6rem 0 .75rem;
+  display: flex; align-items: center; justify-content: flex-end;
+  height: 2.75rem;
+  padding: 0 .6rem;
   border-bottom: 1px solid var(--rule);
 }
-.rail-mark {
-  font-weight: 700; font-size: 14px;
-  letter-spacing: .01em;
-  color: var(--ink);
-}
-.rail-mark:hover { text-decoration: none; }
 
 .rail-road { position: relative; flex: 1 1 auto; min-height: 0; }
 #rail-map { display: block; cursor: grab; touch-action: none; }
@@ -261,23 +260,46 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
   border-top: 1px solid var(--rule);
 }
 
-#rail-go {
-  display: flex; align-items: center; justify-content: center; gap: .4rem;
-  width: 100%;
-  padding: .42rem .5rem;
-  border: 1px solid var(--sign);
-  border-radius: 3px;
-  box-shadow: inset 0 0 0 1px var(--bar);
-  background: var(--sign);
-  color: var(--sign-ink);
-  font: inherit; font-size: 12.5px; font-weight: 600;
-  letter-spacing: .02em;
-  cursor: pointer;
-  transition: filter .15s ease;
+.speedo {
+  display: flex; gap: 3px;
+  margin-bottom: .45rem;
 }
-#rail-go:hover { filter: brightness(1.12); }
-#rail-go svg { width: 9px; height: 9px; fill: currentColor; }
-#rail.driving #rail-go { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.speedo i {
+  flex: 1;
+  height: 3px;
+  border-radius: 1px;
+  background: var(--rule);
+  transition: background .2s ease;
+}
+.speedo i.lit { background: var(--go); }
+
+.pedals { display: grid; grid-template-columns: 1fr 1fr; gap: .35rem; }
+
+.pedal {
+  display: flex; flex-direction: column; align-items: center; gap: .1rem;
+  padding: .4rem .3rem .32rem;
+  border: 1px solid var(--rule-dark);
+  border-radius: 3px;
+  background: none;
+  color: var(--ink-soft);
+  font: inherit; font-size: 10px; font-weight: 600;
+  letter-spacing: .05em; text-transform: uppercase;
+  cursor: pointer;
+  transition: color .15s ease, border-color .15s ease, background .15s ease;
+}
+.pedal svg { width: 17px; height: 17px; fill: currentColor; }
+.pedal .floor { stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; fill: none; opacity: .5; }
+.pedal:active { transform: translateY(1px); }
+
+.pedal.gas:hover { color: var(--go); border-color: var(--go); }
+.pedal.brake:hover { color: var(--stop); border-color: var(--stop); }
+
+#rail.driving .pedal.gas {
+  color: #fff;
+  background: var(--go);
+  border-color: var(--go);
+}
+#rail.driving .pedal.brake { color: var(--stop); border-color: var(--stop); }
 
 #rail-signs { position: absolute; inset: 0; pointer-events: none; }
 

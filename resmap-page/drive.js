@@ -390,75 +390,99 @@
     canvas.addEventListener('pointerup', release);
     canvas.addEventListener('pointercancel', release);
 
-    /* Drive.
+    /* Pedals.
      *
-     * A single rAF loop advancing a float scroll position, not a chain of
-     * smooth scrollTo calls: those restart each other and that is exactly what
-     * made the old stage-by-stage play stutter. CSS scroll-behavior is forced
-     * to auto for the duration, or every frame would queue its own smooth
-     * scroll on top of the last. */
-    var go = document.getElementById('rail-go');
-    var goLabel = document.getElementById('rail-go-label');
-    var goIcon = document.getElementById('rail-go-icon');
-    var GO_D = 'M3 2l7 4-7 4z';
-    var STOP_D = 'M3 3h6v6H3z';
-    var SPEED = 210;        // px per second
+     * One rAF loop advancing a float scroll position, with scroll-behavior
+     * forced to auto for the duration. A chain of smooth scrollTo calls
+     * restarts itself every frame, which is what made the earlier play control
+     * stutter. Speed eases toward whatever the pedals asked for, so pulling
+     * away and stopping both have some weight to them.
+     */
+    var gas = document.getElementById('pedal-gas');
+    var brake = document.getElementById('pedal-brake');
+    var segs = Array.prototype.slice.call(rail.querySelectorAll('.speedo i'));
 
-    var driving = false, driveRaf = 0, drivePos = 0, driveLast = 0, wasBehaviour = '';
+    var GEARS = [0, 130, 215, 340];   // px per second
+    var gear = 0, speed = 0, target = 0;
+    var driveRaf = 0, driveLast = 0, drivePos = 0, wasBehaviour = '';
 
-    function setDriving(on) {
-      driving = on;
-      rail.classList.toggle('driving', on);
-      if (go) {
-        go.setAttribute('aria-pressed', String(on));
-        goLabel.textContent = on ? 'Stop' : 'Drive';
-        goIcon.setAttribute('d', on ? STOP_D : GO_D);
-      }
-      if (on) {
-        wasBehaviour = root.style.scrollBehavior;
-        root.style.scrollBehavior = 'auto';
-        driveLast = 0;
-        driveRaf = requestAnimationFrame(driveStep);
-      } else {
-        if (driveRaf) { cancelAnimationFrame(driveRaf); driveRaf = 0; }
-        root.style.scrollBehavior = wasBehaviour || '';
-      }
+    function showGear() {
+      rail.classList.toggle('driving', gear > 0);
+      segs.forEach(function (seg, i) { seg.classList.toggle('lit', i < gear); });
+      if (gas) gas.setAttribute('aria-pressed', String(gear > 0));
+    }
+
+    function engage() {
+      if (driveRaf) return;
+      wasBehaviour = root.style.scrollBehavior;
+      root.style.scrollBehavior = 'auto';
+      drivePos = window.scrollY;
+      driveLast = 0;
+      driveRaf = requestAnimationFrame(driveStep);
+    }
+
+    function disengage() {
+      if (driveRaf) { cancelAnimationFrame(driveRaf); driveRaf = 0; }
+      root.style.scrollBehavior = wasBehaviour || '';
+      speed = 0;
+    }
+
+    function setGear(n) {
+      gear = Math.max(0, Math.min(GEARS.length - 1, n));
+      target = GEARS[gear];
+      showGear();
+      if (target > 0) engage();
     }
 
     function driveStep(now) {
-      if (!driving) return;
       var dt = driveLast ? Math.min(0.05, (now - driveLast) / 1000) : 0;
       driveLast = now;
 
-      drivePos += SPEED * dt;
+      // Braking has more authority than the accelerator, as it should.
+      var k = target < speed ? 7.5 : 3.2;
+      speed += (target - speed) * Math.min(1, dt * k);
+      if (target === 0 && speed < 2) { disengage(); return; }
+
+      drivePos += speed * dt;
       var max = maxScroll();
       if (drivePos >= max) {
         window.scrollTo(0, max);
-        setDriving(false);
+        setGear(0);
+        disengage();
         return;
       }
       window.scrollTo(0, drivePos);
       driveRaf = requestAnimationFrame(driveStep);
     }
 
-    if (go) {
-      go.addEventListener('click', function () {
-        if (driving) { setDriving(false); return; }
-        // Finished routes start over from the top.
-        drivePos = window.scrollY >= maxScroll() - 2 ? 0 : window.scrollY;
-        if (drivePos === 0) window.scrollTo(0, 0);
-        setDriving(true);
-      });
-
-      ['wheel', 'touchstart', 'pointerdown'].forEach(function (type) {
-        window.addEventListener(type, function (e) {
-          if (driving && !go.contains(e.target)) setDriving(false);
-        }, { passive: true });
-      });
-      window.addEventListener('keydown', function (e) {
-        if (driving && e.key !== 'Tab') setDriving(false);
+    if (gas) {
+      gas.addEventListener('click', function () {
+        // Pressed at the end of the route, pull away from the top again.
+        if (gear === 0 && window.scrollY >= maxScroll() - 2) window.scrollTo(0, 0);
+        setGear(gear + 1);
       });
     }
+    if (brake) {
+      brake.addEventListener('click', function () { setGear(0); });
+    }
+
+    // Taking the wheel yourself lifts off completely, with no coasting.
+    function lift(e) {
+      if (!gear && !speed) return;
+      if (gas && gas.contains(e.target)) return;
+      if (brake && brake.contains(e.target)) return;
+      gear = 0; target = 0;
+      showGear();
+      disengage();
+    }
+    ['wheel', 'touchstart', 'pointerdown'].forEach(function (type) {
+      window.addEventListener(type, lift, { passive: true });
+    });
+    window.addEventListener('keydown', function (e) {
+      if (e.key !== 'Tab') lift(e);
+    });
+
+    showGear();
 
     resize();
     window.addEventListener('resize', resize);

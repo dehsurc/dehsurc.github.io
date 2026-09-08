@@ -22,7 +22,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700&display=swap">
-<link rel="stylesheet" href="style.css?v=11">
+<link rel="stylesheet" href="style.css?v=12">
 
 <!-- Set the theme before first paint so there is no flash. -->
 <script>
@@ -46,18 +46,29 @@
 
 <!-- The route: the whole document as one road, the car as the scroll thumb. -->
 <div id="rail" hidden>
-  <div class="rail-top">
-    <a class="rail-mark" href="#top">ReSMap</a>
-  </div>
+  <div class="rail-top"></div>
   <div class="rail-road" id="rail-road">
     <canvas id="rail-map"></canvas>
     <div id="rail-signs"></div>
   </div>
   <div class="rail-bottom">
-    <button id="rail-go" type="button" aria-pressed="false">
-      <svg viewBox="0 0 12 12" aria-hidden="true"><path id="rail-go-icon" d="M3 2l7 4-7 4z"/></svg>
-      <span id="rail-go-label">Drive</span>
-    </button>
+    <div class="speedo" aria-hidden="true"><i></i><i></i><i></i></div>
+    <div class="pedals">
+      <button id="pedal-brake" class="pedal brake" type="button" aria-label="Brake">
+        <svg viewBox="0 0 16 16" aria-hidden="true">
+          <path d="M4.5 2.4h6a1.1 1.1 0 0 1 1.05 1.45l-2.4 7.8a1.1 1.1 0 0 1-1.05.75H2.9A1.1 1.1 0 0 1 1.85 11L4.25 3.2a1.1 1.1 0 0 1 1.05-.8z"/>
+          <path class="floor" d="M2 14.2h12"/>
+        </svg>
+        <span>Brake</span>
+      </button>
+      <button id="pedal-gas" class="pedal gas" type="button" aria-label="Accelerator">
+        <svg viewBox="0 0 16 16" aria-hidden="true">
+          <path d="M6.6 2.4h3.4a1.1 1.1 0 0 1 1.05 1.45l-2.4 7.8a1.1 1.1 0 0 1-1.05.75H5.3A1.1 1.1 0 0 1 4.25 11l2.4-7.8a1.1 1.1 0 0 1 1.05-.8z"/>
+          <path class="floor" d="M2 14.2h12"/>
+        </svg>
+        <span>Accel</span>
+      </button>
+    </div>
   </div>
 </div>
 
@@ -547,8 +558,8 @@
   </div>
 </footer>
 
-<script src="failure.js?v=11"></script>
-<script src="drive.js?v=11"></script>
-<script src="main.js?v=11"></script>
+<script src="failure.js?v=12"></script>
+<script src="drive.js?v=12"></script>
+<script src="main.js?v=12"></script>
 </body>
 </html>

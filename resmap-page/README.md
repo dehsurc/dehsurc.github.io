@@ -71,13 +71,17 @@ Every section needs an entry in the top bar's link list, since that is where
 the signs take their short names from.
 
 The rail is also the page's chrome. While it is up the top bar is hidden
-entirely and the rail carries the wordmark, the theme toggle (moved into it, so
-there is only ever one such button) and **Drive**, which scrolls the whole page
-at a steady 210 px/s. Drive runs one rAF loop advancing a float scroll
-position, with `scroll-behavior` forced to auto for the duration; a chain of
-smooth `scrollTo` calls restarts itself every frame, which is what made the
-earlier stage-by-stage play stutter. Any scroll, key or pointer of your own
-stops it.
+entirely: the theme toggle moves into the rail's head, so there is only ever
+one such button, and the foot carries the pedals.
+
+**Accel** pulls away and steps up through three gears (130, 215, 340 px/s);
+**Brake** lifts off and coasts to a stop; the three bars above them are the
+gear. Speed eases toward whatever the pedals asked for, with braking given
+more authority than the accelerator, so both have some weight. It is one rAF
+loop advancing a float scroll position with `scroll-behavior` forced to auto
+for the duration; a chain of smooth `scrollTo` calls restarts itself every
+frame, which is what made the earlier play control stutter. Any scroll, key or
+pointer of your own lifts off completely.
 
 Signs are guide-sign green, the colour they are on the road, with the section
 number set like an exit number. Pressing or dragging on the carriageway seeks
