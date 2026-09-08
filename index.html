@@ -19,9 +19,8 @@
 <!-- Survey-cross favicon, drawn inline so there is no extra request. -->
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23f3f0e9'/%3E%3Cg stroke='%23a4432b' stroke-width='2.4'%3E%3Cline x1='16' y1='5' x2='16' y2='27'/%3E%3Cline x1='5' y1='16' x2='27' y2='16'/%3E%3C/g%3E%3C/svg%3E">
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+KR:wght@400;500&display=swap">
+<!-- Latin is Segoe UI (local); Hangul comes from Freesentation, as on the ReSMap page. -->
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="style.css">
 
 <script>
@@ -52,20 +51,21 @@
     </ul>
     <button id="theme-toggle" type="button" aria-label="Switch to dark theme" aria-pressed="false">
       <svg viewBox="0 0 24 24" aria-hidden="true">
-        <g class="sun">
-          <circle cx="12" cy="12" r="5"></circle>
-          <g class="rays">
-            <line x1="12" y1="1.8" x2="12" y2="3.8"></line>
-            <line x1="12" y1="20.2" x2="12" y2="22.2"></line>
-            <line x1="1.8" y1="12" x2="3.8" y2="12"></line>
-            <line x1="20.2" y1="12" x2="22.2" y2="12"></line>
-            <line x1="4.7" y1="4.7" x2="6.1" y2="6.1"></line>
-            <line x1="17.9" y1="17.9" x2="19.3" y2="19.3"></line>
-            <line x1="4.7" y1="19.3" x2="6.1" y2="17.9"></line>
-            <line x1="17.9" y1="6.1" x2="19.3" y2="4.7"></line>
-          </g>
+        <mask id="crescent">
+          <rect x="0" y="0" width="24" height="24" fill="#fff"></rect>
+          <circle cx="26" cy="6" r="8" fill="#000"></circle>
+        </mask>
+        <circle class="disc" cx="12" cy="12" r="5.5" mask="url(#crescent)"></circle>
+        <g class="rays">
+          <line x1="12" y1="1.8" x2="12" y2="3.8"></line>
+          <line x1="12" y1="20.2" x2="12" y2="22.2"></line>
+          <line x1="1.8" y1="12" x2="3.8" y2="12"></line>
+          <line x1="20.2" y1="12" x2="22.2" y2="12"></line>
+          <line x1="4.7" y1="4.7" x2="6.1" y2="6.1"></line>
+          <line x1="17.9" y1="17.9" x2="19.3" y2="19.3"></line>
+          <line x1="4.7" y1="19.3" x2="6.1" y2="17.9"></line>
+          <line x1="17.9" y1="6.1" x2="19.3" y2="4.7"></line>
         </g>
-        <path class="moon" d="M20.4 14.6A8.6 8.6 0 0 1 9.4 3.6 8.6 8.6 0 1 0 20.4 14.6Z"></path>
       </svg>
     </button>
   </div>
@@ -88,7 +88,7 @@
       </div>
       <div>
         <dt>Lab</dt>
-        <dd><a href="https://ircv.hanyang.ac.kr/" target="_blank" rel="noopener">IRCV</a>, advised by Prof. Soonmin Hwang</dd>
+        <dd><a href="https://ircv.hanyang.ac.kr/" target="_blank" rel="noopener">IRCV</a>, advised by <a href="mailto:soonminh@hanyang.ac.kr">Prof. Soonmin Hwang</a></dd>
       </div>
       <div>
         <dt>Position</dt>
@@ -151,7 +151,7 @@
         <div class="pub">
           <h3>ReSMap: Recasting Satellite Priors for Robust and Accurate Online HD Map Construction</h3>
           <p class="authors"><b>Kyungmin Kim</b><sup>*</sup>, Sumin Lee<sup>*</sup>, Sungoh Jeong, DoHyun Lim, Seonghyun Park, Soonmin Hwang<sup>&dagger;</sup></p>
-          <p class="meta"><span class="venue">NeurIPS 2026</span><span class="state">under review</span></p>
+          <p class="meta"><span class="state">under review</span></p>
           <p class="links"><a href="resmap-page/">Project page &rarr;</a></p>
         </div>
       </li>
@@ -161,7 +161,7 @@
         <div class="pub">
           <h3>Right Results, Wrong Reasons: Auditing Behavioral Reliance in Motion Forecasting</h3>
           <p class="authors">Geonyeong Park, Byounghun Park, Nayoung Kim, <b>Kyungmin Kim</b>, Soonmin Hwang<sup>&dagger;</sup></p>
-          <p class="meta"><span class="venue">NeurIPS 2026</span><span class="state">under review</span></p>
+          <p class="meta"><span class="state">under review</span></p>
         </div>
       </li>
 
@@ -200,10 +200,17 @@
   <div class="rail">
     <span class="idx">[02.00]</span>
     <h2>Work</h2>
-    <p class="rail-note">Funded projects and industry collaborations.</p>
+    <p class="rail-note">Positions, funded projects, and industry collaborations.</p>
   </div>
   <div class="body">
     <ul class="entries">
+      <li>
+        <span class="when">2026.08 &ndash; <span class="on">present</span></span>
+        <div class="entry">
+          <h3>Assistant</h3>
+          <p class="org">Kakao Mobility</p>
+        </div>
+      </li>
       <li>
         <span class="when">2026.01 &ndash; 2027.01</span>
         <div class="entry">
@@ -342,43 +349,6 @@
   </div>
 </footer>
 
-<script>
-  // Theme toggle.
-  (function () {
-    var root = document.documentElement;
-    var btn = document.getElementById('theme-toggle');
-    function paint() {
-      var dark = root.dataset.theme === 'dark';
-      btn.setAttribute('aria-pressed', String(dark));
-      btn.setAttribute('aria-label', dark ? 'Switch to light theme' : 'Switch to dark theme');
-    }
-    paint();
-    btn.addEventListener('click', function () {
-      root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
-      try { localStorage.setItem('kk-theme', root.dataset.theme); } catch (e) {}
-      paint();
-    });
-  })();
-
-  // Mark the section currently under the topbar in the nav.
-  (function () {
-    var links = Array.prototype.slice.call(document.querySelectorAll('.topbar a[href^="#"]'));
-    var map = {};
-    links.forEach(function (a) { map[a.getAttribute('href').slice(1)] = a; });
-    var targets = Object.keys(map)
-      .map(function (id) { return document.getElementById(id); })
-      .filter(Boolean);
-    if (!('IntersectionObserver' in window) || !targets.length) return;
-
-    var seen = {};
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (e) { seen[e.target.id] = e.isIntersecting; });
-      var current = targets.filter(function (t) { return seen[t.id]; })[0];
-      links.forEach(function (a) { a.classList.remove('here'); });
-      if (current) map[current.id].classList.add('here');
-    }, { rootMargin: '-45% 0px -50% 0px' });
-    targets.forEach(function (t) { io.observe(t); });
-  })();
-</script>
+<script src="main.js" defer></script>
 </body>
 </html>
