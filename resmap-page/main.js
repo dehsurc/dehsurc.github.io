@@ -113,43 +113,41 @@
     var y = box.top + box.height / 2;
     var w = window.innerWidth, h = window.innerHeight;
 
-    // Dark expands in, light contracts out: going dark the new palette grows
-    // from the button, going light the old one collapses back into it. The
-    // outgoing snapshot has to be lifted above the incoming one for that to
-    // be visible, which is what data-wipe switches in the stylesheet.
-    var contract = next === 'light';
-    delete root.dataset.wipe;
-
-    // Distance to the furthest corner. The expanding case overshoots so the
-    // shape leaves the viewport before the easing curve flattens; the
-    // contracting case starts at coverage, since anything larger is unseen.
-    var reach = Math.hypot(Math.max(x, w - x), Math.max(y, h - y)) *
-                (contract ? 1.02 : 1.18);
+    // Distance to the furthest corner, plus headroom so the shape leaves the
+    // viewport before the easing curve flattens out.
+    var reach = Math.hypot(Math.max(x, w - x), Math.max(y, h - y)) * 1.18;
     var frames = pickShape()(x, y, reach, w, h);
 
-    root.dataset.wipe = contract ? 'out' : 'in';
+    // The two directions are time-reverses of each other. Going dark the new
+    // theme opens out of the button; coming back to light the dark snapshot
+    // closes into it instead, so the shape gathers rather than spreads. That
+    // means clipping the outgoing snapshot, which has to sit on top for the
+    // duration — see the [data-wipe] rules in style.css.
+    var closing = next === 'light';
+    if (closing) {
+      root.dataset.wipe = 'out';
+      frames = frames.slice().reverse();
+    }
+
     var transition = document.startViewTransition(function () { paint(next); });
 
-    var cleared = false;
-    function done() {
-      if (cleared) return;
-      cleared = true;
-      delete root.dataset.wipe;
-    }
-    if (transition.finished) transition.finished.then(done, done);
-    setTimeout(done, 1400);
+    function done() { delete root.dataset.wipe; }
+    transition.finished.then(done, done);
 
     transition.ready.then(function () {
-      root.animate({ clipPath: contract ? [frames[1], frames[0]] : frames }, {
-        duration: contract ? 700 : 760,
-        easing: contract ? 'cubic-bezier(.8, 0, .7, .3)'
-                         : 'cubic-bezier(.3, .7, .2, 1)',
-        // Without a forwards fill the clip is dropped on the last frame, so
-        // the shrunken outgoing snapshot springs back to full size for one
-        // frame before the pseudo-elements are torn down. That is the flash.
+      root.animate({ clipPath: frames }, {
+        duration: closing ? 680 : 760,
+        // Opening leads with speed and settles. The literal mirror of that
+        // curve holds the shape at full size and then collapses it in the
+        // last few frames, which reads as a blink rather than a wipe, so
+        // closing gets a symmetric curve instead.
+        easing: closing ? 'cubic-bezier(.55, 0, .35, 1)'
+                        : 'cubic-bezier(.3, .7, .2, 1)',
+        // Without this the clip reverts to its base value on the last frame
+        // and the closing wipe flashes the whole outgoing theme back in.
         fill: 'forwards',
-        pseudoElement: contract ? '::view-transition-old(root)'
-                                : '::view-transition-new(root)'
+        pseudoElement: closing ? '::view-transition-old(root)'
+                               : '::view-transition-new(root)'
       });
     }).catch(function () { /* transition skipped; the theme still applied */ });
   }

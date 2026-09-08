@@ -10,7 +10,8 @@ Online HD Map Construction*. No build step — three files plus assets.
                   `:root[data-theme="dark"]` blocks
     main.js       theme toggle, scroll progress, section reveal, nav
                   highlighting, scene switcher, BibTeX copy
-    drive.js      the procedural map behind the page and the ego view
+    failure.js    the pinned camera-failure walkthrough
+    drive.js      the route rail down the right edge
     assets/       figures, videos, PDF (see assets/README.md)
 
 ## Type and theme
@@ -30,6 +31,20 @@ palette instead, and `prefers-reduced-motion` skips straight to the new
 theme. The two directions are not symmetric: going dark the new palette grows
 out of the button, going light the old one collapses back into it. Figures keep a light backing in dark mode so white-background diagrams
 stay readable.
+
+## The camera-failure walkthrough
+
+Section 4 is a pinned stage the scroll drives through four measured conditions:
+clean, front camera dropped, three front dropped, all six dropped. The rig is a
+schematic — surround coverage around the ego with the satellite tile behind it,
+built as SVG in `failure.js`, no assets — and the bars are Table 2, interpolated
+between levels so the motion is continuous while every stop on it is a real
+measurement. Editing the numbers means editing `METHODS` in `failure.js`; they
+must stay in step with Table 2 in `index.html`.
+
+Knobs: the `.track` height in `style.css` sets how much scroll the four stages
+take, and `SCALE` in `failure.js` is the mAP at full bar width. Below 62rem the
+stage unpins and stacks.
 
 ## The route rail
 

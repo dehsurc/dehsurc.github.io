@@ -58,6 +58,7 @@
       <li><a href="#abstract">Abstract</a></li>
       <li><a href="#idea">Idea</a></li>
       <li><a href="#method">Method</a></li>
+      <li><a href="#failure">Failure</a></li>
       <li><a href="#results">Results</a></li>
       <li><a href="#ablations">Ablations</a></li>
       <li><a href="#analysis">Analysis</a></li>
@@ -186,12 +187,53 @@
   </div>
 </section>
 
+<section class="reveal" id="failure">
+  <div class="col">
+    <h2><span class="num">4</span>Fail the cameras yourself</h2>
+    <p>The claim, in one sentence: a satellite tile is fetched and cached before the drive, so no onboard fault can take it away. Scroll on, and the surround cameras drop out a group at a time. Every number below is measured &mdash; the same figures reported in <a href="#results">Table 2</a>, read one drop level at a time.</p>
+  </div>
+
+  <div class="track" id="fail-track">
+    <div class="stage">
+      <div class="col wide">
+        <div class="stage-head">
+          <span class="stage-step" id="fail-step">Clean</span>
+          <span class="stage-sub" id="fail-sub">all six cameras reporting</span>
+        </div>
+
+        <div class="stage-grid">
+          <figure class="rig">
+            <svg id="fail-rig" viewBox="0 0 340 340" role="img" aria-labelledby="fail-rig-title">
+              <title id="fail-rig-title">Surround camera coverage around the ego vehicle, with failed cameras darkened and the satellite prior taking over</title>
+              <g id="fail-sat"></g>
+              <g id="fail-cams"></g>
+              <g id="fail-ego"></g>
+            </svg>
+            <figcaption>The six surround cameras, and behind them the geo-aligned satellite tile. As cameras go dark the PTF gate moves its weight onto the satellite branch, which is unaffected by the fault.</figcaption>
+          </figure>
+
+          <div class="chart">
+            <ol class="bars" id="fail-bars"></ol>
+            <p class="tcap">mAP on the geographically non-overlapping split of nuScenes at 60&thinsp;&times;&thinsp;30&nbsp;m. Bars interpolate between the measured drop levels.</p>
+          </div>
+        </div>
+
+        <p class="stage-note" id="fail-note"></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col">
+    <p>The camera-only model is the clearest case: it has nothing else to read, so at the last step there is essentially no map left. The LiDAR- and SD-fused baselines degrade more gracefully but still lose a quarter to a half of their accuracy, because their auxiliary evidence is either bolted to the same sensor stack or too coarse to carry lane-level geometry. ReSMap ends the sequence above where every one of them started.</p>
+  </div>
+</section>
+
 <section class="reveal" id="results">
   <div class="col">
-    <h2><span class="num">4</span>Results on nuScenes</h2>
+    <h2><span class="num">5</span>Results on nuScenes</h2>
     <p>All models are trained and evaluated on nuScenes with the geographically non-overlapping split, using ego-aligned AID4AD satellite tiles cropped to the BEV region of interest. Except where marked, every baseline is retrained under the same evaluation conditions, following its own paper&rsquo;s schedule.</p>
 
-    <h3>4.1 &nbsp;Clean conditions</h3>
+    <h3>5.1 &nbsp;Clean conditions</h3>
   </div>
 
   <div class="col wide">
@@ -236,7 +278,7 @@
   <div class="col">
     <p>At 60&thinsp;&times;&thinsp;30&nbsp;m, ReSMap reaches 53.0 mAP with temporal modelling and 47.0 without, in 24 epochs &mdash; ahead of the camera-only MapTracker by 12.7 mAP, the LiDAR-fused DAMap by 13.6, and the SD-fused PriorDrive by 10.5. At 100&thinsp;&times;&thinsp;50&nbsp;m, where camera evidence thins out with distance, the margin widens to 18.5 / 24.7 / 32.2 mAP, and the temporal variant is best on all three classes. The satellite branch costs little at inference: 16.1 FPS is faster than the camera-only baseline and roughly twice the LiDAR- and SD-fused models.</p>
 
-    <h3>4.2 &nbsp;Camera failure</h3>
+    <h3>5.2 &nbsp;Camera failure</h3>
     <p>Robustness is measured by zeroing the front camera, the three front cameras, and all six cameras at inference time, replacing each dropped view with a blackout image.</p>
   </div>
 
@@ -269,9 +311,9 @@
 
   <div class="col">
     <p>The non-temporal ReSMap degrades by 4.0%, 7.7%, and 13.0% &mdash; the smallest drop at every level. The all-camera case isolates the redundancy claim most clearly: with no camera evidence at all, ReSMap still returns <b>40.9 mAP</b>, higher than the <em>clean-input</em> score of every baseline in the table, while MapTracker collapses by 99.8% and even the LiDAR-fused DAMap loses a quarter of its accuracy.</p>
-    <p>The temporal variant is the stronger model on clean input but the weaker one under severe failure. This is not a contradiction: temporal aggregation is applied to the camera BEV, so corrupted frames enter the memory queue and keep contaminating the fused stream for several frames. We diagnose this directly in <a href="#analysis">&sect;6</a>.</p>
+    <p>The temporal variant is the stronger model on clean input but the weaker one under severe failure. This is not a contradiction: temporal aggregation is applied to the camera BEV, so corrupted frames enter the memory queue and keep contaminating the fused stream for several frames. We diagnose this directly in <a href="#analysis">&sect;7</a>.</p>
 
-    <h3>4.3 &nbsp;Corrupted satellite tiles</h3>
+    <h3>5.3 &nbsp;Corrupted satellite tiles</h3>
     <p>Satellite tiles can be stale or misaligned in practice, through GPS/INS drift or latency in the localisation stack. We inject two such corruptions at inference with probability <i>p</i>&thinsp;=&thinsp;0.2 per sample.</p>
   </div>
 
@@ -296,7 +338,7 @@
 
 <section class="reveal" id="ablations">
   <div class="col">
-    <h2><span class="num">5</span>Ablations</h2>
+    <h2><span class="num">6</span>Ablations</h2>
     <p>Both ablations are run on the geographically non-overlapping split. In (a) the decoder is fixed to the full OCMQ; in (b) the fusion is fixed to PTF, so that <i>F</i><sub>cam</sub>, <i>F</i><sub>sat</sub>, and <i>F</i><sub>fuse</sub> are identical across rows.</p>
   </div>
 
@@ -351,8 +393,8 @@
 
 <section class="reveal" id="analysis">
   <div class="col">
-    <h2><span class="num">6</span>Analysis</h2>
-    <h3>6.1 &nbsp;Where the evidence goes</h3>
+    <h2><span class="num">7</span>Analysis</h2>
+    <h3>7.1 &nbsp;Where the evidence goes</h3>
   </div>
 
   <div class="col wide">
@@ -363,18 +405,18 @@
   </div>
 
   <div class="col">
-    <h3>6.2 &nbsp;Why the non-temporal variant survives severe failure</h3>
+    <h3>7.2 &nbsp;Why the non-temporal variant survives severe failure</h3>
     <p>Running both variants over the full validation split (5&thinsp;981 frames) and restricting the statistics to active cells makes the mechanism explicit. Under all-camera drop, the temporal <i>r</i><sub>cam</sub> falls from 0.751 to 0.166 (&minus;77.9% relative) while the non-temporal one falls from 0.686 to 0.278 (&minus;59.5%). More tellingly, the temporal fused stream is <em>contaminated</em> rather than redirected: <i>r</i><sub>fuse</sub> drops 35.6% and the feature norm &#8214;<i>F</i><sub>fuse</sub>&#8214; contracts 19.1%, against 18.3% and 6.2% for the non-temporal variant.</p>
     <p>The satellite reliability is essentially unchanged across all six conditions (0.473 vs. 0.456), so the difference is not a satellite-side artefact. Temporal aggregation is applied only to the camera BEV, so corrupted evidence accumulates in the BEV history and enters <i>F</i><sub>fuse</sub> before OCMQ ever sees it &mdash; and a per-token gate cannot repair a fused BEV whose evidence is already corrupted.</p>
 
-    <h3>6.3 &nbsp;Class&ndash;modality entanglement</h3>
+    <h3>7.3 &nbsp;Class&ndash;modality entanglement</h3>
     <p>Trained with independent per-modality query pools, each branch specialises: the camera branch is strongest on lane dividers and boundaries, the satellite branch on pedestrian crossings, and the fused branch carries the overall mAP almost entirely through AP<sub>p</sub>. That model loses 15.9 mAP when the three front cameras are dropped, and its largest single-class drop (AP<sub>b</sub>, &minus;28.9) is precisely the class the camera branch had monopolised &mdash; no other branch was ever supervised on it, so nothing can compensate, even though the PTF gate has already reallocated its weight. This is the observation that motivates OCMQ&rsquo;s single shared pool.</p>
   </div>
 </section>
 
 <section class="reveal" id="qualitative">
   <div class="col">
-    <h2><span class="num">7</span>Qualitative comparison</h2>
+    <h2><span class="num">8</span>Qualitative comparison</h2>
     <p>Surround-view input, the satellite tile, and the predicted vector map for each method, first on clean input and then with the cameras dropped.</p>
   </div>
 
@@ -397,7 +439,7 @@
 
 <section class="reveal" id="supplementary">
   <div class="col">
-    <h2><span class="num">8</span>Results on the original split</h2>
+    <h2><span class="num">9</span>Results on the original split</h2>
     <p>The original nuScenes partition has geographically overlapping train and validation regions, so road structures seen in training can reappear at evaluation. We report it as a secondary benchmark, under the same protocol.</p>
   </div>
 
@@ -463,7 +505,7 @@
 
 <section class="reveal" id="cite">
   <div class="col">
-    <h2><span class="num">9</span>Paper and citation</h2>
+    <h2><span class="num">10</span>Paper and citation</h2>
     <!-- EDIT: link the PDF once it is in assets/paper/. -->
     <p class="links">
       <a class="button" href="#" aria-disabled="true">PDF <span class="soon">(soon)</span></a>
@@ -493,6 +535,7 @@
   </div>
 </footer>
 
+<script src="failure.js"></script>
 <script src="drive.js"></script>
 <script src="main.js"></script>
 </body>
