@@ -60,7 +60,7 @@
   --col:  52rem;   /* prose measure */
   --wide: 90rem;   /* figures and tables */
   --gutter: 3rem;
-  --rail: 46px;
+  --rail: 168px;
 
   color-scheme: light;
 }
@@ -137,6 +137,23 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
   font-size: 1.1rem; font-weight: 600; letter-spacing: -.015em;
 }
 .stage-sub { font-size: 13.5px; color: var(--ink-faint); }
+
+#fail-play {
+  margin-left: auto;
+  display: inline-flex; align-items: center; gap: .4rem;
+  padding: .35rem .7rem;
+  border: 1px solid var(--rule-dark);
+  border-radius: 3px;
+  background: none;
+  color: var(--ink-soft);
+  font: inherit; font-size: 13px; font-weight: 500;
+  cursor: pointer;
+  transition: color .15s ease, border-color .15s ease;
+}
+#fail-play:hover { color: var(--ink); border-color: var(--ink); }
+#fail-play[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); }
+#fail-play svg { width: 11px; height: 11px; fill: currentColor; }
+#fail-play[hidden] { display: none; }
 
 .stage-grid {
   display: grid;
@@ -217,6 +234,7 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
 /* The rail reserves its own gutter, the way a scrollbar does, so it never
    sits over the content. */
 .has-rail body { padding-right: var(--rail); }
+.has-rail .topbar ul { display: none; }
 
 #rail {
   position: fixed;
@@ -231,25 +249,32 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
 #rail-map { display: block; cursor: grab; touch-action: none; }
 #rail.dragging #rail-map { cursor: grabbing; }
 
-#rail-tip {
+#rail-signs { position: absolute; inset: 0; pointer-events: none; }
+
+.sign {
   position: absolute;
-  right: calc(var(--rail) + 8px);
+  right: 62px;
   transform: translateY(-50%);
-  display: flex; align-items: baseline; gap: .5rem;
-  max-width: 15rem;
-  padding: .3rem .55rem;
-  border: 1px solid var(--rule);
-  border-radius: 3px;
+  max-width: 100px;
+  padding: .2rem .42rem;
+  border: 1px solid var(--rule-dark);
+  border-radius: 2px;
   background: var(--paper);
+  color: var(--ink-soft);
+  font: inherit; font-size: 11px; line-height: 1.25;
+  text-align: right;
   white-space: nowrap;
-  pointer-events: none;
+  overflow: hidden; text-overflow: ellipsis;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: color .15s ease, border-color .15s ease;
 }
-#rail-tip[hidden] { display: none; }
-#rail-name { font-size: 12px; font-weight: 500; }
-#rail-pct {
-  font-size: 11px;
-  font-variant-numeric: tabular-nums;
-  color: var(--ink-faint);
+.sign:hover { color: var(--ink); border-color: var(--ink); }
+.sign.passed { color: var(--ink-faint); border-color: var(--rule); }
+.sign.here {
+  color: var(--accent);
+  border-color: var(--accent);
+  font-weight: 600;
 }
 
 /* ---------- section reveal ---------- */

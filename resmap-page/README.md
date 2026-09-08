@@ -42,21 +42,32 @@ between levels so the motion is continuous while every stop on it is a real
 measurement. Editing the numbers means editing `METHODS` in `failure.js`; they
 must stay in step with Table 2 in `index.html`.
 
+Scrolling is the primary control. The play button drives the same scroll at a
+readable pace for anyone who would rather watch — it never starts on its own,
+and any scroll, key or pointer of your own takes it straight back.
+
 Knobs: the `.track` height in `style.css` sets how much scroll the four stages
-take, and `SCALE` in `failure.js` is the mAP at full bar width. Below 62rem the
-stage unpins and stacks.
+take, `SECONDS` in `failure.js` is how long the play-through takes, and `SCALE`
+is the mAP at full bar width. Below 62rem the stage unpins and stacks.
 
 ## The route rail
 
 `drive.js` draws the rail down the right edge: the whole document as one road,
-with the car as the scroll thumb. It descends as the page scrolls, each section
-is a junction along the route, and pressing or dragging anywhere on the rail
-seeks one to one. Seeking is explicitly instant, because `html` carries
-`scroll-behavior: smooth` and a smooth scroll restarted on every pointermove
-lurches instead of tracking. The rail reserves its own gutter the way a
-scrollbar does, so it never sits over the content, and it hides below 900 px.
+with the car as the scroll thumb. It descends as the page scrolls, and each
+section is a junction with a **road sign** beside it — the signs are the
+navigation, which is why the top bar drops its links while the rail is up.
+Sections bunch together wherever the document has several short ones in a row,
+so the plates are pushed apart to a legible spacing and an elbowed leader line
+runs back to the junction they actually mark.
 
-Knobs: `RW`, `CAP` and `MIN_VIEWPORT`.
+Pressing or dragging on the road strip seeks one to one; seeking is explicitly
+instant, because `html` carries `scroll-behavior: smooth` and a smooth scroll
+restarted on every pointermove lurches instead of tracking. The rail reserves
+its own gutter the way a scrollbar does, so it never sits over the content, and
+below 1040 px it hides and the top bar's links come back.
+
+Knobs: `RW`, `ROAD_X`, `ROAD_HALF`, `CAP`, `SIGN_GAP`, `SIGN_RIGHT`, `ELBOW`
+and `MIN_VIEWPORT`.
 
 There was a procedurally generated HD map behind the page as well. It is gone.
 The geometry was invented, so it visibly repeated left to right, and a region

@@ -47,7 +47,7 @@
 <!-- The route: the whole document as one road, the car as the scroll thumb. -->
 <div id="rail" hidden>
   <canvas id="rail-map"></canvas>
-  <div id="rail-tip" hidden><span id="rail-name"></span><span id="rail-pct"></span></div>
+  <div id="rail-signs"></div>
 </div>
 
 <nav class="topbar" aria-label="Sections">
@@ -199,6 +199,10 @@
         <div class="stage-head">
           <span class="stage-step" id="fail-step">Clean</span>
           <span class="stage-sub" id="fail-sub">all six cameras reporting</span>
+          <button id="fail-play" type="button" aria-pressed="false">
+            <svg viewBox="0 0 12 12" aria-hidden="true"><path id="fail-play-icon" d="M3 2l7 4-7 4z"/></svg>
+            <span id="fail-play-label">Play it through</span>
+          </button>
         </div>
 
         <div class="stage-grid">

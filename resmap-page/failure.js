@@ -192,4 +192,86 @@
   window.addEventListener('scroll', request, { passive: true });
   window.addEventListener('resize', request);
   window.addEventListener('load', update);
+
+  /* ---- play it through ----
+   *
+   * Scrolling by hand is the primary control; this just drives the same scroll
+   * at a readable pace for anyone who would rather watch. It never starts on
+   * its own — a page that scrolls itself unasked is hostile — and any scroll
+   * of your own takes it straight back. */
+
+  var play = document.getElementById('fail-play');
+  var playLabel = document.getElementById('fail-play-label');
+  var playIcon = document.getElementById('fail-play-icon');
+
+  var PLAY_D = 'M3 2l7 4-7 4z';                 // triangle
+  var PAUSE_D = 'M3 2h2.4v8H3zM6.6 2H9v8H6.6z'; // two bars
+  var SECONDS = 15;
+
+  if (play && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    var running = false, raf = 0, last = 0, carry = 0;
+
+    function travelPx() {
+      var stage = track.firstElementChild;
+      return Math.max(1, track.offsetHeight - stage.offsetHeight);
+    }
+
+    function setRunning(on) {
+      running = on;
+      play.setAttribute('aria-pressed', String(on));
+      playLabel.textContent = on ? 'Pause' : 'Play it through';
+      playIcon.setAttribute('d', on ? PAUSE_D : PLAY_D);
+      if (!on && raf) { cancelAnimationFrame(raf); raf = 0; }
+    }
+
+    function step(now) {
+      if (!running) return;
+      var dt = last ? Math.min(0.05, (now - last) / 1000) : 0;
+      last = now;
+
+      var box = track.getBoundingClientRect();
+      var travel = travelPx();
+
+      // Off the end of the stage in either direction: nothing to drive.
+      if (-box.top >= travel - 0.5) { setRunning(false); return; }
+
+      carry += (travel / SECONDS) * dt;
+      var whole = Math.floor(carry);
+      if (whole >= 1) {
+        carry -= whole;
+        try {
+          window.scrollBy({ top: whole, behavior: 'instant' });
+        } catch (err) {
+          window.scrollBy(0, whole);
+        }
+      }
+      raf = requestAnimationFrame(step);
+    }
+
+    play.addEventListener('click', function () {
+      if (running) { setRunning(false); return; }
+
+      // Start from the top of the stage if it is behind us or not reached yet.
+      var box = track.getBoundingClientRect();
+      if (-box.top < 0 || -box.top >= travelPx() - 0.5) {
+        window.scrollTo({ top: track.getBoundingClientRect().top + window.scrollY,
+                          behavior: 'smooth' });
+      }
+      last = 0; carry = 0;
+      setRunning(true);
+      raf = requestAnimationFrame(step);
+    });
+
+    // Any input of your own hands control back.
+    ['wheel', 'touchstart', 'pointerdown'].forEach(function (type) {
+      window.addEventListener(type, function (e) {
+        if (running && !play.contains(e.target)) setRunning(false);
+      }, { passive: true });
+    });
+    window.addEventListener('keydown', function (e) {
+      if (running && e.key !== 'Tab') setRunning(false);
+    });
+  } else if (play) {
+    play.hidden = true;
+  }
 })();

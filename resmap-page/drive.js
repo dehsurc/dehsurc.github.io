@@ -46,17 +46,20 @@
 
   if (rail && canvas && canvas.getContext) {
     var rctx = canvas.getContext('2d');
-    var tip = document.getElementById('rail-tip');
-    var tipName = document.getElementById('rail-name');
-    var tipPct = document.getElementById('rail-pct');
+    var signBox = document.getElementById('rail-signs');
 
-    var RW = 46;            // rail width, css px
-    var CAP = 30;           // clear space at each end so the car never clips
-    var MIN_VIEWPORT = 900;
+    var RW = 168;           // rail width, css px
+    var ROAD_X = 140;       // road centreline within the rail
+    var ROAD_HALF = 17;     // road half width
+    var CAP = 34;           // clear space at each end so the car never clips
+    var SIGN_GAP = 25;      // minimum vertical spacing between signs
+    var SIGN_RIGHT = 62;    // signs end this far from the rail's right edge
+    var ELBOW = 116;        // where the leader line turns
+    var MIN_VIEWPORT = 1040;
 
     var rdpr = 1, RH = 0;
     var stops = [];
-    var dragging = false, hovering = false;
+    var dragging = false;
     var pending = false;
     var accent = '#0e4a84';
 
@@ -68,6 +71,9 @@
     }
     function carY(p) { return CAP + p * (RH - CAP * 2); }
 
+    /* Each section is a junction on the route and gets a sign beside it. The
+       signs are the navigation, which is why the top bar drops its links while
+       the rail is up. */
     function measure() {
       var max = maxScroll();
       stops = Array.prototype.slice
@@ -83,6 +89,45 @@
                        : (h2 ? h2.textContent.replace(/^\s*\d+\s*/, '') : s.id)
           };
         });
+
+      signBox.textContent = '';
+      stops.forEach(function (stop) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'sign';
+        b.textContent = stop.name;
+        b.addEventListener('click', function () {
+          var el = document.getElementById(stop.id);
+          if (el) el.scrollIntoView({ behavior: 'smooth' });
+        });
+        signBox.appendChild(b);
+        stop.el = b;
+      });
+      layoutSigns();
+    }
+
+    /* Sections bunch up wherever the document has several short ones in a row,
+       so the plates are pushed apart to a legible spacing while the tick they
+       point at stays at the true position. */
+    function layoutSigns() {
+      if (!stops.length) return;
+      var n = stops.length, i;
+      for (i = 0; i < n; i++) stops[i].signY = carY(stops[i].p);
+      for (i = 1; i < n; i++) {
+        if (stops[i].signY - stops[i - 1].signY < SIGN_GAP) {
+          stops[i].signY = stops[i - 1].signY + SIGN_GAP;
+        }
+      }
+      var floorY = RH - CAP * 0.6;
+      if (stops[n - 1].signY > floorY) {
+        stops[n - 1].signY = floorY;
+        for (i = n - 2; i >= 0; i--) {
+          if (stops[i + 1].signY - stops[i].signY < SIGN_GAP) {
+            stops[i].signY = stops[i + 1].signY - SIGN_GAP;
+          }
+        }
+      }
+      for (i = 0; i < n; i++) stops[i].el.style.top = Math.round(stops[i].signY) + 'px';
     }
 
     function readAccent() {
@@ -109,7 +154,7 @@
 
     // Top-down vehicle, nose down the rail, because down the page is forward.
     function drawCar(y) {
-      var len = 26, wide = 13, x = RW / 2;
+      var len = 26, wide = 13, x = ROAD_X;
       rctx.save();
       rctx.translate(x, y);
 
@@ -145,7 +190,7 @@
 
       var p = progress(), ink = neutral();
       var cy = carY(p);
-      var mid = RW / 2, half = RW * 0.30, lane = RW * 0.11;
+      var lane = ROAD_HALF * 0.38;
 
       rctx.clearRect(0, 0, RW, RH);
       rctx.lineCap = 'round';
@@ -154,10 +199,10 @@
       rctx.lineWidth = 1.3;
       rctx.strokeStyle = colour('boundary');
       rctx.globalAlpha = 0.55;
-      [-half, half].forEach(function (off) {
+      [-ROAD_HALF, ROAD_HALF].forEach(function (off) {
         rctx.beginPath();
-        rctx.moveTo(mid + off, CAP * 0.4);
-        rctx.lineTo(mid + off, RH - CAP * 0.4);
+        rctx.moveTo(ROAD_X + off, CAP * 0.4);
+        rctx.lineTo(ROAD_X + off, RH - CAP * 0.4);
         rctx.stroke();
       });
       rctx.lineWidth = 1;
@@ -165,29 +210,47 @@
       rctx.globalAlpha = 0.4;
       [-lane, lane].forEach(function (off) {
         rctx.beginPath();
-        rctx.moveTo(mid + off, CAP * 0.4);
-        rctx.lineTo(mid + off, RH - CAP * 0.4);
+        rctx.moveTo(ROAD_X + off, CAP * 0.4);
+        rctx.lineTo(ROAD_X + off, RH - CAP * 0.4);
         rctx.stroke();
       });
       rctx.globalAlpha = 1;
 
-      // Every section is a junction along the route.
+      // Junctions, and the post running from each sign out to its junction.
+      var here = null;
+      stops.forEach(function (s) {
+        if (s.p <= p + 0.002) here = s;
+      });
+
       stops.forEach(function (s) {
         var y = carY(s.p);
         var passed = s.p <= p + 0.002;
+        var current = s === here;
+
         rctx.strokeStyle = colour('crossing');
-        rctx.globalAlpha = passed ? 0.32 : 0.7;
+        rctx.globalAlpha = current ? 0.85 : (passed ? 0.3 : 0.62);
+        rctx.lineWidth = current ? 1.6 : 1;
+        rctx.beginPath();
+        rctx.moveTo(ROAD_X - ROAD_HALF, y);
+        rctx.lineTo(ROAD_X + ROAD_HALF, y);
+        rctx.stroke();
+
+        // Leader line from the junction out to its sign, elbowed rather than
+        // drawn straight, since de-collision can move a plate a long way from
+        // the tick it belongs to.
+        var sy = s.signY === undefined ? y : s.signY;
+        rctx.strokeStyle = 'rgba(' + ink + ', ' + (current ? 0.38 : 0.17) + ')';
+        rctx.globalAlpha = 1;
         rctx.lineWidth = 1;
         rctx.beginPath();
-        rctx.moveTo(mid - half, y);
-        rctx.lineTo(mid + half, y);
+        rctx.moveTo(ROAD_X - ROAD_HALF - 2, y);
+        rctx.lineTo(ELBOW, y);
+        rctx.lineTo(ELBOW, sy);
+        rctx.lineTo(RW - SIGN_RIGHT - 2, sy);
         rctx.stroke();
-        rctx.globalAlpha = 1;
 
-        rctx.fillStyle = 'rgba(' + ink + ', ' + (passed ? 0.22 : 0.42) + ')';
-        rctx.beginPath();
-        rctx.arc(mid + half + 4, y, 1.7, 0, Math.PI * 2);
-        rctx.fill();
+        if (s.el) s.el.classList.toggle('here', current);
+        if (s.el) s.el.classList.toggle('passed', passed && !current);
       });
 
       // The stretch already driven.
@@ -195,23 +258,12 @@
       rctx.globalAlpha = 0.22;
       rctx.lineWidth = 2;
       rctx.beginPath();
-      rctx.moveTo(mid, CAP * 0.4);
-      rctx.lineTo(mid, cy);
+      rctx.moveTo(ROAD_X, CAP * 0.4);
+      rctx.lineTo(ROAD_X, cy);
       rctx.stroke();
       rctx.globalAlpha = 1;
 
       drawCar(cy);
-
-      if (tip && (hovering || dragging)) {
-        var here = stops[0];
-        stops.forEach(function (s) { if (s.p <= p + 0.002) here = s; });
-        tipName.textContent = here ? here.name : '';
-        tipPct.textContent = Math.round(p * 100) + '%';
-        tip.hidden = false;
-        tip.style.top = Math.round(cy) + 'px';
-      } else if (tip) {
-        tip.hidden = true;
-      }
     }
 
     function request() {
@@ -235,7 +287,13 @@
       }
     }
 
+    function onRoad(e) {
+      var rect = canvas.getBoundingClientRect();
+      return e.clientX - rect.left > RW - SIGN_RIGHT;
+    }
+
     canvas.addEventListener('pointerdown', function (e) {
+      if (!onRoad(e)) return;
       dragging = true;
       rail.classList.add('dragging');
       if (canvas.setPointerCapture) canvas.setPointerCapture(e.pointerId);
@@ -256,9 +314,6 @@
     }
     canvas.addEventListener('pointerup', release);
     canvas.addEventListener('pointercancel', release);
-
-    rail.addEventListener('pointerenter', function () { hovering = true; request(); });
-    rail.addEventListener('pointerleave', function () { hovering = false; request(); });
 
     resize();
     window.addEventListener('resize', resize);
