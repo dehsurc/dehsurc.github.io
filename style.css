@@ -55,6 +55,8 @@
   /* Display face: a grotesque with uneven widths and soft corners, so the
      headings have a voice without going geometric. */
   --display: "Bricolage Grotesque", "Freesentation", "Inter", system-ui, sans-serif;
+  /* The name gets its own face — wide-set, so it carries by proportion. */
+  --name: "Archivo", "Freesentation", "Inter", system-ui, sans-serif;
   --kr: "Freesentation", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
   /* Labels and figures share the family; only their treatment differs. */
   --mono: var(--sans);
@@ -115,7 +117,7 @@ a:hover { color: var(--accent); }
 
 h1, h2, h3 { font-weight: 700; line-height: 1.25; margin: 0; }
 
-.idx, .when, .coord, .venue, .state, .pid, .role, .foot {
+.idx, .coord, .venue, .state, .pid, .foot {
   font-variant-numeric: tabular-nums lining-nums;
 }
 
@@ -273,9 +275,9 @@ h1, h2, h3 { font-weight: 700; line-height: 1.25; margin: 0; }
   text-transform: uppercase; color: var(--accent);
 }
 .hero h1 {
-  font-family: var(--display); font-weight: 700;
-  font-size: clamp(2.7rem, 8.6vw, 4.5rem);
-  letter-spacing: -.032em; line-height: 1.02;
+  font-family: var(--name); font-weight: 700; font-stretch: 112%;
+  font-size: clamp(2.6rem, 8.2vw, 4.3rem);
+  letter-spacing: -.022em; line-height: 1.04;
   margin-bottom: 1.2rem;
 }
 .hangul {
@@ -417,7 +419,7 @@ h1, h2, h3 { font-weight: 700; line-height: 1.25; margin: 0; }
 .pubs > li { transition: padding-left .25s cubic-bezier(.4, 0, .2, 1); }
 .pubs > li:hover { padding-left: .55rem; }
 .pubs > li:hover .pid { color: var(--accent-2); }
-.pid, .when { transition: color .25s ease; }
+.pid { transition: color .25s ease; }
 .pubs > li:first-child { padding-top: 0; }
 .pubs > li:last-child { border-bottom: 0; padding-bottom: 0; }
 .pid {
@@ -452,44 +454,7 @@ h1, h2, h3 { font-weight: 700; line-height: 1.25; margin: 0; }
 }
 .pub .links a:hover { border-bottom-color: var(--accent); }
 
-/* ---------- dated entries (work, education) ---------------------------- */
-
-.entries { list-style: none; margin: 0; padding: 0; }
-.entries > li {
-  display: grid;
-  grid-template-columns: 9.5rem minmax(0, 1fr);
-  gap: .75rem;
-  padding: .85rem 0;
-  border-bottom: 1px dotted var(--rule);
-}
-.entries > li { transition: padding-left .25s cubic-bezier(.4, 0, .2, 1); }
-.entries > li:hover { padding-left: .55rem; }
-.entries > li:hover .when { color: var(--accent-2); }
-.entries > li:first-child { padding-top: 0; }
-.entries > li:last-child { border-bottom: 0; padding-bottom: 0; }
-.when {
-  font-family: var(--mono); font-size: .76rem; font-weight: 500; color: var(--faint);
-  padding-top: .18rem; white-space: nowrap;
-}
-.entry h3 { font-size: 1rem; font-weight: 600; }
-.entry .org { margin: .2rem 0 0; font-size: .85rem; color: var(--soft); }
-
 .soft { color: var(--faint); }
-
-/* ---------- toolkit ----------------------------------------------------- */
-
-.kit { margin: 0; font-size: .9rem; }
-.kit > div {
-  display: grid; grid-template-columns: 6.5rem minmax(0, 1fr); gap: 1rem;
-  padding: .5rem 0; border-bottom: 1px dotted var(--rule);
-}
-.kit > div:first-child { padding-top: 0; }
-.kit > div:last-child { border-bottom: 0; padding-bottom: 0; }
-.kit dt {
-  font-family: var(--mono); font-size: .7rem; font-weight: 600; letter-spacing: .12em;
-  text-transform: uppercase; color: var(--faint); padding-top: .18rem;
-}
-.kit dd { margin: 0; color: var(--soft); }
 
 /* ---------- contact ----------------------------------------------------- */
 
@@ -562,12 +527,12 @@ footer { border-top: 1px solid var(--rule); }
   }
   .rail-note { flex-basis: 100%; margin-top: .2rem; }
 
-  .pubs > li, .entries > li {
+  .pubs > li {
     grid-template-columns: minmax(0, 1fr);
     gap: .25rem;
   }
-  .pid, .when { padding-top: 0; }
-  .legend > div, .kit > div { grid-template-columns: minmax(0, 1fr); gap: .1rem; }
+  .pid { padding-top: 0; }
+  .legend > div { grid-template-columns: minmax(0, 1fr); gap: .1rem; }
 }
 
 @media (max-width: 34rem) {
