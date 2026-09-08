@@ -57,8 +57,9 @@
           "Malgun Gothic", sans-serif;
   --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
-  --col:  40rem;   /* prose measure */
-  --wide: 62rem;   /* figures and tables */
+  --col:  47rem;   /* prose measure, ~74ch */
+  --wide: 76rem;   /* figures and tables */
+  --gutter: 2.5rem;
 
   color-scheme: light;
 }
@@ -147,10 +148,10 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
 
 /* ---------- layout ---------- */
 
-.col { width: min(100% - 2.5rem, var(--col)); margin-inline: auto; }
-.col.wide { width: min(100% - 2.5rem, var(--wide)); }
+.col { width: min(100% - var(--gutter), var(--col)); margin-inline: auto; }
+.col.wide { width: min(100% - var(--gutter), var(--wide)); }
 
-section { padding: 2.6rem 0; }
+section { padding: 3rem 0; }
 section + section { border-top: 1px solid var(--rule); }
 
 /* ---------- top bar ---------- */
@@ -161,7 +162,7 @@ section + section { border-top: 1px solid var(--rule); }
   border-bottom: 1px solid var(--rule);
 }
 .topbar-inner {
-  width: min(100% - 2.5rem, var(--wide));
+  width: min(100% - var(--gutter), var(--wide));
   margin-inline: auto;
   display: flex; align-items: center; gap: 1.25rem;
   height: 3rem;
@@ -252,7 +253,7 @@ section + section { border-top: 1px solid var(--rule); }
 
 /* ---------- hero ---------- */
 
-.hero { padding: 3.6rem 0 2.6rem; }
+.hero { padding: 4rem 0 3rem; }
 
 .venue {
   font-size: 12px; font-weight: 500; line-height: 1;
@@ -363,7 +364,7 @@ figcaption {
   font-size: 14px; line-height: 1.6;
   color: var(--ink-soft);
   margin-top: .75rem;
-  max-width: 46rem;
+  max-width: var(--col);
 }
 
 .placeholder {
@@ -398,6 +399,8 @@ figcaption {
 /* ---------- tables ---------- */
 
 .table-block { margin: 1.9rem 0; }
+/* Tables with few columns sprawl at full width; cap them at the prose measure. */
+.table-block.narrow { max-width: var(--col); }
 .scroll { overflow-x: auto; }
 
 table {
@@ -492,6 +495,7 @@ footer .small { margin-top: .4rem; }
 /* ---------- narrow screens ---------- */
 
 @media (max-width: 46rem) {
+  :root { --gutter: 2rem; }
   body { font-size: 16px; }
   h1 { font-size: 1.6rem; }
   .hero { padding-top: 2.4rem; }
