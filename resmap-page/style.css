@@ -114,15 +114,6 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
 
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
 
-/* ---------- background map ---------- */
-
-#map-bg {
-  position: fixed; inset: 0;
-  width: 100%; height: 100%;
-  z-index: -1;
-  pointer-events: none;
-}
-
 /* ---------- the route rail ---------- */
 
 /* The rail reserves its own gutter, the way a scrollbar does, so it never

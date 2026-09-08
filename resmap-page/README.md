@@ -31,29 +31,22 @@ theme. The two directions are not symmetric: going dark the new palette grows
 out of the button, going light the old one collapses back into it. Figures keep a light backing in dark mode so white-background diagrams
 stay readable.
 
-## The map behind the page, and the route beside it
+## The route rail
 
-`drive.js` generates one world — no assets — and draws it twice.
+`drive.js` draws the rail down the right edge: the whole document as one road,
+with the car as the scroll thumb. It descends as the page scrolls, each section
+is a junction along the route, and pressing or dragging anywhere on the rail
+seeks one to one. Seeking is explicitly instant, because `html` carries
+`scroll-behavior: smooth` and a smooth scroll restarted on every pointermove
+lurches instead of tracking. The rail reserves its own gutter the way a
+scrollbar does, so it never sits over the content, and it hides below 900 px.
 
-The background is a vectorised HD map and only contains what the nuScenes map
-ground truth contains: lane dividers, road boundaries and pedestrian crossings
-as closed polygons. It is drawn nearly invisible until the pointer passes over
-it, where a 1:2 region of interest — the shape of the 60 x 30 m crop the model
-predicts into, with crop marks and a label — redraws the same geometry in the
-class colours, with the per-polyline vertices a MapTR-style figure shows. The
-faint pass is cached to an offscreen canvas and redrawn only on scroll; the
-coloured pass renders at ROI size, so the per-frame cost is flat in display
-size.
+Knobs: `RW`, `CAP` and `MIN_VIEWPORT`.
 
-The rail down the right edge is the whole document as one route. The car is the
-scroll thumb: it travels down the road as the page scrolls, each section is a
-junction along the way, and pressing or dragging anywhere on the rail scrolls
-one-to-one. The rail reserves its own gutter the way a scrollbar does, so it
-never sits over the content, and it hides below 900 px.
-
-Knobs: `ROI_W` / `ROI_H` / `PEAK` for the region of interest, `ROAD_HALF` /
-`LANE` / `SIDE` / `JUNCTION` / `VERT` for the world, `PARALLAX` for how fast it
-passes, `RW` / `CAP` / `MIN_VIEWPORT` for the rail.
+There was a procedurally generated HD map behind the page as well. It is gone.
+The geometry was invented, so it visibly repeated left to right, and a region
+of interest over invented geometry reveals nothing worth revealing. If a map
+comes back it should be real polylines from a real scene.
 
 ## Deploying
 

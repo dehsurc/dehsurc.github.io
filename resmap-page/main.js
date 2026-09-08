@@ -144,6 +144,10 @@
         duration: contract ? 700 : 760,
         easing: contract ? 'cubic-bezier(.8, 0, .7, .3)'
                          : 'cubic-bezier(.3, .7, .2, 1)',
+        // Without a forwards fill the clip is dropped on the last frame, so
+        // the shrunken outgoing snapshot springs back to full size for one
+        // frame before the pseudo-elements are torn down. That is the flash.
+        fill: 'forwards',
         pseudoElement: contract ? '::view-transition-old(root)'
                                 : '::view-transition-new(root)'
       });
