@@ -55,8 +55,6 @@
   /* Display face: a grotesque with uneven widths and soft corners, so the
      headings have a voice without going geometric. */
   --display: "Bricolage Grotesque", "Freesentation", "Inter", system-ui, sans-serif;
-  /* The name gets its own face — wide-set, so it carries by proportion. */
-  --name: "Archivo", "Freesentation", "Inter", system-ui, sans-serif;
   --kr: "Freesentation", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
   /* Labels and figures share the family; only their treatment differs. */
   --mono: var(--sans);
@@ -275,9 +273,9 @@ h1, h2, h3 { font-weight: 700; line-height: 1.25; margin: 0; }
   text-transform: uppercase; color: var(--accent);
 }
 .hero h1 {
-  font-family: var(--name); font-weight: 700; font-stretch: 112%;
-  font-size: clamp(2.6rem, 8.2vw, 4.3rem);
-  letter-spacing: -.022em; line-height: 1.04;
+  font-family: var(--display); font-weight: 700;
+  font-size: clamp(2.7rem, 8.6vw, 4.5rem);
+  letter-spacing: -.032em; line-height: 1.02;
   margin-bottom: 1.2rem;
 }
 .hangul {
