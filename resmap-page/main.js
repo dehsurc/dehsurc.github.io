@@ -1,4 +1,4 @@
-// ReSMap project page — theme, ambient grid, and a few small behaviours.
+// ReSMap project page: theme and a few small behaviours.
 
 (function () {
   'use strict';
@@ -122,7 +122,7 @@
     // theme opens out of the button; coming back to light the dark snapshot
     // closes into it instead, so the shape gathers rather than spreads. That
     // means clipping the outgoing snapshot, which has to sit on top for the
-    // duration — see the [data-wipe] rules in style.css.
+    // duration. See the [data-wipe] rules in style.css.
     var closing = next === 'light';
     if (closing) {
       root.dataset.wipe = 'out';
@@ -262,7 +262,7 @@
     img.addEventListener('error', function () {
       var note = document.createElement('div');
       note.className = 'placeholder';
-      note.textContent = 'missing figure — add ' + img.getAttribute('src');
+      note.textContent = 'missing figure, add ' + img.getAttribute('src');
       img.replaceWith(note);
     });
   });

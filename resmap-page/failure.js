@@ -1,9 +1,9 @@
-/* ReSMap project page — the camera-failure walkthrough.
+/* ReSMap project page: the camera-failure walkthrough.
  *
  * A pinned stage that the scroll drives through four measured conditions:
  * clean, front camera dropped, three front cameras dropped, all six dropped.
- * The rig on the left is a schematic — surround coverage around the ego, with
- * the satellite tile behind it — and the bars on the right are the numbers
+ * The rig on the left is a schematic of the surround coverage around the ego,
+ * with the satellite tile behind it. The bars on the right are the numbers
  * from Table 2, interpolated between the levels so the motion is continuous
  * while every stop on it is a real measurement.
  */
@@ -48,7 +48,7 @@
     { step: 'Front-3', sub: 'three forward cameras zeroed', off: [0, 1, 2],
       note: 'The whole forward arc is gone. MapTracker is down to 10.8 mAP and SDTagNet to 14.5. The satellite branch is now carrying the forward geometry, and ReSMap is still at 43.4.' },
     { step: 'All six', sub: 'no camera evidence at all', off: [0, 1, 2, 3, 4, 5],
-      note: 'No onboard vision whatsoever. ReSMap returns 40.9 mAP — higher than any of these baselines manages with all six cameras working. That is the redundancy claim, and it is the whole reason to cache the imagery.' }
+      note: 'No onboard vision whatsoever. ReSMap returns 40.9 mAP, higher than any of these baselines manages with all six cameras working. That is the redundancy claim, and it is the whole reason to cache the imagery.' }
   ];
 
   function el(name, attrs) {
@@ -195,74 +195,60 @@
 
   /* ---- play it through ----
    *
-   * Scrolling by hand is the primary control; this just drives the same scroll
-   * at a readable pace for anyone who would rather watch. It never starts on
-   * its own — a page that scrolls itself unasked is hostile — and any scroll
-   * of your own takes it straight back. */
+   * Scrolling by hand is the primary control. This hops the page to the next
+   * stage and waits, rather than creeping the scroll a pixel at a time: the
+   * jump between two measured levels is the part worth seeing, and a smooth
+   * scrollTo is the one scroll primitive that behaves the same everywhere.
+   * It never starts on its own, because a page that scrolls itself unasked is
+   * hostile, and any scroll, key or pointer of your own stops it. */
 
   var play = document.getElementById('fail-play');
   var playLabel = document.getElementById('fail-play-label');
   var playIcon = document.getElementById('fail-play-icon');
 
   var PLAY_D = 'M3 2l7 4-7 4z';                 // triangle
-  var PAUSE_D = 'M3 2h2.4v8H3zM6.6 2H9v8H6.6z'; // two bars
-  var SECONDS = 15;
+  var STOP_D = 'M3 3h6v6H3z';                   // square
+  var DWELL = 2400;                             // ms held on each stage
 
   if (play && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    var running = false, raf = 0, last = 0, carry = 0;
+    var running = false, timer = 0;
 
+    function stageTop() { return track.getBoundingClientRect().top + window.scrollY; }
     function travelPx() {
       var stage = track.firstElementChild;
       return Math.max(1, track.offsetHeight - stage.offsetHeight);
+    }
+    function scrollForStage(i) {
+      return stageTop() + (i / (STAGES.length - 1)) * travelPx();
     }
 
     function setRunning(on) {
       running = on;
       play.setAttribute('aria-pressed', String(on));
-      playLabel.textContent = on ? 'Pause' : 'Play it through';
-      playIcon.setAttribute('d', on ? PAUSE_D : PLAY_D);
-      if (!on && raf) { cancelAnimationFrame(raf); raf = 0; }
+      playLabel.textContent = on ? 'Stop' : 'Play';
+      playIcon.setAttribute('d', on ? STOP_D : PLAY_D);
+      if (!on && timer) { clearTimeout(timer); timer = 0; }
     }
 
-    function step(now) {
+    function hop(i) {
       if (!running) return;
-      var dt = last ? Math.min(0.05, (now - last) / 1000) : 0;
-      last = now;
-
-      var box = track.getBoundingClientRect();
-      var travel = travelPx();
-
-      // Off the end of the stage in either direction: nothing to drive.
-      if (-box.top >= travel - 0.5) { setRunning(false); return; }
-
-      carry += (travel / SECONDS) * dt;
-      var whole = Math.floor(carry);
-      if (whole >= 1) {
-        carry -= whole;
-        try {
-          window.scrollBy({ top: whole, behavior: 'instant' });
-        } catch (err) {
-          window.scrollBy(0, whole);
-        }
-      }
-      raf = requestAnimationFrame(step);
+      if (i > STAGES.length - 1) { setRunning(false); return; }
+      window.scrollTo({ top: scrollForStage(i), behavior: 'smooth' });
+      timer = setTimeout(function () { hop(i + 1); }, DWELL);
     }
 
     play.addEventListener('click', function () {
       if (running) { setRunning(false); return; }
 
-      // Start from the top of the stage if it is behind us or not reached yet.
-      var box = track.getBoundingClientRect();
-      if (-box.top < 0 || -box.top >= travelPx() - 0.5) {
-        window.scrollTo({ top: track.getBoundingClientRect().top + window.scrollY,
-                          behavior: 'smooth' });
-      }
-      last = 0; carry = 0;
+      // Resume from the stage after the one currently showing, or start over
+      // if the walkthrough is already finished.
+      var here = -track.getBoundingClientRect().top / travelPx();
+      var from = (here >= 0.995 || here < 0) ? 0 : Math.floor(here * (STAGES.length - 1)) + 1;
+
       setRunning(true);
-      raf = requestAnimationFrame(step);
+      hop(from);
     });
 
-    // Any input of your own hands control back.
     ['wheel', 'touchstart', 'pointerdown'].forEach(function (type) {
       window.addEventListener(type, function (e) {
         if (running && !play.contains(e.target)) setRunning(false);

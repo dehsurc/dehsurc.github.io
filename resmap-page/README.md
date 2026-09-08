@@ -1,10 +1,10 @@
 # ReSMap project page
 
 Static page for *ReSMap: Recasting Satellite Priors for Robust and Accurate
-Online HD Map Construction*. No build step — three files plus assets.
+Online HD Map Construction*. No build step ,  three files plus assets.
 
     index.html    content; every table is plain HTML, marked with an
-                  `<!-- ==== TABLE n · paper Tab. X — update numbers here ==== -->`
+                  `<!-- ==== TABLE n · paper Tab. X ,  update numbers here ==== -->`
                   comment so numbers can be edited in place
     style.css     all styling; both palettes live in the `:root` and
                   `:root[data-theme="dark"]` blocks
@@ -16,7 +16,7 @@ Online HD Map Construction*. No build step — three files plus assets.
 
 ## Type and theme
 
-Latin is set in Inter and Hangul in Freesentation — Inter comes first in the
+Latin is set in Inter and Hangul in Freesentation ,  Inter comes first in the
 stack and carries no Hangul glyphs, so Korean text falls through to
 Freesentation on its own. Inter comes from Google Fonts; Freesentation is
 declared in `style.css` against a commit-pinned jsDelivr URL, restricted by
@@ -36,14 +36,14 @@ stay readable.
 
 Section 4 is a pinned stage the scroll drives through four measured conditions:
 clean, front camera dropped, three front dropped, all six dropped. The rig is a
-schematic — surround coverage around the ego with the satellite tile behind it,
-built as SVG in `failure.js`, no assets — and the bars are Table 2, interpolated
+schematic ,  surround coverage around the ego with the satellite tile behind it,
+built as SVG in `failure.js`, no assets ,  and the bars are Table 2, interpolated
 between levels so the motion is continuous while every stop on it is a real
 measurement. Editing the numbers means editing `METHODS` in `failure.js`; they
 must stay in step with Table 2 in `index.html`.
 
 Scrolling is the primary control. The play button drives the same scroll at a
-readable pace for anyone who would rather watch — it never starts on its own,
+readable pace for anyone who would rather watch ,  it never starts on its own,
 and any scroll, key or pointer of your own takes it straight back.
 
 Knobs: the `.track` height in `style.css` sets how much scroll the four stages
@@ -54,7 +54,7 @@ is the mAP at full bar width. Below 62rem the stage unpins and stacks.
 
 `drive.js` draws the rail down the right edge: the whole document as one road,
 with the car as the scroll thumb. It descends as the page scrolls, and each
-section is a junction with a **road sign** beside it — the signs are the
+section is a junction with a **road sign** beside it ,  the signs are the
 navigation, which is why the top bar drops its links while the rail is up.
 Sections bunch together wherever the document has several short ones in a row,
 so the plates are pushed apart to a legible spacing and an elbowed leader line
@@ -64,10 +64,17 @@ Pressing or dragging on the road strip seeks one to one; seeking is explicitly
 instant, because `html` carries `scroll-behavior: smooth` and a smooth scroll
 restarted on every pointermove lurches instead of tracking. The rail reserves
 its own gutter the way a scrollbar does, so it never sits over the content, and
-below 1040 px it hides and the top bar's links come back.
+below 900 px it hides and the top bar's links come back.
 
-Knobs: `RW`, `ROAD_X`, `ROAD_HALF`, `CAP`, `SIGN_GAP`, `SIGN_RIGHT`, `ELBOW`
-and `MIN_VIEWPORT`.
+Knobs: `--rail` in `style.css` (the JS reads it, so the gutter and the drawing
+cannot drift apart), and `CAP`, `SIGN_GAP`, `SIGN_RIGHT` and `MIN_VIEWPORT` in
+`drive.js`.
+
+## Deploy cache
+
+GitHub Pages serves assets with `max-age=600`, so a fresh `index.html` and a
+stale `drive.js` can disagree for ten minutes. Every asset link carries a `?v=`
+query: **bump it in `index.html` whenever you change a CSS or JS file.**
 
 There was a procedurally generated HD map behind the page as well. It is gone.
 The geometry was invented, so it visibly repeated left to right, and a region

@@ -1,4 +1,4 @@
-/* ReSMap project page — hand-rolled, no framework.
+/* ReSMap project page. Hand-rolled, no framework.
    Latin is set in Inter; Hangul in Freesentation. Inter sits first in the
    stack and carries no Hangul glyphs, so Korean resolves to Freesentation
    on its own. */
@@ -37,19 +37,18 @@
 }
 
 :root {
-  --paper:      #fdfcfa;
-  --surface:    #f6f5f2;
-  --bar:        #fbfaf7;
-  --row-hover:  rgba(20, 20, 18, .04);
-  --grid-dot:   27, 27, 25;
-  --ink:        #1b1b19;
-  --ink-soft:   #55534e;
-  --ink-faint:  #8a877f;
-  --rule:       #e2dfd8;
-  --rule-dark:  #b8b4ab;
+  --paper:      #ffffff;
+  --surface:    #f4f5f7;
+  --bar:        #fbfbfc;
+  --row-hover:  rgba(17, 19, 23, .04);
+  --ink:        #15171b;
+  --ink-soft:   #4c515a;
+  --ink-faint:  #848a93;
+  --rule:       #e2e4e8;
+  --rule-dark:  #b4b9c1;
   --accent:     #0e4a84;
-  --ours-bg:    #eef2f7;
-  --drop:       #a2453c;
+  --ours-bg:    #eef3f9;
+  --drop:       #b23a30;
   --figure-bg:  #ffffff;
 
   --sans: "Inter", "Freesentation", -apple-system, BlinkMacSystemFont,
@@ -60,26 +59,25 @@
   --col:  52rem;   /* prose measure */
   --wide: 90rem;   /* figures and tables */
   --gutter: 3rem;
-  --rail: 168px;
+  --rail: 160px;
 
   color-scheme: light;
 }
 
 :root[data-theme="dark"] {
-  --paper:      #14151a;
-  --surface:    #1b1d23;
-  --bar:        #191a20;
+  --paper:      #0f1114;
+  --surface:    #191c21;
+  --bar:        #14171b;
   --row-hover:  rgba(255, 255, 255, .05);
-  --grid-dot:   233, 231, 226;
-  --ink:        #e9e7e2;
-  --ink-soft:   #a7a49c;
-  --ink-faint:  #76736c;
-  --rule:       #2a2c33;
-  --rule-dark:  #464951;
-  --accent:     #77b0e8;
-  --ours-bg:    #1c222b;
-  --drop:       #dd8c81;
-  --figure-bg:  #f4f3f0;
+  --ink:        #e5e7ea;
+  --ink-soft:   #a0a6ae;
+  --ink-faint:  #6f757d;
+  --rule:       #262a30;
+  --rule-dark:  #424852;
+  --accent:     #7ab2e8;
+  --ours-bg:    #172029;
+  --drop:       #ef8b7f;
+  --figure-bg:  #f5f6f7;
 
   color-scheme: dark;
 }
@@ -140,19 +138,18 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
 
 #fail-play {
   margin-left: auto;
-  display: inline-flex; align-items: center; gap: .4rem;
-  padding: .35rem .7rem;
-  border: 1px solid var(--rule-dark);
-  border-radius: 3px;
+  display: inline-flex; align-items: center; gap: .3rem;
+  padding: 0;
+  border: 0;
   background: none;
-  color: var(--ink-soft);
-  font: inherit; font-size: 13px; font-weight: 500;
+  color: var(--ink-faint);
+  font: inherit; font-size: 12px;
   cursor: pointer;
-  transition: color .15s ease, border-color .15s ease;
+  transition: color .15s ease;
 }
-#fail-play:hover { color: var(--ink); border-color: var(--ink); }
-#fail-play[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); }
-#fail-play svg { width: 11px; height: 11px; fill: currentColor; }
+#fail-play:hover { color: var(--ink); }
+#fail-play[aria-pressed="true"] { color: var(--accent); }
+#fail-play svg { width: 8px; height: 8px; fill: currentColor; }
 #fail-play[hidden] { display: none; }
 
 .stage-grid {
@@ -253,10 +250,10 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
 
 .sign {
   position: absolute;
-  right: 62px;
+  right: 60px;
   transform: translateY(-50%);
-  max-width: 100px;
-  padding: .2rem .42rem;
+  max-width: 88px;
+  padding: .2rem .4rem;
   border: 1px solid var(--rule-dark);
   border-radius: 2px;
   background: var(--paper);

@@ -1,4 +1,4 @@
-/* ReSMap project page — the route rail.
+/* ReSMap project page: the route rail.
  *
  * The rail down the right edge is the document as a single road. The car is
  * the scroll thumb: it travels down as the page scrolls, each section is a
@@ -48,14 +48,20 @@
     var rctx = canvas.getContext('2d');
     var signBox = document.getElementById('rail-signs');
 
-    var RW = 168;           // rail width, css px
-    var ROAD_X = 140;       // road centreline within the rail
-    var ROAD_HALF = 17;     // road half width
+    // The rail's width lives in style.css as --rail, so the reserved gutter and
+    // the drawing can never drift apart.
+    var RW = 160, ROAD_X = 132, ROAD_HALF = 16, ELBOW = 108;
     var CAP = 34;           // clear space at each end so the car never clips
     var SIGN_GAP = 25;      // minimum vertical spacing between signs
-    var SIGN_RIGHT = 62;    // signs end this far from the rail's right edge
-    var ELBOW = 116;        // where the leader line turns
-    var MIN_VIEWPORT = 1040;
+    var SIGN_RIGHT = 60;    // signs end this far from the rail's right edge
+    var MIN_VIEWPORT = 900;
+
+    function readWidth() {
+      var v = parseFloat(getComputedStyle(root).getPropertyValue('--rail'));
+      if (v > 0) RW = v;
+      ROAD_X = RW - 28;
+      ELBOW = RW - SIGN_RIGHT + 8;
+    }
 
     var rdpr = 1, RH = 0;
     var stops = [];
@@ -140,6 +146,7 @@
       root.classList.toggle('has-rail', on);
       if (!on) return;
 
+      readWidth();
       rdpr = Math.min(window.devicePixelRatio || 1, 2);
       RH = window.innerHeight;
       canvas.width = Math.ceil(RW * rdpr);
