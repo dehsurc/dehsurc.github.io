@@ -258,12 +258,20 @@
    * 6. Placeholders for figures that have not been added yet
    * ------------------------------------------------------------------ */
 
-  document.querySelectorAll('.figure img').forEach(function (img) {
-    img.addEventListener('error', function () {
-      var note = document.createElement('div');
-      note.className = 'placeholder';
-      note.textContent = 'missing figure, add ' + img.getAttribute('src');
-      img.replaceWith(note);
+  function placehold(img) {
+    var note = document.createElement('div');
+    note.className = 'placeholder';
+    note.textContent = 'missing figure, add ' + img.getAttribute('src');
+    img.replaceWith(note);
+  }
+
+  Array.prototype.slice.call(document.querySelectorAll('.figure img'))
+    .forEach(function (img) {
+      img.addEventListener('error', function () { placehold(img); });
+      // This script runs at the end of the body, by which time an image that
+      // was going to 404 already has, and its error event fired with nothing
+      // listening. A decoded image has a natural width; a failed one does not,
+      // so that is the state to check rather than the event to wait for.
+      if (img.complete && !img.naturalWidth) placehold(img);
     });
-  });
 })();

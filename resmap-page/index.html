@@ -22,7 +22,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700&display=swap">
-<link rel="stylesheet" href="style.css?v=13">
+<link rel="stylesheet" href="style.css?v=14">
 
 <!-- Set the theme before first paint so there is no flash. -->
 <script>
@@ -44,33 +44,16 @@
 
 <a class="skiplink" href="#abstract">Skip to content</a>
 
-<!-- The route: the whole document as one road, the car as the scroll thumb. -->
-<div id="rail" hidden>
-  <div class="rail-road" id="rail-road">
-    <canvas id="rail-map"></canvas>
-    <div id="rail-signs"></div>
+<!-- The route: the document as one road running across the top, the car fixed
+     a quarter of the way in and the world sliding past it. -->
+<div id="road" hidden>
+  <div class="road-view">
+    <canvas id="road-map"></canvas>
+    <div id="road-signs"></div>
   </div>
-  <div class="rail-bottom">
-    <div class="speedo">
-      <b id="speed-val">0</b><span>km/h</span>
-      <i class="speed-bar"><u id="speed-fill"></u></i>
-    </div>
-    <div class="pedals">
-      <button id="pedal-brake" class="pedal brake" type="button" aria-label="Brake">
-        <svg viewBox="0 0 16 16" aria-hidden="true">
-          <path d="M4.5 2.4h6a1.1 1.1 0 0 1 1.05 1.45l-2.4 7.8a1.1 1.1 0 0 1-1.05.75H2.9A1.1 1.1 0 0 1 1.85 11L4.25 3.2a1.1 1.1 0 0 1 1.05-.8z"/>
-          <path class="floor" d="M2 14.2h12"/>
-        </svg>
-        <span>Brake</span>
-      </button>
-      <button id="pedal-gas" class="pedal gas" type="button" aria-label="Accelerator">
-        <svg viewBox="0 0 16 16" aria-hidden="true">
-          <path d="M6.6 2.4h3.4a1.1 1.1 0 0 1 1.05 1.45l-2.4 7.8a1.1 1.1 0 0 1-1.05.75H5.3A1.1 1.1 0 0 1 4.25 11l2.4-7.8a1.1 1.1 0 0 1 1.05-.8z"/>
-          <path class="floor" d="M2 14.2h12"/>
-        </svg>
-        <span>Accel</span>
-      </button>
-    </div>
+  <div class="route" id="route" title="The whole route. Drag to seek.">
+    <div class="route-ticks" id="route-ticks"></div>
+    <i class="route-done" id="route-done"></i>
   </div>
 </div>
 
@@ -91,6 +74,9 @@
       <li><a href="#cite">Paper</a></li>
     </ul>
     </div>
+    <!-- Shown in place of the links while the road is up: the signs are the
+         navigation, and this is the next one coming. -->
+    <p class="nextup" id="nextup" aria-live="off"></p>
     <button id="theme-toggle" type="button" aria-label="Switch to dark theme" aria-pressed="false">
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <mask id="crescent">
@@ -560,8 +546,48 @@
   </div>
 </footer>
 
-<script src="failure.js?v=13"></script>
-<script src="drive.js?v=13"></script>
-<script src="main.js?v=13"></script>
+<!-- The cockpit: gear selector and pedals, where they are in a car. -->
+<div id="cockpit" hidden>
+  <div class="dials">
+    <p class="speed"><b id="kmh">0</b><span>km/h</span></p>
+    <p class="gear-now" id="gear-now">D1</p>
+    <i class="tacho"><u id="rpm-fill"></u></i>
+    <p class="trip" id="trip">0.00 / 0.00 km</p>
+  </div>
+
+  <div class="gears" role="radiogroup" aria-label="Gear selector">
+    <button type="button" role="radio" data-gear="P" aria-checked="false" title="Park">P</button>
+    <button type="button" role="radio" data-gear="R" aria-checked="false" title="Reverse, back up the page">R</button>
+    <button type="button" role="radio" data-gear="N" aria-checked="false" title="Neutral, coast">N</button>
+    <button type="button" role="radio" data-gear="D" aria-checked="true"  title="Drive, down the page">D</button>
+  </div>
+
+  <div class="pedals">
+    <button id="pedal-brake" class="pedal brake" type="button" aria-label="Brake">
+      <svg viewBox="0 0 16 16" aria-hidden="true">
+        <path d="M4.5 2.4h6a1.1 1.1 0 0 1 1.05 1.45l-2.4 7.8a1.1 1.1 0 0 1-1.05.75H2.9A1.1 1.1 0 0 1 1.85 11L4.25 3.2a1.1 1.1 0 0 1 1.05-.8z"/>
+        <path class="floor" d="M2 14.2h12"/>
+      </svg>
+      <span>Brake</span>
+    </button>
+    <button id="pedal-gas" class="pedal gas" type="button" aria-label="Accelerator">
+      <svg viewBox="0 0 16 16" aria-hidden="true">
+        <path d="M6.6 2.4h3.4a1.1 1.1 0 0 1 1.05 1.45l-2.4 7.8a1.1 1.1 0 0 1-1.05.75H5.3A1.1 1.1 0 0 1 4.25 11l2.4-7.8a1.1 1.1 0 0 1 1.05-.8z"/>
+        <path class="floor" d="M2 14.2h12"/>
+      </svg>
+      <span>Accel</span>
+    </button>
+  </div>
+
+  <p class="keys">W accel &middot; S brake &middot; P R N D gear</p>
+
+  <button id="cockpit-toggle" type="button" aria-expanded="true" aria-label="Collapse the cockpit">
+    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 6.2 8 10.4l4.5-4.2"/></svg>
+  </button>
+</div>
+
+<script src="failure.js?v=14"></script>
+<script src="drive.js?v=14"></script>
+<script src="main.js?v=14"></script>
 </body>
 </html>

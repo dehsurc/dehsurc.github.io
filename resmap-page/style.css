@@ -55,6 +55,12 @@
   --sign-ink:   #ffffff;
   --figure-bg:  #ffffff;
 
+  /* The carriageway and the markings painted on it. A road that does not read
+     as a road is just a progress bar, so these are their own tokens rather
+     than borrowed surface greys. drive.js reads both. */
+  --road-surface: #d6d9df;
+  --road-line:    #fbfcfd;
+
   --sans: "Inter", "Freesentation", -apple-system, BlinkMacSystemFont,
           system-ui, "Segoe UI", Roboto, "Apple SD Gothic Neo",
           "Malgun Gothic", sans-serif;
@@ -63,7 +69,10 @@
   --col:  52rem;   /* prose measure */
   --wide: 90rem;   /* figures and tables */
   --gutter: 3rem;
-  --rail: 172px;
+
+  --road-h: 104px; /* the road band across the top; drive.js reads nothing
+                      from this, but the topbar offset and body padding do */
+  --chrome: 3rem;  /* sticky chrome a pinned section has to clear */
 
   color-scheme: light;
 }
@@ -86,6 +95,9 @@
   --stop:       #dd5e4e;
   --sign-ink:   #f2fbf5;
   --figure-bg:  #f5f6f7;
+
+  --road-surface: #262c35;
+  --road-line:    #858d99;
 
   color-scheme: dark;
 }
@@ -126,8 +138,8 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
 
 .stage {
   position: sticky;
-  top: 3rem;
-  height: calc(100vh - 3rem);
+  top: var(--chrome);
+  height: calc(100vh - var(--chrome));
   min-height: 34rem;
   display: flex;
   align-items: center;
@@ -218,63 +230,240 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
   .stage-note { min-height: 0; }
 }
 
-/* ---------- the route rail ---------- */
+/* ---------- the road ---------- */
 
-/* The rail reserves its own gutter, the way a scrollbar does, so it never
-   sits over the content. */
-.has-rail body { padding-right: var(--rail); }
+/* The road reserves its own band at the top, the way a scrollbar reserves a
+   gutter, so it never sits over the content. The top bar sticks below it, and
+   anchors have to clear both. */
+.has-road body { padding-top: var(--road-h); }
+.has-road .topbar { top: var(--road-h); }
+.has-road { scroll-padding-top: calc(var(--road-h) + 4rem); }
+.has-road { --chrome: calc(var(--road-h) + 3rem); }
 
-#rail {
+/* While the road is up the signs are the navigation, so the link list gives
+   way to the next-junction readout. */
+.has-road .nav-scroll { display: none; }
+.nextup { display: none; }
+.has-road .nextup {
+  display: block;
+  flex: 1 1 auto;
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-soft);
+  font-variant-numeric: lining-nums tabular-nums;
+  white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
+}
+
+#road {
   position: fixed;
-  top: 0; right: 0; bottom: 0;
-  width: var(--rail);
-  z-index: 45;
+  top: 0; left: 0; right: 0;
+  height: var(--road-h);
+  z-index: 55;
   display: flex;
   flex-direction: column;
-  border-left: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
   background: var(--bar);
 }
-#rail[hidden] { display: none; }
+#road[hidden] { display: none; }
 
-.rail-road { position: relative; flex: 1 1 auto; min-height: 0; }
-#rail-map { display: block; cursor: grab; touch-action: none; }
-#rail.dragging #rail-map { cursor: grabbing; }
+.road-view { position: relative; flex: 1 1 auto; min-height: 0; }
+#road-map { display: block; }
 
-.rail-bottom {
+#road-signs { position: absolute; inset: 0; pointer-events: none; }
+
+/* Guide signs: green plate, white legend, white inner border, section number
+   set the way an exit number sits on the real thing. They stand at their true
+   position on the road and slide in from the right. */
+.sign {
+  position: absolute;
+  top: 2px;
+  transform: translateX(-50%);
+  display: flex; align-items: baseline; gap: .3rem;
+  max-width: 150px;
+  padding: .2rem .42rem;
+  border: 1px solid var(--sign);
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .5);
+  background: var(--sign);
+  color: var(--sign-ink);
+  font: inherit; font-size: 10.5px; line-height: 1.2;
+  letter-spacing: .005em;
+  white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
+  opacity: .8;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: opacity .15s ease;
+}
+.sign[hidden] { display: none; }
+.sign b {
   flex: none;
-  padding: .5rem .6rem .6rem;
+  font-size: 9px; font-weight: 700;
+  font-variant-numeric: lining-nums;
+  color: rgba(255, 255, 255, .68);
+}
+.sign:hover { opacity: 1; }
+.sign.passed { opacity: .34; }
+.sign.here {
+  opacity: 1;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .78), 0 0 0 2px var(--bar);
+}
+.sign.here b { color: rgba(255, 255, 255, .85); }
+
+/* The route bar under the road: the whole document, and how far along it the
+   car is. Dragging it seeks one to one. */
+.route {
+  flex: none;
+  position: relative;
+  height: 18px;
   border-top: 1px solid var(--rule);
+  background: var(--surface);
+  cursor: grab;
+  touch-action: none;
+}
+.route.dragging { cursor: grabbing; }
+.route-ticks { position: absolute; inset: 0; }
+.route-ticks i {
+  position: absolute; top: 4px; bottom: 4px;
+  width: 1px;
+  background: var(--rule-dark);
+}
+.route-done {
+  position: absolute; left: 0; top: 0; bottom: 0;
+  width: 0;
+  background: var(--accent);
+  opacity: .16;
+  pointer-events: none;
+}
+.route::after {
+  content: '';
+  position: absolute; left: 0; right: 0; bottom: 0;
+  height: 1px;
+  background: var(--rule);
 }
 
-.speedo {
-  display: flex; align-items: baseline; gap: .22rem;
-  margin-bottom: .45rem;
+/* ---------- the cockpit ---------- */
+
+#cockpit {
+  position: fixed;
+  right: 1rem; bottom: 1rem;
+  z-index: 55;
+  width: 11.5rem;
+  padding: .6rem .65rem .55rem;
+  border: 1px solid var(--rule-dark);
+  border-radius: 5px;
+  background: var(--bar);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, .10);
+  transition: transform .2s cubic-bezier(.2, .7, .3, 1);
 }
-.speedo b {
-  font-size: 20px; font-weight: 600; line-height: 1;
-  letter-spacing: -.02em;
+#cockpit[hidden] { display: none; }
+#cockpit.shut { transform: translateY(calc(100% - 1.9rem)); }
+#cockpit.baulk { animation: baulk .3s ease; }
+
+@keyframes baulk {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-3px); }
+  75% { transform: translateX(3px); }
+}
+
+#cockpit-toggle {
+  position: absolute; top: .35rem; right: .4rem;
+  width: 1.2rem; height: 1.2rem;
+  display: grid; place-items: center;
+  padding: 0;
+  background: none; border: 0; border-radius: 3px;
+  color: var(--ink-faint);
+  cursor: pointer;
+}
+#cockpit-toggle:hover { color: var(--ink); }
+#cockpit-toggle svg {
+  width: 13px; height: 13px;
+  fill: none; stroke: currentColor; stroke-width: 1.7;
+  stroke-linecap: round; stroke-linejoin: round;
+  transition: transform .2s ease;
+}
+#cockpit.shut #cockpit-toggle svg { transform: rotate(180deg); }
+
+.dials {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: baseline;
+  gap: 0 .4rem;
+  margin-bottom: .5rem;
+}
+.dials .speed { grid-column: 1; margin: 0; display: flex; align-items: baseline; gap: .2rem; }
+.dials .speed b {
+  font-size: 23px; font-weight: 600; line-height: 1;
+  letter-spacing: -.03em;
   font-variant-numeric: lining-nums tabular-nums;
   color: var(--ink);
 }
-.speedo span {
-  font-size: 9.5px; font-weight: 500;
+.dials .speed span {
+  font-size: 9px; font-weight: 500;
   letter-spacing: .06em; text-transform: uppercase;
   color: var(--ink-faint);
 }
-.speed-bar {
-  flex: 1;
-  align-self: center;
+.gear-now {
+  /* Clears the collapse chevron, which sits in the same corner. */
+  grid-column: 2; justify-self: end; margin: 0 1.35rem 0 0;
+  font-size: 14px; font-weight: 700;
+  letter-spacing: .02em;
+  font-variant-numeric: lining-nums;
+  color: var(--ink);
+}
+.tacho {
+  grid-column: 1 / -1;
+  display: block;
   height: 3px;
-  margin-left: .25rem;
+  margin-top: .35rem;
   border-radius: 2px;
   background: var(--rule);
   overflow: hidden;
 }
-.speed-bar u {
+.tacho u {
   display: block; height: 100%; width: 0;
   border-radius: 2px;
   background: var(--go);
   text-decoration: none;
+  transition: background .12s linear;
+}
+.tacho u.red { background: var(--stop); }
+.trip {
+  grid-column: 1 / -1;
+  margin: .3rem 0 0;
+  font-size: 10px;
+  letter-spacing: .03em;
+  font-variant-numeric: lining-nums tabular-nums;
+  color: var(--ink-faint);
+}
+
+.gears {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: .25rem;
+  margin-bottom: .4rem;
+}
+.gears button {
+  padding: .3rem 0;
+  border: 1px solid var(--rule-dark);
+  border-radius: 3px;
+  background: none;
+  color: var(--ink-faint);
+  font: inherit; font-size: 11px; font-weight: 700;
+  letter-spacing: .04em;
+  cursor: pointer;
+  transition: color .15s ease, border-color .15s ease, background .15s ease;
+}
+.gears button:hover { color: var(--ink); border-color: var(--ink); }
+.gears button[aria-checked="true"] {
+  color: var(--paper);
+  background: var(--ink);
+  border-color: var(--ink);
+}
+.gears button[data-gear="R"][aria-checked="true"] {
+  background: var(--stop); border-color: var(--stop); color: #fff;
+}
+.gears button[data-gear="D"][aria-checked="true"] {
+  background: var(--go); border-color: var(--go); color: #fff;
 }
 
 .pedals { display: grid; grid-template-columns: 1fr 1fr; gap: .35rem; }
@@ -295,55 +484,17 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
 .pedal .floor { stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; fill: none; opacity: .5; }
 .pedal:active { transform: translateY(1px); }
 
-.pedal.gas:hover { color: var(--go); border-color: var(--go); }
-.pedal.brake:hover { color: var(--stop); border-color: var(--stop); }
+.pedal.gas:hover, .pedal.gas:active { color: var(--go); border-color: var(--go); }
+.pedal.brake:hover, .pedal.brake:active { color: var(--stop); border-color: var(--stop); }
 
-#rail.driving .pedal.gas {
-  color: #fff;
-  background: var(--go);
-  border-color: var(--go);
-}
-#rail.driving .pedal.brake { color: var(--stop); border-color: var(--stop); }
+#cockpit.moving .pedal.gas { color: #fff; background: var(--go); border-color: var(--go); }
 
-#rail-signs { position: absolute; inset: 0; pointer-events: none; }
-
-/* Guide signs: green plate, white legend, white inner border, section number
-   in the corner the way an exit number sits on the real thing. */
-.sign {
-  position: absolute;
-  right: 64px;
-  transform: translateY(-50%);
-  display: flex; align-items: baseline; gap: .3rem;
-  max-width: 100px;
-  padding: .24rem .42rem;
-  border: 1px solid var(--sign);
-  border-radius: 3px;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .5);
-  background: var(--sign);
-  color: var(--sign-ink);
-  font: inherit; font-size: 10.5px; line-height: 1.2;
-  letter-spacing: .005em;
-  white-space: nowrap;
-  overflow: hidden; text-overflow: ellipsis;
-  opacity: .72;
-  cursor: pointer;
-  pointer-events: auto;
-  transition: opacity .15s ease, transform .15s ease;
+.keys {
+  margin: .45rem 0 0;
+  font-size: 9.5px; line-height: 1.4;
+  letter-spacing: .02em;
+  color: var(--ink-faint);
 }
-.sign b {
-  flex: none;
-  font-size: 9px; font-weight: 700;
-  font-variant-numeric: lining-nums;
-  color: rgba(255, 255, 255, .68);
-}
-.sign:hover { opacity: 1; }
-.sign.passed { opacity: .34; }
-.sign.here {
-  opacity: 1;
-  transform: translateY(-50%) scale(1.06);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .78), 0 0 0 2px var(--bar);
-}
-.sign.here b { color: rgba(255, 255, 255, .85); }
 
 /* ---------- section reveal ---------- */
 
@@ -462,6 +613,12 @@ section + section { border-top: 1px solid var(--rule); }
   html { scroll-behavior: auto; }
   * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
   .js .reveal > .col { opacity: 1; transform: none; }
+  /* A driving model is motion by definition. drive.js declines to start under
+     this preference; this is the belt to that pair of braces. */
+  #road, #cockpit { display: none !important; }
+  .has-road body { padding-top: 0; }
+  .has-road .topbar { top: 0; }
+  .has-road .nav-scroll { display: block; }
 }
 
 
@@ -722,7 +879,9 @@ footer .small { margin-top: .4rem; }
 }
 
 @media print {
-  .topbar, .scene-picker, .bibtex button { display: none; }
+  .topbar, .scene-picker, .bibtex button, #road, #cockpit { display: none; }
+  /* The road reserves a band on screen; on paper there is nothing to reserve. */
+  .has-road body { padding-top: 0; }
   body { font-size: 10.5pt; }
   .col, .col.wide { width: 100%; }
 }

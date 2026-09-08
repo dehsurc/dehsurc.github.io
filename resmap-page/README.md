@@ -8,10 +8,10 @@ Online HD Map Construction*. No build step ,  three files plus assets.
                   comment so numbers can be edited in place
     style.css     all styling; both palettes live in the `:root` and
                   `:root[data-theme="dark"]` blocks
-    main.js       theme toggle, scroll progress, section reveal, nav
-                  highlighting, scene switcher, BibTeX copy
+    main.js       theme toggle, section reveal, nav highlighting, scene
+                  switcher, BibTeX copy, missing-figure placeholders
     failure.js    the pinned camera-failure walkthrough
-    drive.js      the route rail down the right edge
+    drive.js      the road across the top, and the car that drives it
     assets/       figures, videos, PDF (see assets/README.md)
 
 ## Type and theme
@@ -42,57 +42,83 @@ between levels so the motion is continuous while every stop on it is a real
 measurement. Editing the numbers means editing `METHODS` in `failure.js`; they
 must stay in step with Table 2 in `index.html`.
 
-Scrolling is the primary control. The play button drives the same scroll at a
-readable pace for anyone who would rather watch ,  it never starts on its own,
-and any scroll, key or pointer of your own takes it straight back.
+Scrolling is the only control. Nothing here plays itself; the stage rides the
+page's scroll like any other part of it, whether that scroll comes from a wheel
+or from the pedals.
 
 Knobs: the `.track` height in `style.css` sets how much scroll the four stages
-take, `SECONDS` in `failure.js` is how long the play-through takes, and `SCALE`
-is the mAP at full bar width. Below 62rem the stage unpins and stacks.
+take, and `SCALE` in `failure.js` is the mAP at full bar width. Below 62rem the
+stage unpins.
 
-## The route rail
+## The road
 
-`drive.js` draws the rail down the right edge: the whole document as one road,
-with the car as the scroll thumb. Ahead of the car the road is bare surface
-with faint markings. Behind it the same elements are drawn in their map class
-colours, with the per-polyline vertices a predicted map is drawn with, because
-the car is building the map as it drives. That is the subject of the paper, and
-it is what makes the progress indicator mean something. It descends as the page scrolls, and each
-section is a junction with a **road sign** beside it ,  the signs are the
-navigation, which is why the top bar drops its links while the rail is up.
-Each plate carries its section number the way a guide sign carries an exit
-number. Sections bunch together wherever the document has several short ones in
-a row, so the plates are pushed apart to a legible spacing and an elbowed arm
-runs back to the junction they actually mark. A section counts as current once
-its heading is `LOOKAHEAD` up the viewport rather than only at the very top,
-which is what stops the previous sign from staying lit.
+`drive.js` draws the road across the top of the page. The car sits a quarter of
+the way into it, nose right, because right is forward is down the page, and the
+world slides past the car rather than the car sliding along a track ,  that is
+what driving looks like from the driver's seat, and it is the only way the
+speed reads as speed.
 
-Every section needs an entry in the top bar's link list, since that is where
-the signs take their short names from.
+Ahead of the car the road is bare surface with plain markings. Behind it the
+same elements are drawn in their map class colours, with the per-polyline
+vertices a predicted map is drawn with, because the car is building the map as
+it drives. That is the subject of the paper, and it is what makes a progress
+indicator mean something. The extent is the furthest point reached rather than
+the current one: reversing does not unmap the road you already drove.
 
-The rail's foot carries the pedals and a speedometer. **Accel** pulls away at
-240 px/s, adds 130 on each further press, and keeps climbing to 620 while it is
-held down; **Brake** lifts off and coasts to a stop. The rail runs at ten pixels
-to the metre, so the readout is a plausible km/h.
-
-Speed eases toward whatever the pedals ask for, with braking given more
-authority than the accelerator, so pulling away and stopping both have some
-weight. It is one rAF loop advancing a float scroll position with
-`scroll-behavior` forced to auto for the duration; a chain of smooth `scrollTo`
-calls restarts itself every frame, which is what made the earlier play control
-stutter. Any scroll, key or pointer of your own lifts off completely.
-
-Signs are guide-sign green, the colour they are on the road, with the section
-number set like an exit number. Pressing or dragging on the carriageway seeks
-one to one; seeking is explicitly
+Each section is a junction with an overhead **guide sign** at its true position,
+green with its section number set like an exit number. The signs are the
+navigation, which is why the top bar drops its link list while the road is up
+and shows the next junction and its distance instead. Every section still needs
+an entry in that link list, since that is where the signs take their short
+names from. Under the road runs the **route bar**: the whole document, with a
+tick per section, and dragging it seeks one to one. Seeking is explicitly
 instant, because `html` carries `scroll-behavior: smooth` and a smooth scroll
-restarted on every pointermove lurches instead of tracking. The rail reserves
-its own gutter the way a scrollbar does, so it never sits over the content, and
-below 900 px it hides and the top bar's links come back.
+restarted on every pointermove lurches instead of tracking.
 
-Knobs: `--rail` in `style.css` (the JS reads it, so the gutter and the drawing
-cannot drift apart), and `CAP`, `SIGN_GAP`, `SIGN_RIGHT` and `MIN_VIEWPORT` in
-`drive.js`.
+The road reserves its own band at the top the way a scrollbar reserves a
+gutter, so it never sits over the content; the top bar sticks below it and
+anchors clear both. Below 900 px, and under `prefers-reduced-motion`, the road
+and the cockpit stand down and the link list comes back.
+
+## Driving it
+
+The cockpit at the bottom right carries the gear selector, the pedals, a
+speedometer, a tachometer and a trip meter. **Accel** and **Brake** are held,
+not clicked; `W` and `S` are the same two pedals and `P` `R` `N` `D` the
+selector. The arrow keys are left alone, because they are how the page scrolls.
+
+The scroll is not an easing curve. It is a longitudinal vehicle model: a 210 Nm
+engine torque curve through a five-speed automatic and a 3.9 final drive,
+against aerodynamic drag and rolling resistance, integrated once per frame on a
+1500 kg car. The gearbox shifts on rpm with a torque cut, and its upshift point
+rises with throttle, so a gentle pull-away shifts early and a floored one holds
+each gear out to the redline. Lift off and it takes the tallest gear it can;
+brake and it walks back down. **R** is a real gear, governed to about 18 km/h,
+and it is how you go back up the page. **P** refuses the accelerator, which is
+the whole point of it, so the car starts in **D**. Selecting P or R above
+walking pace is refused too.
+
+Metres are the unit throughout. `PX_PER_M` converts them to document pixels and
+`ROAD_PX_PER_M` to strip pixels, and the two are deliberately different: the
+document is long, and a road drawn at the document's own scale would show one
+lane marking at a time. `PX_PER_M` is the one number that decides whether
+ordinary road speeds come out as comfortable reading speeds ,  at 18, 50 km/h
+scrolls at 250 px/s and 90 km/h at 450, which is what keeps the whole gearbox in
+use over a document this length.
+
+The model owns the scroll position only while someone is driving it. A wheel or
+a touch of your own hands it straight back, and from then on the page scrolls
+the way it always did while the road and the speedometer simply report what it
+is doing; pressing a pedal takes the wheel again, from whatever speed the page
+was already travelling at. It is one rAF loop advancing a float position with
+`scroll-behavior` forced to auto for the duration ,  a chain of smooth
+`scrollTo` calls restarts itself every frame and stutters ,  and the loop
+sleeps when the car is stopped.
+
+Knobs: `--road-h`, `--road-surface` and `--road-line` in `style.css` (the JS
+reads the last two, so the carriageway and its markings cannot drift from the
+palette), and `PX_PER_M`, `ROAD_PX_PER_M`, `CAR_X`, `MIN_VIEWPORT` and the
+vehicle block in `drive.js`.
 
 ## Deploy cache
 

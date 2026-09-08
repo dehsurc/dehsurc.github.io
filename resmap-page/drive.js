@@ -1,14 +1,26 @@
-/* ReSMap project page: the route rail.
+/* ReSMap project page: the drive.
  *
- * The rail down the right edge is the document as a single road. The car is
- * the scroll thumb: it travels down as the page scrolls, each section is a
- * junction with a sign naming it, and pressing or dragging on the carriageway
- * seeks one to one.
+ * The road runs across the top of the page. The car sits a quarter of the way
+ * into it, nose right, because right is forward is down the page, and the
+ * world slides past the car rather than the car sliding along a track. That
+ * is what driving looks like from the driver's seat, and it is the only way
+ * the speed reads as speed.
  *
- * Ahead of the car the road is bare surface with faint markings. Behind it the
- * same elements are drawn in their map class colours, with vertices, because
- * the car is building the map as it drives. That is the subject of the paper,
- * and it makes the progress indicator mean something.
+ * Behind the car the road is drawn in the map class colours with the
+ * per-polyline vertices a predicted map is drawn with; ahead of it the road is
+ * bare surface with faint markings. The car is building the map as it drives,
+ * which is the subject of the paper, and it is what makes a progress indicator
+ * mean something.
+ *
+ * The scroll is not an easing curve. It is a longitudinal vehicle model: an
+ * engine torque curve through a five-speed automatic and a final drive,
+ * against aerodynamic drag and rolling resistance, integrated once per frame.
+ * Metres are the unit throughout. PX_PER_M converts metres to document pixels
+ * and ROAD_PX_PER_M to strip pixels, so the two scales can be tuned apart:
+ * the document is long, and a road drawn at the document's own scale would
+ * show one lane marking at a time.
+ *
+ * Reverse is a real gear. It is how you go back up.
  */
 
 (function () {
@@ -17,9 +29,105 @@
   var root = document.documentElement;
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-  function neutral() {
-    return root.dataset.theme === 'dark' ? '229, 231, 234' : '21, 23, 27';
+  var road       = document.getElementById('road');
+  var canvas     = document.getElementById('road-map');
+  var signBox    = document.getElementById('road-signs');
+  var routeBar   = document.getElementById('route');
+  var routeTicks = document.getElementById('route-ticks');
+  var routeDone  = document.getElementById('route-done');
+  var cockpit    = document.getElementById('cockpit');
+
+  if (!road || !canvas || !canvas.getContext || !cockpit) return;
+
+  var ctx = canvas.getContext('2d');
+
+  /* ---------------------------------------------------------------- *
+   * Scale
+   * ---------------------------------------------------------------- */
+
+  /* Ordinary road speeds have to come out as comfortable reading speeds, and
+     the ratio between them is this one number. At 18 px to the metre, 50 km/h
+     scrolls at 250 px/s and 90 km/h at 450, so the whole gearbox gets used
+     over a document this length instead of the car spending its life in
+     second. */
+  var PX_PER_M = 18;        // document pixels to the metre
+  var ROAD_PX_PER_M = 9;    // strip pixels to the metre
+  var CAR_X = 0.26;         // the car's fixed position across the strip
+  var MIN_VIEWPORT = 900;   // below this the road hides and the links return
+
+  /* ---------------------------------------------------------------- *
+   * The car
+   *
+   * A mid-size saloon: 1500 kg, a 210 Nm engine, a five-speed automatic.
+   * The numbers are ordinary ones on purpose, so the way it pulls away, runs
+   * out of first, and settles into a cruise is the way a car does.
+   * ---------------------------------------------------------------- */
+
+  var MASS = 1500;                                  // kg
+  var WHEEL_R = 0.32;                               // m
+  var FINAL = 3.9;                                  // final drive ratio
+  var EFF = 0.85;                                   // driveline efficiency
+  var GEARS = [3.55, 2.05, 1.35, 1.00, 0.78];       // five forward ratios
+  var REV_RATIO = 3.30;
+  var IDLE = 780, REDLINE = 6500;                   // rpm
+  var DRAG_K = 0.42;                                // ½·rho·Cd·A
+  var C_RR = 0.013;                                 // rolling resistance
+  var GRAV = 9.81;
+  var BRAKE_MAX = 9200;                             // N, about 6 m/s²
+  var SHIFT_T = 0.32;                               // s of torque cut per shift
+  var REV_LIMIT = 5.0;                              // m/s in reverse, ~18 km/h
+  var STOP_V = 0.15;                                // below this, call it stopped
+
+  // Torque curve: pulls from just off idle, peaks around the middle of the
+  // range, and tails off before the redline. A parabola is close enough.
+  function torque(r) {
+    var t = clamp((r - 700) / (REDLINE - 700), 0, 1);
+    return 210 * (0.58 + 1.55 * t - 1.30 * t * t);
   }
+
+  // Off throttle, the engine drags the car back through the same gearing.
+  function engineBrake(r) { return 22 + r * 0.012; }
+
+  function ratio() {
+    return gear === 'R' ? REV_RATIO : GEARS[g];
+  }
+  function rpmAt(v) {
+    var r = Math.abs(v) / (2 * Math.PI * WHEEL_R) * ratio() * FINAL * 60;
+    return clamp(r, IDLE, REDLINE);
+  }
+
+  /* ---------------------------------------------------------------- *
+   * State
+   * ---------------------------------------------------------------- */
+
+  // Drive, not Park: you are sat in the driver's seat with the page in front
+  // of you. Nothing moves until a pedal is pressed either way, and a selector
+  // that refuses the first press of the accelerator is a puzzle, not a car.
+  var gear = 'D';           // P, R, N, D
+  var g = 0;                // index into GEARS while in D
+  var shifting = 0;         // seconds of torque cut left
+  var speed = 0;            // m/s, signed: positive is down the page
+  var pos = 0;              // metres from the top of the document
+  var mappedTo = 0;         // furthest point reached, and so mapped
+  var rpm = IDLE;
+  var throttle = 0, brake = 0;
+  var holdGas = false, holdBrake = false;
+
+  var raf = 0, last = 0, idleFor = 0;
+  var ownScroll = -1, wasBehaviour = '', driving = false;
+  var stops = [], routeM = 1, dragging = false;
+  var W = 0, H = 0, dpr = 1;
+  var shownKmh = -1, shownGear = '', shownNext = '';
+
+  function clamp(v, lo, hi) { return v < lo ? lo : (v > hi ? hi : v); }
+  function maxScroll() {
+    return Math.max(1, root.scrollHeight - window.innerHeight);
+  }
+  function maxM() { return maxScroll() / PX_PER_M; }
+
+  /* ---------------------------------------------------------------- *
+   * Palette
+   * ---------------------------------------------------------------- */
 
   /* Map element colours, in the convention every online-mapping figure uses:
      boundary green, divider amber, pedestrian crossing blue. */
@@ -31,470 +139,753 @@
   function colour(kind) {
     return CLASS[kind][root.dataset.theme === 'dark' ? 'dark' : 'light'];
   }
+  function neutral() {
+    return root.dataset.theme === 'dark' ? '229, 231, 234' : '21, 23, 27';
+  }
 
-  function box(ctx, x, y, w, h, r) {
-    ctx.beginPath();
-    ctx.moveTo(x + r, y);
-    ctx.arcTo(x + w, y, x + w, y + h, r);
-    ctx.arcTo(x + w, y + h, x, y + h, r);
-    ctx.arcTo(x, y + h, x, y, r);
-    ctx.arcTo(x, y, x + w, y, r);
-    ctx.closePath();
+  var accent = '#0e4a84', pavement = '#f4f5f7', paint = '#b4b9c1', sign = '#16673c';
+
+  function readPalette() {
+    var cs = getComputedStyle(root);
+    function v(name, fallback) {
+      var got = (cs.getPropertyValue(name) || '').trim();
+      return got || fallback;
+    }
+    accent = v('--accent', '#0e4a84');
+    pavement = v('--road-surface', '#d6d9df');
+    paint = v('--road-line', '#fbfcfd');
+    sign = v('--sign', '#16673c');
+  }
+
+  function box(c, x, y, w, h, r) {
+    c.beginPath();
+    c.moveTo(x + r, y);
+    c.arcTo(x + w, y, x + w, y + h, r);
+    c.arcTo(x + w, y + h, x, y + h, r);
+    c.arcTo(x, y + h, x, y, r);
+    c.arcTo(x, y, x + w, y, r);
+    c.closePath();
   }
 
   /* ---------------------------------------------------------------- *
-   * The route: the document as one road, the car as the scroll thumb
+   * The route
+   *
+   * Each section is a junction, with an overhead guide sign at its true
+   * position on the road and a tick on the route bar underneath. Names come
+   * from the top bar's link list, which is why every section needs an entry
+   * there.
    * ---------------------------------------------------------------- */
 
-  var rail = document.getElementById('rail');
-  var canvas = document.getElementById('rail-map');
-  var roadBox = document.getElementById('rail-road');
+  function measure() {
+    routeM = maxM();
 
-  if (rail && canvas && roadBox && canvas.getContext) {
-    var rctx = canvas.getContext('2d');
-    var signBox = document.getElementById('rail-signs');
-
-    // The rail's width lives in style.css as --rail, so the reserved gutter and
-    // the drawing can never drift apart.
-    var RW = 172, ROAD_X = 142, ROAD_HALF = 18, ELBOW = 120;
-    var CAP = 34;           // clear space at each end so the car never clips
-    var SIGN_GAP = 26;      // minimum vertical spacing between signs
-    var SIGN_RIGHT = 64;    // signs end this far from the rail's right edge
-    var LOOKAHEAD = 0.35;   // a section counts as current once its heading is
-                            // this far up the viewport, not only at the very top
-    var MIN_VIEWPORT = 900;
-
-    function readWidth() {
-      var v = parseFloat(getComputedStyle(root).getPropertyValue('--rail'));
-      if (v > 0) RW = v;
-      ROAD_X = RW - 30;
-      ELBOW = RW - SIGN_RIGHT + 8;
-    }
-
-    var rdpr = 1, RH = 0;
-    var stops = [];
-    var dragging = false;
-    var pending = false;
-    var accent = '#0e4a84', pavement = '#f4f5f7', paint = '#b4b9c1', sign = '#16673c';
-
-    function maxScroll() {
-      return Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
-    }
-    function progress() {
-      return Math.min(1, Math.max(0, window.scrollY / maxScroll()));
-    }
-    function carY(p) { return CAP + p * (RH - CAP * 2); }
-
-    /* Each section is a junction on the route and gets a sign beside it. The
-       signs are the navigation, which is why the top bar drops its links while
-       the rail is up. */
-    function measure() {
-      var max = maxScroll();
-      stops = Array.prototype.slice
-        .call(document.querySelectorAll('main section[id]'))
-        .map(function (s) {
-          var link = document.querySelector('.topbar a[href="#' + s.id + '"]');
-          var h2 = s.querySelector('h2');
-          var top = s.getBoundingClientRect().top + window.scrollY;
-          return {
-            id: s.id,
-            y: top,
-            p: Math.min(1, Math.max(0, top / max)),
-            name: link ? link.textContent
-                       : (h2 ? h2.textContent.replace(/^\s*\d+\s*/, '') : s.id)
-          };
-        });
-
-      signBox.textContent = '';
-      stops.forEach(function (stop, i) {
-        var b = document.createElement('button');
-        b.type = 'button';
-        b.className = 'sign';
-        var num = document.createElement('b');
-        num.textContent = i + 1;
-        b.appendChild(num);
-        b.appendChild(document.createTextNode(stop.name));
-        b.addEventListener('click', function () {
-          var el = document.getElementById(stop.id);
-          if (el) el.scrollIntoView({ behavior: 'smooth' });
-        });
-        signBox.appendChild(b);
-        stop.el = b;
-      });
-      layoutSigns();
-    }
-
-    /* Sections bunch up wherever the document has several short ones in a row,
-       so the plates are pushed apart to a legible spacing while the tick they
-       point at stays at the true position. */
-    function layoutSigns() {
-      if (!stops.length) return;
-      var n = stops.length, i;
-      for (i = 0; i < n; i++) stops[i].signY = carY(stops[i].p);
-      for (i = 1; i < n; i++) {
-        if (stops[i].signY - stops[i - 1].signY < SIGN_GAP) {
-          stops[i].signY = stops[i - 1].signY + SIGN_GAP;
-        }
-      }
-      var floorY = RH - CAP * 0.6;
-      if (stops[n - 1].signY > floorY) {
-        stops[n - 1].signY = floorY;
-        for (i = n - 2; i >= 0; i--) {
-          if (stops[i + 1].signY - stops[i].signY < SIGN_GAP) {
-            stops[i].signY = stops[i + 1].signY - SIGN_GAP;
-          }
-        }
-      }
-      for (i = 0; i < n; i++) stops[i].el.style.top = Math.round(stops[i].signY) + 'px';
-    }
-
-    function readPalette() {
-      var cs = getComputedStyle(root);
-      function v(name, fallback) {
-        var got = (cs.getPropertyValue(name) || '').trim();
-        return got || fallback;
-      }
-      accent = v('--accent', '#0e4a84');
-      pavement = v('--surface', '#f4f5f7');
-      paint = v('--rule-dark', '#b4b9c1');
-      sign = v('--sign', '#16673c');
-    }
-
-    function resize() {
-      var on = window.innerWidth >= MIN_VIEWPORT;
-      rail.hidden = !on;
-      root.classList.toggle('has-rail', on);
-      if (!on) return;
-
-      readWidth();
-      rdpr = Math.min(window.devicePixelRatio || 1, 2);
-      RH = roadBox.clientHeight || window.innerHeight;
-      canvas.width = Math.ceil(RW * rdpr);
-      canvas.height = Math.ceil(RH * rdpr);
-      canvas.style.width = RW + 'px';
-      canvas.style.height = RH + 'px';
-      rctx.setTransform(rdpr, 0, 0, rdpr, 0, 0);
-      readPalette();
-      measure();
-      draw();
-    }
-
-    // Top-down vehicle, nose down the rail, because down the page is forward.
-    function drawCar(y) {
-      var len = 26, wide = 13, x = ROAD_X;
-      rctx.save();
-      rctx.translate(x, y);
-
-      var beam = rctx.createLinearGradient(0, len * 0.5, 0, len * 3.2);
-      beam.addColorStop(0, 'rgba(255, 214, 130, .32)');
-      beam.addColorStop(1, 'rgba(255, 214, 130, 0)');
-      rctx.fillStyle = beam;
-      rctx.beginPath();
-      rctx.moveTo(-wide * 0.34, len * 0.5);
-      rctx.lineTo(-wide * 1.25, len * 3.2);
-      rctx.lineTo(wide * 1.25, len * 3.2);
-      rctx.lineTo(wide * 0.34, len * 0.5);
-      rctx.closePath();
-      rctx.fill();
-
-      rctx.fillStyle = accent;
-      box(rctx, -wide / 2, -len / 2, wide, len, 3);
-      rctx.fill();
-
-      rctx.fillStyle = 'rgba(255,255,255,.62)';
-      box(rctx, -wide / 2 + 2.2, -len * 0.04, wide - 4.4, len * 0.28, 1.5);
-      rctx.fill();
-
-      rctx.fillStyle = 'rgba(255,236,186,.95)';
-      rctx.fillRect(-wide / 2 + 1.6, len / 2 - 3, 3, 2);
-      rctx.fillRect(wide / 2 - 4.6, len / 2 - 3, 3, 2);
-      rctx.restore();
-    }
-
-    function draw() {
-      pending = false;
-      if (rail.hidden) return;
-
-      var p = progress(), ink = neutral();
-      var cy = carY(p);
-      var top = CAP * 0.4, bot = RH - CAP * 0.4;
-      var left = ROAD_X - ROAD_HALF, right = ROAD_X + ROAD_HALF;
-      var edgeL = left + 2.5, edgeR = right - 2.5;
-      var VERT = 22;          // vertex spacing on a drawn polyline
-
-      rctx.clearRect(0, 0, RW, RH);
-      rctx.lineCap = 'butt';
-
-      // Carriageway.
-      rctx.fillStyle = pavement;
-      rctx.fillRect(left, top, ROAD_HALF * 2, bot - top);
-
-      var probe = window.scrollY + window.innerHeight * LOOKAHEAD;
-      var here = null;
-      stops.forEach(function (s) { if (s.y <= probe) here = s; });
-      if (!here && stops.length) here = stops[0];
-
-      function crossing(y, style, width, alpha) {
-        rctx.strokeStyle = style;
-        rctx.globalAlpha = alpha;
-        rctx.lineWidth = width;
-        for (var b = 0; b < 4; b++) {
-          var x = left + 5 + b * ((ROAD_HALF * 2 - 10) / 3.35);
-          rctx.beginPath();
-          rctx.moveTo(x, y - 4);
-          rctx.lineTo(x, y + 4);
-          rctx.stroke();
-        }
-        rctx.globalAlpha = 1;
-      }
-
-      /* Ahead of the car the road is unmapped: bare surface, faint markings. */
-      rctx.strokeStyle = paint;
-      rctx.globalAlpha = 0.45;
-      rctx.lineWidth = 1.2;
-      [edgeL, edgeR].forEach(function (x) {
-        rctx.beginPath();
-        rctx.moveTo(x, top);
-        rctx.lineTo(x, bot);
-        rctx.stroke();
-      });
-      rctx.setLineDash([7, 7]);
-      rctx.beginPath();
-      rctx.moveTo(ROAD_X, top);
-      rctx.lineTo(ROAD_X, bot);
-      rctx.stroke();
-      rctx.setLineDash([]);
-      rctx.globalAlpha = 1;
-      stops.forEach(function (s) { crossing(carY(s.p), paint, 2.4, 0.45); });
-
-      /* Behind it the map has been built: the same elements in their class
-         colours, with the per-polyline vertices a predicted map is drawn with.
-         The car is drawing the map as it goes, which is the whole subject of
-         the paper. */
-      rctx.save();
-      rctx.beginPath();
-      rctx.rect(0, 0, RW, Math.max(0, cy + 2));
-      rctx.clip();
-
-      rctx.strokeStyle = colour('boundary');
-      rctx.fillStyle = colour('boundary');
-      rctx.lineWidth = 1.6;
-      [edgeL, edgeR].forEach(function (x) {
-        rctx.beginPath();
-        rctx.moveTo(x, top);
-        rctx.lineTo(x, bot);
-        rctx.stroke();
-        for (var y = top; y <= bot; y += VERT) {
-          rctx.beginPath();
-          rctx.arc(x, y, 1.2, 0, Math.PI * 2);
-          rctx.fill();
-        }
+    stops = Array.prototype.slice
+      .call(document.querySelectorAll('main section[id]'))
+      .map(function (s) {
+        var link = document.querySelector('.topbar a[href="#' + s.id + '"]');
+        var h2 = s.querySelector('h2');
+        var top = s.getBoundingClientRect().top + window.scrollY;
+        return {
+          id: s.id,
+          m: top / PX_PER_M,
+          name: link ? link.textContent
+                     : (h2 ? h2.textContent.replace(/^\s*\d+\s*/, '') : s.id)
+        };
       });
 
-      rctx.strokeStyle = colour('divider');
-      rctx.lineWidth = 1.3;
-      rctx.setLineDash([7, 7]);
-      rctx.beginPath();
-      rctx.moveTo(ROAD_X, top);
-      rctx.lineTo(ROAD_X, bot);
-      rctx.stroke();
-      rctx.setLineDash([]);
+    signBox.textContent = '';
+    routeTicks.textContent = '';
 
-      stops.forEach(function (s) { crossing(carY(s.p), colour('crossing'), 2.6, 1); });
-      rctx.restore();
+    stops.forEach(function (stop, i) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'sign';
+      var num = document.createElement('b');
+      num.textContent = i + 1;
+      b.appendChild(num);
+      b.appendChild(document.createTextNode(stop.name));
+      b.addEventListener('click', function () { jumpTo(stop); });
+      signBox.appendChild(b);
+      stop.el = b;
 
-      /* Junction arms out to the signs. */
-      stops.forEach(function (s) {
-        var y = carY(s.p);
-        var passed = s.y <= probe;
-        var current = s === here;
-        var sy = s.signY === undefined ? y : s.signY;
+      var tick = document.createElement('i');
+      tick.style.left = (routeM > 0 ? clamp(stop.m / routeM, 0, 1) : 0) * 100 + '%';
+      tick.title = stop.name;
+      routeTicks.appendChild(tick);
+      stop.tick = tick;
+    });
+  }
 
-        rctx.strokeStyle = current ? sign : 'rgba(' + ink + ', 0.2)';
-        rctx.globalAlpha = current ? 0.75 : 1;
-        rctx.lineWidth = 1;
-        rctx.beginPath();
-        rctx.moveTo(left - 2, y);
-        rctx.lineTo(ELBOW, y);
-        rctx.lineTo(ELBOW, sy);
-        rctx.lineTo(RW - SIGN_RIGHT - 2, sy);
-        rctx.stroke();
-        rctx.globalAlpha = 1;
+  /* A sign is navigation, not a drive control: coast to a stop and let the
+     browser's own smooth scroll take it from there. */
+  function jumpTo(stop) {
+    holdGas = holdBrake = false;
+    throttle = 0;
+    speed = 0;
+    stopLoop();
+    var el = document.getElementById(stop.id);
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+  }
 
-        if (s.el) s.el.classList.toggle('here', current);
-        if (s.el) s.el.classList.toggle('passed', passed && !current);
+  /* ---------------------------------------------------------------- *
+   * Sizing
+   * ---------------------------------------------------------------- */
+
+  function resize() {
+    var on = window.innerWidth >= MIN_VIEWPORT && !reduceMotion.matches;
+    road.hidden = !on;
+    cockpit.hidden = !on;
+    root.classList.toggle('has-road', on);
+    if (!on) { stopLoop(); return; }
+
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = road.clientWidth;
+    H = canvas.parentNode.clientHeight || 78;
+    canvas.width = Math.ceil(W * dpr);
+    canvas.height = Math.ceil(H * dpr);
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    readPalette();
+    measure();
+    syncFromScroll();
+    draw();
+  }
+
+  function syncFromScroll() {
+    pos = window.scrollY / PX_PER_M;
+    if (pos > mappedTo) mappedTo = pos;
+  }
+
+  /* ---------------------------------------------------------------- *
+   * Drawing
+   * ---------------------------------------------------------------- */
+
+  function sx(m) { return CAR_X * W + (m - pos) * ROAD_PX_PER_M; }
+
+  // Top-down car, nose to the right. Headlamp wash ahead, brake lamps behind
+  // when the pedal is down, reversing lamps behind when the gear is R.
+  function drawCar(x, y) {
+    var len = 34, wide = 17;
+    ctx.save();
+    ctx.translate(x, y);
+
+    /* A headlamp adds light, it does not tint the road. Painted with normal
+       alpha over dark tarmac a warm wash blends to olive mud, so on the dark
+       palette the beam is composited additively instead. */
+    var dark = root.dataset.theme === 'dark';
+    var beam = ctx.createLinearGradient(len * 0.5, 0, len * 3.0, 0);
+    beam.addColorStop(0, 'rgba(255, 218, 145, ' + (dark ? '.34' : '.22') + ')');
+    beam.addColorStop(1, 'rgba(255, 218, 145, 0)');
+    ctx.save();
+    if (dark) ctx.globalCompositeOperation = 'lighter';
+    ctx.fillStyle = beam;
+    ctx.beginPath();
+    ctx.moveTo(len * 0.5, -wide * 0.34);
+    ctx.lineTo(len * 3.0, -wide * 1.15);
+    ctx.lineTo(len * 3.0, wide * 1.15);
+    ctx.lineTo(len * 0.5, wide * 0.34);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+
+    if (brake > 0.02) {
+      var glow = ctx.createLinearGradient(-len * 0.5, 0, -len * 1.9, 0);
+      glow.addColorStop(0, 'rgba(226, 62, 46, ' + (0.20 + brake * 0.34).toFixed(3) + ')');
+      glow.addColorStop(1, 'rgba(226, 62, 46, 0)');
+      ctx.fillStyle = glow;
+      ctx.fillRect(-len * 1.9, -wide * 0.62, len * 1.4, wide * 1.24);
+    }
+
+    ctx.fillStyle = accent;
+    box(ctx, -len / 2, -wide / 2, len, wide, 3.4);
+    ctx.fill();
+
+    ctx.fillStyle = 'rgba(255,255,255,.62)';
+    box(ctx, len * 0.04, -wide / 2 + 2.4, len * 0.28, wide - 4.8, 1.6);
+    ctx.fill();
+
+    // Headlamps.
+    ctx.fillStyle = 'rgba(255,236,186,.95)';
+    ctx.fillRect(len / 2 - 3, -wide / 2 + 1.8, 2, 3);
+    ctx.fillRect(len / 2 - 3, wide / 2 - 4.8, 2, 3);
+
+    // Tail, brake and reversing lamps.
+    if (gear === 'R') ctx.fillStyle = 'rgba(255,255,255,.95)';
+    else if (brake > 0.02) ctx.fillStyle = 'rgba(240, 78, 60, .98)';
+    else ctx.fillStyle = 'rgba(190, 52, 42, .55)';
+    ctx.fillRect(-len / 2 + 1, -wide / 2 + 1.8, 2, 3);
+    ctx.fillRect(-len / 2 + 1, wide / 2 - 4.8, 2, 3);
+
+    ctx.restore();
+  }
+
+  function draw() {
+    if (road.hidden) return;
+
+    var ink = neutral();
+    // The band leaves room for the sign gantry above and the distance posts
+    // along the shoulder below.
+    var rTop = Math.round(H * 0.35);
+    var rBot = H - 9;
+    var mid = (rTop + rBot) / 2;
+    var edgeT = rTop + 2.5, edgeB = rBot - 2.5;
+    var carX = CAR_X * W;
+    var VERT = 2.4;            // metres between polyline vertices
+    var DASH = 4 * ROAD_PX_PER_M, GAP = 8 * ROAD_PX_PER_M;
+    var PERIOD = DASH + GAP;
+
+    ctx.clearRect(0, 0, W, H);
+    ctx.lineCap = 'butt';
+
+    // Carriageway.
+    ctx.fillStyle = pavement;
+    ctx.fillRect(0, rTop, W, rBot - rTop);
+
+    // Distance posts every 50 m, so the scale is legible without a readout.
+    ctx.strokeStyle = 'rgba(' + ink + ', 0.22)';
+    ctx.lineWidth = 1;
+    var first = Math.floor((pos - CAR_X * W / ROAD_PX_PER_M) / 50) * 50;
+    for (var d = first; sx(d) < W + 20; d += 50) {
+      var px = sx(d);
+      if (px < -20) continue;
+      ctx.beginPath();
+      ctx.moveTo(px, rBot + 2);
+      ctx.lineTo(px, rBot + 6);
+      ctx.stroke();
+    }
+
+    /* Zebra stripes run with the traffic, so on a road drawn left to right
+       they stack across the carriageway. */
+    function crossing(x, style, width, alpha) {
+      ctx.strokeStyle = style;
+      ctx.globalAlpha = alpha;
+      ctx.lineWidth = width;
+      for (var b = 0; b < 5; b++) {
+        var y = rTop + 5 + b * ((rBot - rTop - 10) / 4);
+        ctx.beginPath();
+        ctx.moveTo(x - 7, y);
+        ctx.lineTo(x + 7, y);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    /* Ahead of the car the road is unmapped: bare surface, plain markings. */
+    ctx.strokeStyle = paint;
+    ctx.globalAlpha = 0.75;
+    ctx.lineWidth = 1.4;
+    [edgeT, edgeB].forEach(function (y) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(W, y);
+      ctx.stroke();
+    });
+    ctx.setLineDash([DASH, GAP]);
+    ctx.lineDashOffset = ((-sx(0)) % PERIOD + PERIOD) % PERIOD;
+    ctx.beginPath();
+    ctx.moveTo(0, mid);
+    ctx.lineTo(W, mid);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.lineDashOffset = 0;
+    ctx.globalAlpha = 1;
+    stops.forEach(function (s) { crossing(sx(s.m), paint, 2.6, 0.75); });
+
+    /* Behind it the map has been built: the same elements in their class
+       colours, with the per-polyline vertices a predicted map is drawn with.
+       The extent is the furthest point reached, not the current one, because
+       reversing does not unmap the road you already drove. */
+    var builtTo = Math.min(W, sx(mappedTo));
+    if (builtTo > 0) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(0, 0, builtTo, H);
+      ctx.clip();
+
+      ctx.strokeStyle = colour('boundary');
+      ctx.fillStyle = colour('boundary');
+      ctx.lineWidth = 1.6;
+      [edgeT, edgeB].forEach(function (y) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(builtTo, y);
+        ctx.stroke();
+        var m0 = Math.floor((pos - carX / ROAD_PX_PER_M) / VERT) * VERT;
+        for (var m = m0; sx(m) < builtTo + VERT * ROAD_PX_PER_M; m += VERT) {
+          var vx = sx(m);
+          if (vx < -4) continue;
+          ctx.beginPath();
+          ctx.arc(vx, y, 1.2, 0, Math.PI * 2);
+          ctx.fill();
+        }
       });
 
-      drawCar(cy);
+      ctx.strokeStyle = colour('divider');
+      ctx.lineWidth = 1.3;
+      ctx.setLineDash([DASH, GAP]);
+      ctx.lineDashOffset = ((-sx(0)) % PERIOD + PERIOD) % PERIOD;
+      ctx.beginPath();
+      ctx.moveTo(0, mid);
+      ctx.lineTo(builtTo, mid);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.lineDashOffset = 0;
+
+      stops.forEach(function (s) { crossing(sx(s.m), colour('crossing'), 2.6, 1); });
+      ctx.restore();
     }
 
-    function request() {
-      if (pending) return;
-      pending = true;
-      requestAnimationFrame(draw);
+    drawCar(carX, mid);
+
+    /* Signs sit at their true position and slide in from the right, the way
+       they do on the road. Off-strip ones are not drawn at all. */
+    stops.forEach(function (s, i) {
+      if (!s.el) return;
+      var x = sx(s.m);
+      if (x < -170 || x > W + 170) { s.el.hidden = true; return; }
+      s.el.hidden = false;
+      s.el.style.left = Math.round(x) + 'px';
+      s.el.classList.toggle('passed', s.m <= pos);
+      s.el.classList.toggle('here', s === current());
+      // Junction stalk down to the carriageway.
+      ctx.strokeStyle = s === current() ? sign : 'rgba(' + ink + ', 0.22)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x, rTop - 6);
+      ctx.lineTo(x, rTop);
+      ctx.stroke();
+    });
+
+    // Route bar: the whole document, and how much of it has been driven.
+    if (routeDone) {
+      routeDone.style.width = clamp(pos / routeM, 0, 1) * 100 + '%';
+    }
+  }
+
+  /* A section counts as current once it is behind the car, which is the same
+     lookahead the old rail had, expressed in the only way that makes sense
+     here: you are in the section you have driven into. */
+  function current() {
+    var here = stops.length ? stops[0] : null;
+    stops.forEach(function (s) { if (s.m <= pos + 0.5) here = s; });
+    return here;
+  }
+
+  /* ---------------------------------------------------------------- *
+   * The model
+   * ---------------------------------------------------------------- */
+
+  function step(dt) {
+    // Pedal travel. Real pedals move fast but not instantly, and lifting off
+    // is quicker than pressing down.
+    throttle += ((holdGas ? 1 : 0) - throttle) * Math.min(1, dt * (holdGas ? 12 : 16));
+    brake += ((holdBrake ? 1 : 0) - brake) * Math.min(1, dt * (holdBrake ? 14 : 18));
+
+    if (gear === 'P') { speed = 0; rpm = IDLE; return; }
+
+    var dir = gear === 'R' ? -1 : 1;
+    var v = speed;
+    var absV = Math.abs(v);
+
+    rpm = rpmAt(v);
+
+    // Gearbox. The upshift point rises with throttle, which is what makes a
+    // gentle pull-away shift early and a floored one hold each gear out.
+    if (shifting > 0) shifting -= dt;
+    else if (gear === 'D') {
+      var up = 2600 + throttle * 3400;
+      var dn = 1250 + throttle * 900;
+      if (g < GEARS.length - 1 && rpm > up) { g++; shifting = SHIFT_T; }
+      else if (g > 0 && rpm < dn) { g--; shifting = SHIFT_T; }
     }
 
-    /* Dragging the car is dragging the thumb: the pointer's position on the
-       rail is the position in the document, one to one. */
-    function seek(clientY) {
-      var rect = canvas.getBoundingClientRect();
-      var p = (clientY - rect.top - CAP) / (RH - CAP * 2);
-      var top = Math.min(1, Math.max(0, p)) * maxScroll();
-      // html has scroll-behavior: smooth, and a smooth scroll restarted on
-      // every pointermove lurches instead of tracking. Seeking is instant.
+    var drive = 0;
+    if (gear !== 'N' && shifting <= 0) {
+      var t = throttle * torque(rpm) - (1 - throttle) * engineBrake(rpm);
+      drive = dir * t * ratio() * FINAL * EFF / WHEEL_R;
+    }
+
+    // Reverse is geared and governed the way reverse is: it will not run away
+    // with you. Cutting drive outright, because the force here is signed by
+    // the direction of travel and clamping it against zero would be a no-op.
+    if (gear === 'R' && absV > REV_LIMIT) drive = 0;
+
+    var resist = -Math.sign(v) * (DRAG_K * v * v + C_RR * MASS * GRAV);
+    if (absV < 0.05) resist = 0;
+
+    var braking = -Math.sign(v) * brake * BRAKE_MAX;
+    if (absV < 0.05) braking = 0;
+
+    var a = (drive + resist + braking) / MASS;
+    speed = v + a * dt;
+
+    // Do not let the brake or the drag pull the car through zero into a
+    // creep the other way.
+    if (v !== 0 && Math.sign(speed) !== Math.sign(v) && throttle < 0.02) speed = 0;
+    if (Math.abs(speed) < STOP_V && throttle < 0.02) speed = 0;
+
+    pos += speed * dt;
+
+    // The ends of the document are the ends of the road.
+    var top = maxM();
+    if (pos >= top) { pos = top; speed = 0; }
+    if (pos <= 0) { pos = 0; speed = 0; }
+
+    if (pos > mappedTo) mappedTo = pos;
+    rpm = rpmAt(speed);
+  }
+
+  /* ---------------------------------------------------------------- *
+   * Readouts
+   * ---------------------------------------------------------------- */
+
+  var kmhEl  = document.getElementById('kmh');
+  var rpmEl  = document.getElementById('rpm-fill');
+  var gearEl = document.getElementById('gear-now');
+  var tripEl = document.getElementById('trip');
+  var nextEl = document.getElementById('nextup');
+
+  function metres(m) {
+    if (m < 15) return 'arriving';
+    return m > 950 ? (m / 1000).toFixed(1) + ' km' : Math.round(m / 10) * 10 + ' m';
+  }
+
+  function hud() {
+    var kmh = Math.round(Math.abs(speed) * 3.6);
+    if (kmh !== shownKmh) {
+      shownKmh = kmh;
+      if (kmhEl) kmhEl.textContent = String(kmh);
+    }
+    if (rpmEl) {
+      rpmEl.style.width = clamp((rpm - IDLE) / (REDLINE - IDLE), 0, 1) * 100 + '%';
+      rpmEl.classList.toggle('red', rpm > REDLINE * 0.88);
+    }
+
+    var label = gear === 'D' ? 'D' + (g + 1) : gear;
+    if (label !== shownGear) {
+      shownGear = label;
+      if (gearEl) gearEl.textContent = label;
+    }
+    if (tripEl) {
+      tripEl.textContent = (pos / 1000).toFixed(2) + ' / ' + (routeM / 1000).toFixed(2) + ' km';
+    }
+
+    // Next junction, the way a nav system calls it.
+    var next = null;
+    for (var i = 0; i < stops.length; i++) {
+      if (stops[i].m > pos + 0.5) { next = stops[i]; break; }
+    }
+    var d = next ? metres(next.m - pos) : '';
+    var text = next ? '§' + (stops.indexOf(next) + 1) + ' ' + next.name +
+                      (d === 'arriving' ? ' · arriving' : ' · ' + d)
+                    : 'end of route';
+    if (nextEl && text !== shownNext) {
+      shownNext = text;
+      nextEl.textContent = text;
+    }
+
+    cockpit.classList.toggle('moving', Math.abs(speed) > 0.3);
+  }
+
+  /* ---------------------------------------------------------------- *
+   * The loop
+   *
+   * One rAF advancing a float position in metres. The model owns the scroll
+   * position only while someone is actually driving it; a wheel or a touch of
+   * your own hands it straight back, and from then on the page scrolls the way
+   * it always did while the road and the speedometer simply report what it is
+   * doing. Pressing a pedal takes the wheel again, from whatever speed the
+   * page was already travelling at — a flicked wheel is not a launch control,
+   * so what is adopted is clamped to something a car could be doing.
+   *
+   * While the model is driving, scroll-behavior is forced to auto: a chain of
+   * smooth scrollTo calls restarts itself every frame and stutters.
+   * ---------------------------------------------------------------- */
+
+  var owned = false;      // does the model own the scroll position?
+  var observed = 0;       // m/s read off the page's own scrolling
+
+  function grabScroll() {
+    if (driving) return;
+    wasBehaviour = root.style.scrollBehavior;
+    root.style.scrollBehavior = 'auto';
+    driving = true;
+  }
+  function freeScroll() {
+    if (!driving) return;
+    root.style.scrollBehavior = wasBehaviour || '';
+    driving = false;
+  }
+
+  function takeWheel() {
+    if (!owned) {
+      owned = true;
+      pos = window.scrollY / PX_PER_M;
+      speed = clamp(observed, -45, 45);
+      grabScroll();
+    }
+    startLoop();
+  }
+
+  function handBack() {
+    owned = false;
+    holdGas = holdBrake = false;
+    throttle = 0;
+    brake = 0;
+    freeScroll();
+  }
+
+  function loop(now) {
+    var dt = last ? Math.min(0.05, (now - last) / 1000) : 0;
+    last = now;
+
+    var sy = window.scrollY;
+
+    // Anything that moved the page other than us wins, and lifts us off.
+    if (owned && ownScroll >= 0 && Math.abs(sy - ownScroll) > 2) handBack();
+
+    if (owned && !dragging) {
+      step(dt);
+      window.scrollTo(0, pos * PX_PER_M);
+      ownScroll = window.scrollY;
+      observed = speed;
+    } else {
+      // Reading the page's own motion rather than driving it. The reading is
+      // low-passed, because one frame of a wheel gesture is not a speed.
+      var m = sy / PX_PER_M;
+      var raw = dt > 0 ? (m - pos) / dt : 0;
+      if (dragging) observed = 0;
+      else {
+        observed += (clamp(raw, -60, 60) - observed) * Math.min(1, dt * 6);
+        if (Math.abs(observed) < 0.2) observed = 0;
+      }
+      pos = m;
+      speed = observed;
+      throttle = 0;
+      brake = 0;
+      rpm = rpmAt(speed);
+      if (pos > mappedTo) mappedTo = pos;
+      ownScroll = sy;
+    }
+
+    draw();
+    hud();
+
+    var busy = dragging || (owned
+      ? (Math.abs(speed) > 0.02 || holdGas || holdBrake || throttle > 0.02 || brake > 0.02)
+      : Math.abs(observed) > 0.05);
+    idleFor = busy ? 0 : idleFor + dt;
+    if (idleFor > 0.5) { stopLoop(); return; }
+
+    raf = requestAnimationFrame(loop);
+  }
+
+  function startLoop() {
+    if (raf || road.hidden) return;
+    last = 0;
+    idleFor = 0;
+    ownScroll = window.scrollY;
+    raf = requestAnimationFrame(loop);
+  }
+
+  function stopLoop() {
+    if (raf) { cancelAnimationFrame(raf); raf = 0; }
+    // Coming to rest gives the scroll back, so the next anchor jump is smooth
+    // and the next pedal press starts from a known state.
+    owned = false;
+    freeScroll();
+    ownScroll = -1;
+    draw();
+    hud();
+  }
+
+  /* ---------------------------------------------------------------- *
+   * Controls
+   * ---------------------------------------------------------------- */
+
+  var gasBtn = document.getElementById('pedal-gas');
+  var brakeBtn = document.getElementById('pedal-brake');
+  var gearBtns = Array.prototype.slice.call(cockpit.querySelectorAll('[data-gear]'));
+
+  function baulk() {
+    cockpit.classList.add('baulk');
+    setTimeout(function () { cockpit.classList.remove('baulk'); }, 320);
+  }
+
+  function setGear(next) {
+    if (next === gear) return;
+    // You cannot slam a moving car into P or R. Neutral is always allowed.
+    if ((next === 'P' || next === 'R') && Math.abs(speed) > 1.2) { baulk(); return; }
+    gear = next;
+    g = 0;
+    shifting = 0;
+    if (gear === 'P') { speed = 0; throttle = 0; holdGas = false; }
+    gearBtns.forEach(function (b) {
+      var on = b.dataset.gear === gear;
+      b.setAttribute('aria-checked', String(on));
+      b.tabIndex = on ? 0 : -1;
+    });
+    shownGear = '';
+    hud();
+    startLoop();
+  }
+
+  gearBtns.forEach(function (b, i) {
+    b.tabIndex = b.dataset.gear === gear ? 0 : -1;
+    b.addEventListener('click', function () { setGear(b.dataset.gear); });
+    b.addEventListener('keydown', function (e) {
+      var d = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1
+            : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0;
+      if (!d) return;
+      e.preventDefault();
+      var t = gearBtns[(i + d + gearBtns.length) % gearBtns.length];
+      t.focus();
+      setGear(t.dataset.gear);
+    });
+  });
+
+  // A parked car does not move for the accelerator, and saying so is the whole
+  // point of the gear. Neutral is different: selecting a gear is the obvious
+  // thing you meant, so it is done for you.
+  function pressGas() {
+    if (gear === 'P') { baulk(); return; }
+    if (gear === 'N') setGear('D');
+    takeWheel();
+    holdGas = true;
+  }
+  function pressBrake() { takeWheel(); holdBrake = true; }
+  function release() { holdGas = holdBrake = false; }
+
+  function pedal(btn, press) {
+    if (!btn) return;
+    btn.addEventListener('pointerdown', function (e) {
+      e.preventDefault();
+      // Press first. Capturing the pointer is a convenience — it keeps the
+      // release if you slide off the button — and it throws for a pointer the
+      // element never saw, which must not cost us the pedal.
+      press();
       try {
-        window.scrollTo({ top: top, behavior: 'instant' });
-      } catch (err) {
-        window.scrollTo(0, top);
-      }
-    }
+        if (btn.setPointerCapture) btn.setPointerCapture(e.pointerId);
+      } catch (err) { /* nothing to capture */ }
+    });
+    btn.addEventListener('pointerup', release);
+    btn.addEventListener('pointercancel', release);
+    // A pedal you can only reach with a mouse is not a control.
+    btn.addEventListener('keydown', function (e) {
+      if (e.key !== ' ' && e.key !== 'Enter') return;
+      e.preventDefault();
+      press();
+    });
+    btn.addEventListener('keyup', function (e) {
+      if (e.key === ' ' || e.key === 'Enter') release();
+    });
+    btn.addEventListener('blur', release);
+  }
+  pedal(gasBtn, pressGas);
+  pedal(brakeBtn, pressBrake);
+  window.addEventListener('pointerup', release);
+  window.addEventListener('blur', release);
 
-    function onRoad(e) {
-      var rect = canvas.getBoundingClientRect();
-      return e.clientX - rect.left > RW - SIGN_RIGHT;
-    }
+  /* Keyboard: W and S are the pedals, P R N D are the selector. The arrow
+     keys are left alone, because they are how the page scrolls. */
+  function editable(el) {
+    return !el || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) || el.isContentEditable;
+  }
+  document.addEventListener('keydown', function (e) {
+    if (e.metaKey || e.ctrlKey || e.altKey || road.hidden) return;
+    if (editable(document.activeElement)) return;
+    var k = e.key.toLowerCase();
+    if (k === 'w') { e.preventDefault(); pressGas(); }
+    else if (k === 's') { e.preventDefault(); pressBrake(); }
+    else if (k === 'p' || k === 'r' || k === 'n' || k === 'd') setGear(k.toUpperCase());
+  });
+  document.addEventListener('keyup', function (e) {
+    var k = e.key.toLowerCase();
+    if (k === 'w' || k === 's') release();
+  });
 
-    canvas.addEventListener('pointerdown', function (e) {
-      if (!onRoad(e)) return;
+  /* The route bar is the whole document, and dragging it seeks one to one.
+     Seeking is explicitly instant: html carries scroll-behavior: smooth, and a
+     smooth scroll restarted on every pointermove lurches instead of tracking. */
+  function seek(clientX) {
+    var rect = routeBar.getBoundingClientRect();
+    var p = clamp((clientX - rect.left) / rect.width, 0, 1);
+    pos = p * maxM();
+    if (pos > mappedTo) mappedTo = pos;
+    speed = 0;
+    try {
+      window.scrollTo({ top: pos * PX_PER_M, behavior: 'instant' });
+    } catch (err) {
+      window.scrollTo(0, pos * PX_PER_M);
+    }
+    ownScroll = window.scrollY;
+  }
+
+  if (routeBar) {
+    routeBar.addEventListener('pointerdown', function (e) {
       dragging = true;
-      rail.classList.add('dragging');
-      if (canvas.setPointerCapture) canvas.setPointerCapture(e.pointerId);
-      seek(e.clientY);
+      handBack();
+      routeBar.classList.add('dragging');
+      seek(e.clientX);
+      startLoop();
+      try {
+        if (routeBar.setPointerCapture) routeBar.setPointerCapture(e.pointerId);
+      } catch (err) { /* nothing to capture */ }
       e.preventDefault();
     });
-    canvas.addEventListener('pointermove', function (e) {
-      if (dragging) seek(e.clientY);
+    routeBar.addEventListener('pointermove', function (e) {
+      if (dragging) seek(e.clientX);
     });
-    function release(e) {
+    function letGoBar(e) {
       if (!dragging) return;
       dragging = false;
-      rail.classList.remove('dragging');
-      if (canvas.releasePointerCapture && e && e.pointerId !== undefined) {
-        try { canvas.releasePointerCapture(e.pointerId); } catch (err) { /* gone */ }
+      routeBar.classList.remove('dragging');
+      if (routeBar.releasePointerCapture && e && e.pointerId !== undefined) {
+        try { routeBar.releasePointerCapture(e.pointerId); } catch (err) { /* gone */ }
       }
-      request();
-    }
-    canvas.addEventListener('pointerup', release);
-    canvas.addEventListener('pointercancel', release);
-
-    /* Pedals.
-     *
-     * One rAF loop advancing a float scroll position, with scroll-behavior
-     * forced to auto for the duration. A chain of smooth scrollTo calls
-     * restarts itself every frame, which is what made the earlier play control
-     * stutter. Speed eases toward whatever the pedals ask for, and braking is
-     * given more authority than the accelerator, so pulling away and stopping
-     * both have some weight.
-     */
-    var gas = document.getElementById('pedal-gas');
-    var brake = document.getElementById('pedal-brake');
-    var readout = document.getElementById('speed-val');
-    var speedFill = document.getElementById('speed-fill');
-
-    var PULL_AWAY = 240;    // px/s on the first press
-    var STEP = 130;         // px/s added per press
-    var RAMP = 640;         // px/s added per second while held
-    var MAX = 620;          // px/s
-    var KMH = 0.36;         // the rail runs at 10 px to the metre
-
-    var speed = 0, target = 0;
-    var holdGas = false, holdBrake = false;
-    var driveRaf = 0, driveLast = 0, drivePos = 0, wasBehaviour = '', shown = -1;
-
-    function showSpeed() {
-      var kmh = Math.round(speed * KMH);
-      if (kmh !== shown) {
-        shown = kmh;
-        if (readout) readout.textContent = String(kmh);
-      }
-      if (speedFill) speedFill.style.width = Math.min(100, (speed / MAX) * 100) + '%';
-      rail.classList.toggle('driving', speed > 1);
-      if (gas) gas.setAttribute('aria-pressed', String(speed > 1));
-    }
-
-    function engage() {
-      if (driveRaf) return;
-      wasBehaviour = root.style.scrollBehavior;
-      root.style.scrollBehavior = 'auto';
-      drivePos = window.scrollY;
-      driveLast = 0;
-      driveRaf = requestAnimationFrame(driveStep);
-    }
-
-    function disengage() {
-      if (driveRaf) { cancelAnimationFrame(driveRaf); driveRaf = 0; }
-      root.style.scrollBehavior = wasBehaviour || '';
       speed = 0;
-      showSpeed();
     }
-
-    function driveStep(now) {
-      var dt = driveLast ? Math.min(0.05, (now - driveLast) / 1000) : 0;
-      driveLast = now;
-
-      if (holdGas) target = Math.min(MAX, target + RAMP * dt);
-      if (holdBrake) target = 0;
-
-      var k = target < speed ? 7.5 : 3.4;
-      speed += (target - speed) * Math.min(1, dt * k);
-      showSpeed();
-
-      if (target === 0 && speed < 2) { disengage(); return; }
-
-      drivePos += speed * dt;
-      var max = maxScroll();
-      if (drivePos >= max) {
-        window.scrollTo(0, max);
-        target = 0;
-        disengage();
-        return;
-      }
-      window.scrollTo(0, drivePos);
-      driveRaf = requestAnimationFrame(driveStep);
-    }
-
-    function pressGas() {
-      // Pressed at the end of the route, pull away from the top again.
-      if (speed < 1 && window.scrollY >= maxScroll() - 2) window.scrollTo(0, 0);
-      target = target < 1 ? PULL_AWAY : Math.min(MAX, target + STEP);
-      holdGas = true;
-      engage();
-    }
-    function pressBrake() { holdBrake = true; target = 0; engage(); }
-    function letGo() { holdGas = false; holdBrake = false; }
-
-    if (gas) {
-      gas.addEventListener('pointerdown', function (e) { e.preventDefault(); pressGas(); });
-    }
-    if (brake) {
-      brake.addEventListener('pointerdown', function (e) { e.preventDefault(); pressBrake(); });
-    }
-    ['pointerup', 'pointercancel', 'blur'].forEach(function (type) {
-      window.addEventListener(type, letGo);
-    });
-
-    // Taking the wheel yourself lifts off completely, with no coasting.
-    function lift(e) {
-      if (!speed && !target) return;
-      if (gas && gas.contains(e.target)) return;
-      if (brake && brake.contains(e.target)) return;
-      letGo();
-      target = 0;
-      disengage();
-    }
-    ['wheel', 'touchstart', 'pointerdown'].forEach(function (type) {
-      window.addEventListener(type, lift, { passive: true });
-    });
-    window.addEventListener('keydown', function (e) {
-      if (e.key !== 'Tab') lift(e);
-    });
-
-    showSpeed();
-
-    resize();
-    window.addEventListener('resize', resize);
-    window.addEventListener('load', function () { measure(); draw(); });
-    window.addEventListener('scroll', request, { passive: true });
-    window.addEventListener('resmap:theme', function () { readPalette(); draw(); });
+    routeBar.addEventListener('pointerup', letGoBar);
+    routeBar.addEventListener('pointercancel', letGoBar);
   }
+
+  // Taking the wheel yourself lifts off completely, and the model picks the
+  // page's own motion back up on the next frame.
+  ['wheel', 'touchstart'].forEach(function (type) {
+    window.addEventListener(type, function () {
+      handBack();
+      startLoop();
+    }, { passive: true });
+  });
+
+  /* ---------------------------------------------------------------- *
+   * Wiring
+   * ---------------------------------------------------------------- */
+
+  var collapse = document.getElementById('cockpit-toggle');
+  if (collapse) {
+    collapse.addEventListener('click', function () {
+      var open = !cockpit.classList.toggle('shut');
+      collapse.setAttribute('aria-expanded', String(open));
+    });
+  }
+
+  window.addEventListener('scroll', function () {
+    if (raf) return;
+    syncFromScroll();
+    draw();
+    hud();
+  }, { passive: true });
+
+  window.addEventListener('resize', resize);
+  window.addEventListener('load', function () { resize(); });
+  window.addEventListener('resmap:theme', function () { readPalette(); draw(); });
+  if (reduceMotion.addEventListener) {
+    reduceMotion.addEventListener('change', resize);
+  }
+
+  resize();
+  hud();
 })();
