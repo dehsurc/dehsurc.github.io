@@ -50,7 +50,7 @@
   --accent-soft: rgba(21, 127, 174, 0.11);
   --bar-bg:  rgba(243, 240, 233, 0.86);
 
-  --sans: "Instrument Sans", "Freesentation", -apple-system, BlinkMacSystemFont,
+  --sans: "Space Grotesk", "Freesentation", -apple-system, BlinkMacSystemFont,
           system-ui, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   --kr: "Freesentation", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
   /* Labels and figures share the family; only their treatment differs. */
@@ -246,8 +246,8 @@ h1, h2, h3 { font-weight: 700; line-height: 1.25; margin: 0; }
   text-transform: uppercase; color: var(--accent);
 }
 .hero h1 {
-  font-size: clamp(2.1rem, 6.5vw, 3.1rem);
-  letter-spacing: -.02em;
+  font-size: clamp(2.1rem, 6.5vw, 3.2rem);
+  letter-spacing: -.035em;
   margin-bottom: 1.1rem;
 }
 .hangul {
@@ -258,7 +258,7 @@ h1, h2, h3 { font-weight: 700; line-height: 1.25; margin: 0; }
 }
 .lede {
   margin: 0 0 1.9rem;
-  font-size: 1.24rem; line-height: 1.5;
+  font-size: 1.24rem; line-height: 1.5; letter-spacing: -.015em;
   max-width: 22em;
   color: var(--ink);
 }
@@ -357,8 +357,8 @@ h1, h2, h3 { font-weight: 700; line-height: 1.25; margin: 0; }
 .focus > div:first-child { padding-top: 0; }
 .focus > div:last-child { border-bottom: 0; padding-bottom: 0; }
 .focus dt {
-  font-size: 1.02rem; font-weight: 600;
-  letter-spacing: -.005em;
+  font-size: 1.04rem; font-weight: 600;
+  letter-spacing: -.018em;
 }
 .focus dd {
   margin: .25rem 0 0; max-width: 40em;
@@ -392,7 +392,7 @@ h1, h2, h3 { font-weight: 700; line-height: 1.25; margin: 0; }
   font-family: var(--mono); font-size: .74rem; font-weight: 600; color: var(--faint);
   padding-top: .2rem;
 }
-.pub h3 { font-size: 1.02rem; font-weight: 700; letter-spacing: -.005em; }
+.pub h3 { font-size: 1.02rem; font-weight: 700; letter-spacing: -.018em; }
 .pub .authors {
   margin: .3rem 0 0; font-size: .87rem; color: var(--soft);
 }
