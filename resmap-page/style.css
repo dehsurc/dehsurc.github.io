@@ -227,7 +227,9 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
   .rig svg { max-width: 15rem; }
   .stage { min-height: 0; height: auto; padding: 2rem 0; }
   .track { height: auto; }
-  .stage-note { min-height: 0; }
+  /* Still reserved: the note changes length between stages, and letting the
+     block resize under a scroll that is reading its position feeds back. */
+  .stage-note { min-height: 7.5em; }
 }
 
 /* ---------- the road ---------- */

@@ -150,7 +150,20 @@
     var stage = track.firstElementChild;
     var box = track.getBoundingClientRect();
     var travel = track.offsetHeight - stage.offsetHeight;
-    var t = travel > 0 ? clamp(-box.top / travel, 0, 1) : 0;
+    var t;
+
+    if (travel > 0) {
+      // Pinned: the stage holds still and the track scrolls past behind it.
+      t = clamp(-box.top / travel, 0, 1);
+    } else {
+      /* Narrow screens unpin the stage and stack it, so the track is exactly
+         as tall as the stage and there is no travel to read. Run the stages
+         off the block's own passage through the viewport instead: without
+         this the walkthrough sat on Clean for ever on a phone. */
+      var h = stage.offsetHeight || 1;
+      var vh = window.innerHeight || 1;
+      t = clamp((vh * 0.7 - box.top) / (h + vh * 0.3), 0, 1);
+    }
 
     var f = t * (STAGES.length - 1);
     var lo = Math.floor(f), hi = Math.min(STAGES.length - 1, lo + 1);
