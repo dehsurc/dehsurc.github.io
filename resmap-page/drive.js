@@ -506,13 +506,23 @@
     if (outro > 0.02) {
       var fade = clamp((outro - 0.35) / 0.4, 0, 1);
       if (fade > 0) {
+        var label = 'THANK YOU FOR VISITING ReSMap';
         ctx.save();
         ctx.globalAlpha = fade;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillStyle = 'rgba(' + ink + ', 0.8)';
         ctx.font = '700 15px ' + FACE;
-        ctx.fillText('THANK YOU FOR VISITING ReSMap', W / 2, mid);
+
+        /* Fresh tarmac behind the words. The centre line runs straight through
+           them otherwise, and a broken line through a word is worse than no
+           line at all. */
+        var tw = ctx.measureText(label).width;
+        ctx.fillStyle = pavement;
+        box(ctx, W / 2 - tw / 2 - 16, mid - 13, tw + 32, 26, 4);
+        ctx.fill();
+
+        ctx.fillStyle = 'rgba(' + ink + ', 0.8)';
+        ctx.fillText(label, W / 2, mid);
         ctx.restore();
       }
     }
