@@ -65,12 +65,11 @@ it drives. That is the subject of the paper, and it is what makes a progress
 indicator mean something. The extent is the furthest point reached rather than
 the current one: reversing does not unmap the road you already drove.
 
-Each section is a junction with an overhead **guide sign** at its true position,
-green with its section number set like an exit number. The signs are the
-navigation, which is why the top bar drops its link list while the road is up
-and shows the next junction and its distance instead. Every section still needs
-an entry in that link list, since that is where the signs take their short
-names from. Under the road runs the **route bar**: the whole document, with a
+Each section is a junction with a **guide sign** at its true position, green
+with its section number set like an exit number, standing on two posts that run
+down into the verge. Every section needs an entry in the top bar's link list,
+since that is where the signs take their short names from. The next junction
+and its distance are called out in the cockpit, next to the trip meter. Under the road runs the **route bar**: the whole document, with a
 tick per section, and dragging it seeks one to one. Seeking is explicitly
 instant, because `html` carries `scroll-behavior: smooth` and a smooth scroll
 restarted on every pointermove lurches instead of tracking.
@@ -84,8 +83,7 @@ and the cockpit stand down and the link list comes back.
 
 The cockpit at the bottom right carries the gear selector, the pedals, a
 speedometer, a tachometer and a trip meter. **Accel** and **Brake** are held,
-not clicked; `W` and `S` are the same two pedals and `P` `R` `N` `D` the
-selector. The arrow keys are left alone, because they are how the page scrolls.
+not clicked; `W` and `S` are the same two pedals and `D` and `R` the selector. The arrow keys are left alone, because they are how the page scrolls.
 
 The scroll is not an easing curve. It is a longitudinal vehicle model: a 210 Nm
 engine torque curve through a five-speed automatic and a 3.9 final drive,
@@ -94,9 +92,9 @@ against aerodynamic drag and rolling resistance, integrated once per frame on a
 rises with throttle, so a gentle pull-away shifts early and a floored one holds
 each gear out to the redline. Lift off and it takes the tallest gear it can;
 brake and it walks back down. **R** is a real gear, governed to about 18 km/h,
-and it is how you go back up the page. **P** refuses the accelerator, which is
-the whole point of it, so the car starts in **D**. Selecting P or R above
-walking pace is refused too.
+and it is how you go back up the page. There are only two gears, because there
+are only two things you can do to a page: go down it or go back up. Changing
+direction above walking pace is refused.
 
 Metres are the unit throughout. `PX_PER_M` converts them to document pixels and
 `ROAD_PX_PER_M` to strip pixels, and the two are deliberately different: the
@@ -105,6 +103,14 @@ lane marking at a time. `PX_PER_M` is the one number that decides whether
 ordinary road speeds come out as comfortable reading speeds ,  at 18, 50 km/h
 scrolls at 250 px/s and 90 km/h at 450, which is what keeps the whole gearbox in
 use over a document this length.
+
+When the page is yours rather than the model's, the car does not sit exactly
+where the page is: it chases it, and the speed on the dial is the chase's own
+rate. A wheel moves the page in notches, and differentiating that staircase
+gives a reading that spikes and dies on every notch, with a road that jumps
+along with it. The chase costs about 200 ms of lag, which reads as the weight
+of a car. Past a 60 m gap it stops chasing and simply relocates, because an
+anchor jump is not driving. `FOLLOW_K` and `FOLLOW_SMOOTH` are the two knobs.
 
 The model owns the scroll position only while someone is driving it. A wheel or
 a touch of your own hands it straight back, and from then on the page scrolls

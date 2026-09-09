@@ -51,6 +51,9 @@
      over a document this length instead of the car spending its life in
      second. */
   var PX_PER_M = 18;        // document pixels to the metre
+  var FOLLOW_K = 4.5;         // how hard the car chases a page you scroll yourself
+  var FOLLOW_SMOOTH = 5.5;   // and how smoothly that chase changes speed
+  var FOLLOW_SNAP = 60;     // m of gap past which it stops chasing and relocates
   var ROAD_PX_PER_M = 9;    // strip pixels to the metre
   var CAR_X = 0.26;         // the car's fixed position across the strip
   var MIN_VIEWPORT = 900;   // below this the road hides and the links return
@@ -74,7 +77,7 @@
   var C_RR = 0.013;                                 // rolling resistance
   var GRAV = 9.81;
   var BRAKE_MAX = 9200;                             // N, about 6 m/s²
-  var SHIFT_T = 0.32;                               // s of torque cut per shift
+  var SHIFT_T = 0.16;                               // s of torque cut per shift
   var REV_LIMIT = 5.0;                              // m/s in reverse, ~18 km/h
   var STOP_V = 0.15;                                // below this, call it stopped
 
@@ -100,10 +103,9 @@
    * State
    * ---------------------------------------------------------------- */
 
-  // Drive, not Park: you are sat in the driver's seat with the page in front
-  // of you. Nothing moves until a pedal is pressed either way, and a selector
-  // that refuses the first press of the accelerator is a puzzle, not a car.
-  var gear = 'D';           // P, R, N, D
+  // Two gears, because there are only two things you can do to a page: go
+  // down it or go back up. Park and Neutral had nothing to select between.
+  var gear = 'D';           // D or R
   var g = 0;                // index into GEARS while in D
   var shifting = 0;         // seconds of torque cut left
   var speed = 0;            // m/s, signed: positive is down the page
@@ -214,6 +216,13 @@
       routeTicks.appendChild(tick);
       stop.tick = tick;
     });
+
+    // One forced layout, here rather than per frame, so the posts can be drawn
+    // to the plate they actually hold up.
+    stops.forEach(function (stop) {
+      stop.w = stop.el.offsetWidth || 90;
+      stop.h = stop.el.offsetHeight || 22;
+    });
   }
 
   /* A sign is navigation, not a drive control: coast to a stop and let the
@@ -261,6 +270,8 @@
   /* ---------------------------------------------------------------- *
    * Drawing
    * ---------------------------------------------------------------- */
+
+  var SIGN_TOP = 2;          // matches .sign { top } in style.css
 
   function sx(m) { return CAR_X * W + (m - pos) * ROAD_PX_PER_M; }
 
@@ -327,7 +338,7 @@
     var ink = neutral();
     // The band leaves room for the sign gantry above and the distance posts
     // along the shoulder below.
-    var rTop = Math.round(H * 0.35);
+    var rTop = Math.round(H * 0.45);
     var rBot = H - 9;
     var mid = (rTop + rBot) / 2;
     var edgeT = rTop + 2.5, edgeB = rBot - 2.5;
@@ -448,14 +459,29 @@
       s.el.hidden = false;
       s.el.style.left = Math.round(x) + 'px';
       s.el.classList.toggle('passed', s.m <= pos);
-      s.el.classList.toggle('here', s === current());
-      // Junction stalk down to the carriageway.
-      ctx.strokeStyle = s === current() ? sign : 'rgba(' + ink + ', 0.22)';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(x, rTop - 6);
-      ctx.lineTo(x, rTop);
-      ctx.stroke();
+      var isHere = s === current();
+      s.el.classList.toggle('here', isHere);
+
+      /* Two posts from the plate down into the verge, with a footing where
+         they meet the ground. A sign hanging in the air is a label; a sign on
+         legs is a sign. */
+      var footY = rTop + 3;
+      var plateY = SIGN_TOP + (s.h || 22);
+      var leg = Math.max(7, Math.min(34, (s.w || 90) * 0.28));
+      ctx.strokeStyle = isHere ? sign : 'rgba(' + ink + ', 0.34)';
+      ctx.lineCap = 'butt';
+      [-leg, leg].forEach(function (dx) {
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        ctx.moveTo(x + dx, plateY);
+        ctx.lineTo(x + dx, footY);
+        ctx.stroke();
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(x + dx - 3.5, footY);
+        ctx.lineTo(x + dx + 3.5, footY);
+        ctx.stroke();
+      });
     });
 
     // Route bar: the whole document, and how much of it has been driven.
@@ -480,10 +506,8 @@
   function step(dt) {
     // Pedal travel. Real pedals move fast but not instantly, and lifting off
     // is quicker than pressing down.
-    throttle += ((holdGas ? 1 : 0) - throttle) * Math.min(1, dt * (holdGas ? 12 : 16));
+    throttle += ((holdGas ? 1 : 0) - throttle) * Math.min(1, dt * (holdGas ? 20 : 16));
     brake += ((holdBrake ? 1 : 0) - brake) * Math.min(1, dt * (holdBrake ? 14 : 18));
-
-    if (gear === 'P') { speed = 0; rpm = IDLE; return; }
 
     var dir = gear === 'R' ? -1 : 1;
     var v = speed;
@@ -502,7 +526,7 @@
     }
 
     var drive = 0;
-    if (gear !== 'N' && shifting <= 0) {
+    if (shifting <= 0) {
       var t = throttle * torque(rpm) - (1 - throttle) * engineBrake(rpm);
       drive = dir * t * ratio() * FINAL * EFF / WHEEL_R;
     }
@@ -652,16 +676,30 @@
       ownScroll = window.scrollY;
       observed = speed;
     } else {
-      // Reading the page's own motion rather than driving it. The reading is
-      // low-passed, because one frame of a wheel gesture is not a speed.
+      /* Reading the page's own motion rather than driving it.
+       *
+       * A wheel moves the page in notches: differentiating that staircase
+       * gives a speed that spikes and dies every notch, and a road that jumps
+       * with it. So the car does not sit exactly where the page is. It chases
+       * it, and its speed is the chase's own rate, which is continuous by
+       * construction. The lag is a hundred milliseconds and reads as the
+       * weight of a car rather than as lag. */
       var m = sy / PX_PER_M;
-      var raw = dt > 0 ? (m - pos) / dt : 0;
-      if (dragging) observed = 0;
-      else {
-        observed += (clamp(raw, -60, 60) - observed) * Math.min(1, dt * 6);
-        if (Math.abs(observed) < 0.2) observed = 0;
+      // An anchor jump or a scrollbar thrown across the document is not
+      // driving. Past a point, the car is simply somewhere else now.
+      if (dragging || Math.abs(m - pos) > FOLLOW_SNAP) {
+        pos = m;
+        observed = 0;
+      } else {
+        var want = clamp((m - pos) * FOLLOW_K, -45, 45);
+        observed += (want - observed) * Math.min(1, dt * FOLLOW_SMOOTH);
+        if (Math.abs(m - pos) < 0.03 && Math.abs(observed) < 0.15) {
+          pos = m;
+          observed = 0;
+        } else {
+          pos += observed * dt;
+        }
       }
-      pos = m;
       speed = observed;
       throttle = 0;
       brake = 0;
@@ -697,6 +735,11 @@
     owned = false;
     freeScroll();
     ownScroll = -1;
+    // Settle exactly on the page, so the next frame does not start from a lag.
+    pos = window.scrollY / PX_PER_M;
+    speed = 0;
+    observed = 0;
+    if (pos > mappedTo) mappedTo = pos;
     draw();
     hud();
   }
@@ -716,12 +759,11 @@
 
   function setGear(next) {
     if (next === gear) return;
-    // You cannot slam a moving car into P or R. Neutral is always allowed.
-    if ((next === 'P' || next === 'R') && Math.abs(speed) > 1.2) { baulk(); return; }
+    // You cannot slam a moving car into the other direction.
+    if (Math.abs(speed) > 1.2) { baulk(); return; }
     gear = next;
     g = 0;
     shifting = 0;
-    if (gear === 'P') { speed = 0; throttle = 0; holdGas = false; }
     gearBtns.forEach(function (b) {
       var on = b.dataset.gear === gear;
       b.setAttribute('aria-checked', String(on));
@@ -746,12 +788,7 @@
     });
   });
 
-  // A parked car does not move for the accelerator, and saying so is the whole
-  // point of the gear. Neutral is different: selecting a gear is the obvious
-  // thing you meant, so it is done for you.
   function pressGas() {
-    if (gear === 'P') { baulk(); return; }
-    if (gear === 'N') setGear('D');
     takeWheel();
     holdGas = true;
   }
@@ -788,8 +825,8 @@
   window.addEventListener('pointerup', release);
   window.addEventListener('blur', release);
 
-  /* Keyboard: W and S are the pedals, P R N D are the selector. The arrow
-     keys are left alone, because they are how the page scrolls. */
+  /* Keyboard: W and S are the pedals, D and R the selector. The arrow keys are
+     left alone, because they are how the page scrolls. */
   function editable(el) {
     return !el || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) || el.isContentEditable;
   }
@@ -799,7 +836,7 @@
     var k = e.key.toLowerCase();
     if (k === 'w') { e.preventDefault(); pressGas(); }
     else if (k === 's') { e.preventDefault(); pressBrake(); }
-    else if (k === 'p' || k === 'r' || k === 'n' || k === 'd') setGear(k.toUpperCase());
+    else if (k === 'r' || k === 'd') setGear(k.toUpperCase());
   });
   document.addEventListener('keyup', function (e) {
     var k = e.key.toLowerCase();

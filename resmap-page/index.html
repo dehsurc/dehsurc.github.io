@@ -22,7 +22,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700&display=swap">
-<link rel="stylesheet" href="style.css?v=14">
+<link rel="stylesheet" href="style.css?v=15">
 
 <!-- Set the theme before first paint so there is no flash. -->
 <script>
@@ -59,7 +59,6 @@
 
 <nav class="topbar" aria-label="Sections">
   <div class="topbar-inner">
-    <a class="mark" href="#top">ReSMap</a>
     <div class="nav-scroll">
     <ul>
       <li><a href="#abstract">Abstract</a></li>
@@ -74,28 +73,6 @@
       <li><a href="#cite">Paper</a></li>
     </ul>
     </div>
-    <!-- Shown in place of the links while the road is up: the signs are the
-         navigation, and this is the next one coming. -->
-    <p class="nextup" id="nextup" aria-live="off"></p>
-    <button id="theme-toggle" type="button" aria-label="Switch to dark theme" aria-pressed="false">
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <mask id="crescent">
-          <rect x="0" y="0" width="24" height="24" fill="#fff"></rect>
-          <circle cx="26" cy="6" r="7" fill="#000"></circle>
-        </mask>
-        <circle class="disc" cx="12" cy="12" r="5.5" mask="url(#crescent)"></circle>
-        <g class="rays">
-          <line x1="12" y1="1.6" x2="12" y2="3.6"></line>
-          <line x1="12" y1="20.4" x2="12" y2="22.4"></line>
-          <line x1="1.6" y1="12" x2="3.6" y2="12"></line>
-          <line x1="20.4" y1="12" x2="22.4" y2="12"></line>
-          <line x1="4.6" y1="4.6" x2="6" y2="6"></line>
-          <line x1="18" y1="18" x2="19.4" y2="19.4"></line>
-          <line x1="4.6" y1="19.4" x2="6" y2="18"></line>
-          <line x1="18" y1="6" x2="19.4" y2="4.6"></line>
-        </g>
-      </svg>
-    </button>
   </div>
 </nav>
 
@@ -546,6 +523,27 @@
   </div>
 </footer>
 
+<!-- Its own control in the corner, off the top bar, which is the links only. -->
+<button id="theme-toggle" type="button" aria-label="Switch to dark theme" aria-pressed="false">
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <mask id="crescent">
+      <rect x="0" y="0" width="24" height="24" fill="#fff"></rect>
+      <circle cx="26" cy="6" r="7" fill="#000"></circle>
+    </mask>
+    <circle class="disc" cx="12" cy="12" r="5.5" mask="url(#crescent)"></circle>
+    <g class="rays">
+      <line x1="12" y1="1.6" x2="12" y2="3.6"></line>
+      <line x1="12" y1="20.4" x2="12" y2="22.4"></line>
+      <line x1="1.6" y1="12" x2="3.6" y2="12"></line>
+      <line x1="20.4" y1="12" x2="22.4" y2="12"></line>
+      <line x1="4.6" y1="4.6" x2="6" y2="6"></line>
+      <line x1="18" y1="18" x2="19.4" y2="19.4"></line>
+      <line x1="4.6" y1="19.4" x2="6" y2="18"></line>
+      <line x1="18" y1="6" x2="19.4" y2="4.6"></line>
+    </g>
+  </svg>
+</button>
+
 <!-- The cockpit: gear selector and pedals, where they are in a car. -->
 <div id="cockpit" hidden>
   <div class="dials">
@@ -553,12 +551,11 @@
     <p class="gear-now" id="gear-now">D1</p>
     <i class="tacho"><u id="rpm-fill"></u></i>
     <p class="trip" id="trip">0.00 / 0.00 km</p>
+    <p class="nextup" id="nextup" aria-live="off"></p>
   </div>
 
   <div class="gears" role="radiogroup" aria-label="Gear selector">
-    <button type="button" role="radio" data-gear="P" aria-checked="false" title="Park">P</button>
     <button type="button" role="radio" data-gear="R" aria-checked="false" title="Reverse, back up the page">R</button>
-    <button type="button" role="radio" data-gear="N" aria-checked="false" title="Neutral, coast">N</button>
     <button type="button" role="radio" data-gear="D" aria-checked="true"  title="Drive, down the page">D</button>
   </div>
 
@@ -579,15 +576,15 @@
     </button>
   </div>
 
-  <p class="keys">W accel &middot; S brake &middot; P R N D gear</p>
+  <p class="keys">W accel &middot; S brake &middot; D R gear</p>
 
   <button id="cockpit-toggle" type="button" aria-expanded="true" aria-label="Collapse the cockpit">
     <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 6.2 8 10.4l4.5-4.2"/></svg>
   </button>
 </div>
 
-<script src="failure.js?v=14"></script>
-<script src="drive.js?v=14"></script>
-<script src="main.js?v=14"></script>
+<script src="failure.js?v=15"></script>
+<script src="drive.js?v=15"></script>
+<script src="main.js?v=15"></script>
 </body>
 </html>

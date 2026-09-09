@@ -70,9 +70,9 @@
   --wide: 90rem;   /* figures and tables */
   --gutter: 3rem;
 
-  --road-h: 104px; /* the road band across the top; drive.js reads nothing
+  --road-h: 118px; /* the road band across the top; drive.js reads nothing
                       from this, but the topbar offset and body padding do */
-  --chrome: 3rem;  /* sticky chrome a pinned section has to clear */
+  --chrome: 2.6rem;  /* sticky chrome a pinned section has to clear */
 
   color-scheme: light;
 }
@@ -237,23 +237,19 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
    anchors have to clear both. */
 .has-road body { padding-top: var(--road-h); }
 .has-road .topbar { top: var(--road-h); }
-.has-road { scroll-padding-top: calc(var(--road-h) + 4rem); }
-.has-road { --chrome: calc(var(--road-h) + 3rem); }
+.has-road { scroll-padding-top: calc(var(--road-h) + 3.6rem); }
+.has-road { --chrome: calc(var(--road-h) + 2.6rem); }
 
-/* While the road is up the signs are the navigation, so the link list gives
-   way to the next-junction readout. */
-.has-road .nav-scroll { display: none; }
-.nextup { display: none; }
-.has-road .nextup {
-  display: block;
-  flex: 1 1 auto;
-  margin: 0;
-  font-size: 13px;
+.nextup {
+  grid-column: 1 / -1;
+  margin: .1rem 0 0;
+  font-size: 11px;
   color: var(--ink-soft);
   font-variant-numeric: lining-nums tabular-nums;
   white-space: nowrap;
   overflow: hidden; text-overflow: ellipsis;
 }
+.nextup:empty { display: none; }
 
 #road {
   position: fixed;
@@ -280,14 +276,14 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
   top: 2px;
   transform: translateX(-50%);
   display: flex; align-items: baseline; gap: .3rem;
-  max-width: 150px;
-  padding: .2rem .42rem;
+  max-width: 160px;
+  padding: .26rem .5rem;
   border: 1px solid var(--sign);
   border-radius: 3px;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .5);
   background: var(--sign);
   color: var(--sign-ink);
-  font: inherit; font-size: 10.5px; line-height: 1.2;
+  font: inherit; font-size: 12px; line-height: 1.2;
   letter-spacing: .005em;
   white-space: nowrap;
   overflow: hidden; text-overflow: ellipsis;
@@ -299,7 +295,7 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
 .sign[hidden] { display: none; }
 .sign b {
   flex: none;
-  font-size: 9px; font-weight: 700;
+  font-size: 10px; font-weight: 700;
   font-variant-numeric: lining-nums;
   color: rgba(255, 255, 255, .68);
 }
@@ -439,7 +435,7 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
 }
 
 .gears {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: .25rem;
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: .3rem;
   margin-bottom: .4rem;
 }
 .gears button {
@@ -525,14 +521,7 @@ section + section { border-top: 1px solid var(--rule); }
   width: min(100% - var(--gutter), var(--wide));
   margin-inline: auto;
   display: flex; align-items: center; gap: 1.25rem;
-  height: 3rem;
-}
-
-.topbar .mark {
-  flex: none;
-  font-weight: 700; font-size: 15px;
-  letter-spacing: .01em;
-  color: var(--ink);
+  height: 2.6rem;
 }
 
 .nav-scroll { flex: 1 1 auto; overflow-x: auto; scrollbar-width: none; }
@@ -541,7 +530,7 @@ section + section { border-top: 1px solid var(--rule); }
 .topbar ul {
   display: flex; gap: 1.15rem;
   list-style: none; margin: 0; padding: 0;
-  font-size: 13.5px; line-height: 3rem;
+  font-size: 13.5px; line-height: 2.6rem;
   white-space: nowrap;
 }
 .topbar li { flex: none; }
@@ -551,12 +540,16 @@ section + section { border-top: 1px solid var(--rule); }
 
 /* ---------- theme toggle ---------- */
 
+/* Off the top bar and into the corner opposite the cockpit, so the bar can be
+   the links and nothing else. */
 #theme-toggle {
-  flex: none;
-  width: 2rem; height: 2rem;
+  position: fixed;
+  left: 1.1rem; bottom: 1.1rem;
+  z-index: 46;
+  width: 2.25rem; height: 2.25rem;
   display: grid; place-items: center;
   padding: 0;
-  background: none;
+  background: var(--bar);
   border: 1px solid var(--rule-dark);
   border-radius: 999px;
   color: var(--ink-soft);
