@@ -70,7 +70,7 @@
   --wide: 90rem;   /* figures and tables */
   --gutter: 3rem;
 
-  --road-h: 118px; /* the road band across the top; drive.js reads nothing
+  --road-h: 100px; /* the road band across the top; drive.js reads nothing
                       from this, but the topbar offset and body padding do */
   --chrome: 2.6rem;  /* sticky chrome a pinned section has to clear */
 
@@ -307,37 +307,6 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
 }
 .sign.here b { color: rgba(255, 255, 255, .85); }
 
-/* The route bar under the road: the whole document, and how far along it the
-   car is. Dragging it seeks one to one. */
-.route {
-  flex: none;
-  position: relative;
-  height: 18px;
-  border-top: 1px solid var(--rule);
-  background: var(--surface);
-  cursor: grab;
-  touch-action: none;
-}
-.route.dragging { cursor: grabbing; }
-.route-ticks { position: absolute; inset: 0; }
-.route-ticks i {
-  position: absolute; top: 4px; bottom: 4px;
-  width: 1px;
-  background: var(--rule-dark);
-}
-.route-done {
-  position: absolute; left: 0; top: 0; bottom: 0;
-  width: 0;
-  background: var(--accent);
-  opacity: .16;
-  pointer-events: none;
-}
-.route::after {
-  content: '';
-  position: absolute; left: 0; right: 0; bottom: 0;
-  height: 1px;
-  background: var(--rule);
-}
 
 /* ---------- the cockpit ---------- */
 

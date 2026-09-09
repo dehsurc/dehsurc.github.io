@@ -83,10 +83,7 @@ with its section number set like an exit number, standing on two posts that run
 down into the verge. The signs are the navigation, so the top bar is hidden while the road is up;
 it stays in the markup, and comes back below 900 px, because that is where the
 signs take their short names from. The next junction
-and its distance are called out in the cockpit, next to the trip meter. Under the road runs the **route bar**: the whole document, with a
-tick per section, and dragging it seeks one to one. Seeking is explicitly
-instant, because `html` carries `scroll-behavior: smooth` and a smooth scroll
-restarted on every pointermove lurches instead of tracking.
+and its distance are called out in the cockpit, next to the trip meter.
 
 The road reserves its own band at the top the way a scrollbar reserves a
 gutter, so it never sits over the content; the top bar sticks below it and

@@ -32,9 +32,6 @@
   var road       = document.getElementById('road');
   var canvas     = document.getElementById('road-map');
   var signBox    = document.getElementById('road-signs');
-  var routeBar   = document.getElementById('route');
-  var routeTicks = document.getElementById('route-ticks');
-  var routeDone  = document.getElementById('route-done');
   var cockpit    = document.getElementById('cockpit');
 
   if (!road || !canvas || !canvas.getContext || !cockpit) return;
@@ -133,7 +130,7 @@
 
   var raf = 0, last = 0, idleFor = 0;
   var ownScroll = -1, wasBehaviour = '', driving = false;
-  var stops = [], routeM = 1, dragging = false;
+  var stops = [], routeM = 1;
   var W = 0, H = 0, dpr = 1;
   var shownNext = '';
   var stopCol = '#b53228';
@@ -222,7 +219,6 @@
       });
 
     signBox.textContent = '';
-    routeTicks.textContent = '';
 
     stops.forEach(function (stop, i) {
       var b = document.createElement('button');
@@ -235,12 +231,6 @@
       b.addEventListener('click', function () { jumpTo(stop); });
       signBox.appendChild(b);
       stop.el = b;
-
-      var tick = document.createElement('i');
-      tick.style.left = (routeM > 0 ? clamp(stop.m / routeM, 0, 1) : 0) * 100 + '%';
-      tick.title = stop.name;
-      routeTicks.appendChild(tick);
-      stop.tick = tick;
     });
 
     // One forced layout, here rather than per frame, so the posts can be drawn
@@ -568,10 +558,6 @@
       });
     });
 
-    // Route bar: the whole document, and how much of it has been driven.
-    if (routeDone) {
-      routeDone.style.width = clamp(pos / routeM, 0, 1) * 100 + '%';
-    }
   }
 
   /* A section counts as current once it is behind the car, which is the same
@@ -857,7 +843,7 @@
     // Anything that moved the page other than us wins, and lifts us off.
     if (owned && ownScroll >= 0 && Math.abs(sy - ownScroll) > 2) handBack();
 
-    if (owned && !dragging) {
+    if (owned) {
       step(dt);
       window.scrollTo(0, pos * PX_PER_M);
       ownScroll = window.scrollY;
@@ -874,7 +860,7 @@
       var m = sy / PX_PER_M;
       // An anchor jump or a scrollbar thrown across the document is not
       // driving. Past a point, the car is simply somewhere else now.
-      if (dragging || Math.abs(m - pos) > FOLLOW_SNAP) {
+      if (Math.abs(m - pos) > FOLLOW_SNAP) {
         pos = m;
         observed = 0;
       } else {
@@ -906,13 +892,13 @@
        must not put the flourish away. */
     if (pos >= maxM() - 1.5) arrived = true;
     else if (pos < maxM() - 6) arrived = false;
-    var atEnd = arrived && !dragging;
+    var atEnd = arrived;
     outro = clamp(outro + (atEnd ? dt / 1.2 : -dt / 0.25), 0, 1);
 
     draw();
     hud(dt);
 
-    var busy = dragging || Math.abs(needleV) > 0.008 ||
+    var busy = Math.abs(needleV) > 0.008 ||
       (atEnd ? outro < 1 : outro > 0) || (owned
       ? (Math.abs(speed) > 0.02 || holdGas || holdBrake || throttle > 0.02 || brake > 0.02)
       : Math.abs(observed) > 0.05);
@@ -1117,49 +1103,6 @@
     liftTimer = setTimeout(release, 60);
   });
 
-  /* The route bar is the whole document, and dragging it seeks one to one.
-     Seeking is explicitly instant: html carries scroll-behavior: smooth, and a
-     smooth scroll restarted on every pointermove lurches instead of tracking. */
-  function seek(clientX) {
-    var rect = routeBar.getBoundingClientRect();
-    var p = clamp((clientX - rect.left) / rect.width, 0, 1);
-    pos = p * maxM();
-    speed = 0;
-    try {
-      window.scrollTo({ top: pos * PX_PER_M, behavior: 'instant' });
-    } catch (err) {
-      window.scrollTo(0, pos * PX_PER_M);
-    }
-    ownScroll = window.scrollY;
-  }
-
-  if (routeBar) {
-    routeBar.addEventListener('pointerdown', function (e) {
-      dragging = true;
-      handBack();
-      routeBar.classList.add('dragging');
-      seek(e.clientX);
-      startLoop();
-      try {
-        if (routeBar.setPointerCapture) routeBar.setPointerCapture(e.pointerId);
-      } catch (err) { /* nothing to capture */ }
-      e.preventDefault();
-    });
-    routeBar.addEventListener('pointermove', function (e) {
-      if (dragging) seek(e.clientX);
-    });
-    function letGoBar(e) {
-      if (!dragging) return;
-      dragging = false;
-      routeBar.classList.remove('dragging');
-      if (routeBar.releasePointerCapture && e && e.pointerId !== undefined) {
-        try { routeBar.releasePointerCapture(e.pointerId); } catch (err) { /* gone */ }
-      }
-      speed = 0;
-    }
-    routeBar.addEventListener('pointerup', letGoBar);
-    routeBar.addEventListener('pointercancel', letGoBar);
-  }
 
   // Taking the wheel yourself lifts off completely, and the model picks the
   // page's own motion back up on the next frame.
