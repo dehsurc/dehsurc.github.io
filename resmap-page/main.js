@@ -27,13 +27,21 @@
       toggle.setAttribute('aria-label',
         'Switch to ' + (theme === 'dark' ? 'light' : 'dark') + ' theme');
     }
-    try { localStorage.setItem('resmap-theme', theme); } catch (e) { /* private mode */ }
+    // Everything that has to be right in the snapshot happens here and only
+    // here. Persisting the choice does not, and localStorage is a synchronous
+    // write, so it waits until the animation is running.
     window.dispatchEvent(new CustomEvent('resmap:theme', { detail: theme }));
+  }
+
+  function remember(theme) {
+    try { localStorage.setItem('resmap-theme', theme); } catch (e) { /* private mode */ }
   }
 
   function round(v) { return Math.round(v * 10) / 10; }
 
-  // A polygon of n vertices, each at its own radius from (x, y).
+  /* A polygon of n vertices, each at its own radius from (x, y). Kept short:
+     a circle or an ellipse animates on the compositor, a polygon has to be
+     re-rasterised every frame, and the cost climbs with the vertex count. */
   function polygon(x, y, radii, phase) {
     var n = radii.length, points = [];
     for (var i = 0; i < n; i++) {
@@ -73,19 +81,6 @@
       return [polygon(x, y, flat(6, 0), phase),
               polygon(x, y, flat(6, cover(reach, 6)), phase)];
     },
-    function burstWipe(x, y, reach) {
-      var n = 16, phase = Math.random() * Math.PI * 2;
-      var outer = cover(reach, n) / 0.62, radii = [];
-      for (var i = 0; i < n; i++) radii.push(i % 2 ? outer * 0.62 : outer);
-      return [polygon(x, y, flat(n, 0), phase), polygon(x, y, radii, phase)];
-    },
-    function blobWipe(x, y, reach) {
-      var n = 9, phase = Math.random() * Math.PI * 2, radii = [];
-      for (var i = 0; i < n; i++) {
-        radii.push(cover(reach, n) * (1 + Math.random() * 0.45));
-      }
-      return [polygon(x, y, flat(n, 0), phase), polygon(x, y, radii, phase)];
-    },
     function boxWipe(x, y, reach, w, h) {
       return ['inset(' + round(y) + 'px ' + round(w - x) + 'px ' +
                 round(h - y) + 'px ' + round(x) + 'px round 999px)',
@@ -105,6 +100,7 @@
 
     if (!document.startViewTransition || reduceMotion.matches) {
       paint(next);
+      remember(next);
       return;
     }
 
@@ -133,10 +129,11 @@
 
     function done() { delete root.dataset.wipe; }
     transition.finished.then(done, done);
+    transition.ready.then(function () { remember(next); }, function () { remember(next); });
 
     transition.ready.then(function () {
       root.animate({ clipPath: frames }, {
-        duration: closing ? 680 : 760,
+        duration: closing ? 560 : 620,
         // Opening leads with speed and settles. The literal mirror of that
         // curve holds the shape at full size and then collapses it in the
         // last few frames, which reads as a blink rather than a wipe, so

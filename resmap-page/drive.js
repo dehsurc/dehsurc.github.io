@@ -844,6 +844,14 @@
     var dt = last ? Math.min(0.05, (now - last) / 1000) : 0;
     last = now;
 
+    /* Hold still through a theme wipe. The browser is compositing two
+       snapshots of the whole page across those frames, and two canvases
+       repainting underneath it is the last thing it needs. */
+    if (root.dataset.wipe) {
+      raf = requestAnimationFrame(loop);
+      return;
+    }
+
     var sy = window.scrollY;
 
     // Anything that moved the page other than us wins, and lifts us off.
