@@ -554,11 +554,15 @@
 
   }
 
-  /* A section counts as current once it is behind the car, which is the same
-     lookahead the old rail had, expressed in the only way that makes sense
-     here: you are in the section you have driven into. */
+  /* A section counts as current once the car has driven into it. */
   function current() {
-    var here = stops.length ? stops[0] : null;
+    if (!stops.length) return null;
+    /* Except at the bottom of the document, where the last section's top can
+       never reach the top of the viewport because the scroll runs out first.
+       Sat at the end of the route you are in the last section, whatever the
+       arithmetic says. */
+    if (pos >= maxM() - 0.5) return stops[stops.length - 1];
+    var here = stops[0];
     stops.forEach(function (s) { if (s.m <= pos + 0.5) here = s; });
     return here;
   }
