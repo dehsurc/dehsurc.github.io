@@ -66,12 +66,10 @@ The map does not stop at the car. The model predicts over a region of interest
 around the ego, so it runs `PERCEPTION_M` up the road ahead (30 m, the
 longitudinal half of the paper's 60 x 30 m setting) and thins out across that
 range, because distant evidence is sparse and the prediction there is a guess.
-Every stretch driven stays drawn, and only the model extends one: scrolling
-past a stretch you never drove leaves it bare. Drive away from one and a new
-one starts without erasing the old. Only the road *ahead* of the car is still
-a prediction and gets the long fade; behind it is finished work and gets a
-4 m soft edge, so a driven stretch does not look like it is being erased off
-the back of the strip. **Clear map** at the top of the cockpit wipes them all.
+The map is the road up to the car and the road it can see ahead of it, and
+nothing else: everything from the start of the route to the car is laid down,
+the perception range hangs off the front of it, and backing up takes the map
+with you. There is nothing to remember and nothing to clear.
 
 Reaching the end of the document sends the car off the right-hand side and the
 road says thank you. Arrival latches, because browsers report a fractional
@@ -125,7 +123,11 @@ rate. A wheel moves the page in notches, and differentiating that staircase
 gives a reading that spikes and dies on every notch, with a road that jumps
 along with it. The chase costs about 200 ms of lag, which reads as the weight
 of a car. Past a 60 m gap it stops chasing and simply relocates, because an
-anchor jump is not driving. `FOLLOW_K` and `FOLLOW_SMOOTH` are the two knobs.
+anchor jump is not driving. The chase stiffens with the gap, softly at reading pace so the needle does not
+jitter on every wheel notch and hard beyond it so a flick cannot outrun the car:
+a fixed gain let a fast scroll pull away until the gap tripped the snap, over
+and over, which is what made fast scrolling stutter. `FOLLOW_K`,
+`FOLLOW_SMOOTH` and `FOLLOW_SNAP` are the knobs.
 
 The model owns the scroll position only while someone is driving it. A wheel or
 a touch of your own hands it straight back, and from then on the page scrolls

@@ -53,7 +53,7 @@
   var PX_PER_M = 32;        // document pixels to the metre
   var FOLLOW_K = 4.5;         // how hard the car chases a page you scroll yourself
   var FOLLOW_SMOOTH = 5.5;   // and how smoothly that chase changes speed
-  var FOLLOW_SNAP = 60;     // m of gap past which it stops chasing and relocates
+  var FOLLOW_SNAP = 150;    // m of gap past which it stops chasing and relocates
   // The model predicts a map over a region of interest around the ego, not a
   // trail behind it. 60 x 30 m is the paper's main setting, so the prediction
   // reaches 30 m up the road, and thins out towards the end of that range the
@@ -119,12 +119,9 @@
   var shifting = 0;         // seconds of torque cut left
   var speed = 0;            // m/s, signed: positive is down the page
   var pos = 0;              // metres from the top of the document
-  /* Every stretch the car has actually driven, and so built a map of. Only
-     the model extends them: scrolling the page by hand is not driving, and a
-     road that arrives already mapped has nothing left to show you. Drive away
-     from one stretch and a new one starts, and both stay drawn. */
-  var segs = [];                       // committed, sorted, non-overlapping
-  var live = { a: 0, b: 0 };           // the one being driven right now
+  /* The map is the road up to the car, and the road it can see ahead of it.
+     Nothing to remember and nothing to clear: come forward and it is laid
+     down, back up and it goes with you. */
   var outro = 0;                       // end-of-route flourish, 0 to 1
   var arrived = false;                 // latched at the end of the route
   var rpm = IDLE;
@@ -290,40 +287,6 @@
 
   function syncFromScroll() {
     pos = window.scrollY / PX_PER_M;
-    relocate();
-  }
-
-  /* Driving extends the stretch under the car. */
-  function drove() {
-    if (pos < live.a) live.a = pos;
-    if (pos > live.b) live.b = pos;
-  }
-
-  /* Landing outside it puts it away and starts a new one where you are. What
-     was drawn stays drawn: you did drive it. */
-  function relocate() {
-    if (pos >= live.a - PERCEPTION_M && pos <= live.b + PERCEPTION_M) return;
-    commit();
-    live = { a: pos, b: pos };
-  }
-
-  function commit() {
-    if (live.b - live.a < 0.5) return;
-    segs.push({ a: live.a, b: live.b });
-    segs.sort(function (p, q) { return p.a - q.a; });
-    var out = [];
-    segs.forEach(function (seg) {
-      var last = out[out.length - 1];
-      if (last && seg.a <= last.b + 1) last.b = Math.max(last.b, seg.b);
-      else out.push({ a: seg.a, b: seg.b });
-    });
-    segs = out;
-  }
-
-  function clearMap() {
-    segs = [];
-    live = { a: pos, b: pos };
-    draw();
   }
 
   /* ---------------------------------------------------------------- *
@@ -463,61 +426,42 @@
     ctx.globalAlpha = 1;
     stops.forEach(function (s) { crossing(sx(s.m), paint, 2.6, 0.75); });
 
-    /* The map the car has built, in its class colours with the per-polyline
-       vertices a predicted map is drawn with.
+    /* The map, in its class colours with the per-polyline vertices a predicted
+       map is drawn with.
 
-       It is not the whole road. It is the stretches actually driven, solid,
-       with the perception range hanging off the ends of the one the car is on:
-       the model predicts over a region of interest around the ego, so the map
-       runs a little way up the road ahead and thins out across that range,
-       because distant evidence is sparse and the prediction there is a guess.
-       Drive and you watch it laid down ahead of you; a stretch you never drove
-       has nothing on it. */
-    function drawSeg(seg) {
-      /* Only the road ahead of the car is still being predicted, and only on
-         the stretch it is actually on. Everything behind is finished work and
-         gets a soft edge, not a range of guesswork: a long fade there reads as
-         the map being erased off the back of the strip. */
-      var onIt = pos >= seg.a - PERCEPTION_M && pos <= seg.b + PERCEPTION_M;
-      var backM = seg.a - EDGE_M;
-      var frontM = onIt ? Math.max(seg.b, pos + PERCEPTION_M) : seg.b + EDGE_M;
-      var x0 = sx(backM), x1 = sx(seg.a), x2 = sx(seg.b), x3 = sx(frontM);
-      if (x3 < 0 || x0 > W) return;
+       Everything from the start of the route up to the car is laid down. Ahead
+       of it the model is still predicting, over a region of interest around
+       the ego, so the map runs on to the edge of the perception range and thins
+       out across it: distant evidence is sparse and the prediction there is a
+       guess. Back up and the map goes with you. */
+    var edgeX = sx(pos);
+    var predictX = sx(pos + PERCEPTION_M);
+    var clipR = Math.min(W, predictX);
 
-      var clipL = Math.max(0, x0), clipR = Math.min(W, x3);
-      if (clipR <= clipL) return;
-
+    if (clipR > 0) {
       function shade(kind) {
         var hex = colour(kind);
+        var a1 = clamp(edgeX / W, 0, 1);
+        var a2 = clamp(predictX / W, 0, 1);
         var grd = ctx.createLinearGradient(0, 0, W, 0);
-        var a0 = clamp(x0 / W, 0, 1), a1 = clamp(x1 / W, 0, 1);
-        var a2 = clamp(x2 / W, 0, 1), a3 = clamp(x3 / W, 0, 1);
-        var st = [];
-        if (a1 > 0) {
-          st.push([0, 0]);
-          if (a0 > 0) st.push([a0, 0]);
-          if (a1 > a0 + 0.0005) st.push([a0 + (a1 - a0) * 0.5, 0.5]);
-        }
-        st.push([a1, 1]);
-        if (a2 > a1) st.push([a2, 1]);
-        if (a3 > a2 + 0.0005) st.push([a2 + (a3 - a2) * 0.5, 0.5]);
-        if (a3 < 1) st.push([a3, 0]);
-        st.push([1, 0]);
-        st.forEach(function (p) {
-          grd.addColorStop(p[0], p[1] === 1 ? hex : rgba(hex, p[1]));
-        });
+        grd.addColorStop(0, hex);
+        grd.addColorStop(a1, hex);
+        if (a2 > a1 + 0.0005) grd.addColorStop(a1 + (a2 - a1) * 0.5, rgba(hex, 0.5));
+        grd.addColorStop(Math.max(a1, a2), rgba(hex, 0));
+        grd.addColorStop(1, rgba(hex, 0));
         return grd;
       }
 
+      // A crossing is one element, so it takes one confidence rather than a
+      // gradient across itself.
       function conf(m) {
-        if (m >= seg.a && m <= seg.b) return 1;
-        if (m < seg.a) return clamp((m - backM) / EDGE_M, 0, 1);
-        return clamp((frontM - m) / Math.max(0.001, frontM - seg.b), 0, 1);
+        if (m <= pos) return 1;
+        return clamp((pos + PERCEPTION_M - m) / PERCEPTION_M, 0, 1);
       }
 
       ctx.save();
       ctx.beginPath();
-      ctx.rect(clipL, 0, clipR - clipL, H);
+      ctx.rect(0, 0, clipR, H);
       ctx.clip();
 
       var bound = shade('boundary');
@@ -529,10 +473,10 @@
         ctx.moveTo(0, y);
         ctx.lineTo(W, y);
         ctx.stroke();
-        var m0 = Math.floor(backM / VERT) * VERT;
-        for (var m = m0; m <= frontM + VERT; m += VERT) {
+        var m0 = Math.floor((pos - carX / ROAD_PX_PER_M) / VERT) * VERT;
+        for (var m = m0; m <= pos + PERCEPTION_M + VERT; m += VERT) {
           var vx = sx(m);
-          if (vx < clipL - 4 || vx > clipR + 4) continue;
+          if (vx < -4 || vx > clipR + 4) continue;
           ctx.beginPath();
           ctx.arc(vx, y, 1.2, 0, Math.PI * 2);
           ctx.fill();
@@ -553,17 +497,12 @@
       ctx.setLineDash([]);
       ctx.lineDashOffset = 0;
 
-      // A crossing is one element, so it takes one confidence rather than a
-      // gradient across itself.
       stops.forEach(function (s) {
         var a = conf(s.m);
         if (a > 0.02) crossing(sx(s.m), colour('crossing'), 2.6, a);
       });
       ctx.restore();
     }
-
-    segs.forEach(drawSeg);
-    drawSeg(live);
 
     /* End of the route: the car carries on off the right-hand side and the
        road says thank you. Drive back up and it takes it back. */
@@ -579,7 +518,7 @@
         ctx.textBaseline = 'middle';
         ctx.fillStyle = 'rgba(' + ink + ', 0.8)';
         ctx.font = '700 15px ' + FACE;
-        ctx.fillText('THANK YOU FOR DRIVING ReSMap', W / 2, mid - 6);
+        ctx.fillText('THANK YOU FOR VISITING ReSMap', W / 2, mid - 6);
         ctx.fillStyle = 'rgba(' + ink + ', 0.45)';
         ctx.font = '600 10px ' + FACE;
         ctx.fillText('END OF ROUTE  ·  ' + (routeM / 1000).toFixed(2) + ' KM',
@@ -696,7 +635,6 @@
     if (pos >= top) { pos = top; speed = 0; }
     if (pos <= 0) { pos = 0; speed = 0; }
 
-    drove();
     rpm = rpmAt(speed);
   }
 
@@ -925,7 +863,14 @@
         pos = m;
         observed = 0;
       } else {
-        var want = clamp((m - pos) * FOLLOW_K, -45, 45);
+        /* The chase stiffens with the gap. A fixed gain and a speed clamp made
+           a fast scroll outrun the car until the gap tripped the snap, over
+           and over, which is exactly the stutter that was in it. */
+        /* Soft at reading pace, so the needle does not jitter on every wheel
+           notch, and stiffening hard beyond that, so a flick cannot outrun the
+           car until the gap trips the snap. That race was the stutter. */
+        var gap = Math.abs(m - pos);
+        var want = (m - pos) * (FOLLOW_K + Math.max(0, gap - 8) * 1.4);
         observed += (want - observed) * Math.min(1, dt * FOLLOW_SMOOTH);
         if (Math.abs(m - pos) < 0.03 && Math.abs(observed) < 0.15) {
           pos = m;
@@ -938,7 +883,6 @@
       throttle = 0;
       brake = 0;
       rpm = rpmAt(speed);
-      relocate();
       ownScroll = sy;
     }
 
@@ -982,7 +926,6 @@
     pos = window.scrollY / PX_PER_M;
     speed = 0;
     observed = 0;
-    relocate();
     draw();
     hud();
   }
@@ -1036,8 +979,6 @@
     shifting = 0;
     showLever();
 
-  var wipeBtn = document.getElementById('wipe');
-  if (wipeBtn) wipeBtn.addEventListener('click', clearMap);
     hud();
     startLoop();
   }
@@ -1081,6 +1022,20 @@
     });
   }
   showLever();
+
+  var topBtn = document.getElementById('to-top');
+  if (topBtn) {
+    topBtn.addEventListener('click', function () {
+      // Navigation, not a drive control: come off the pedals and let the
+      // browser's own smooth scroll take it from there.
+      holdGas = holdBrake = false;
+      throttle = 0;
+      brake = 0;
+      speed = 0;
+      stopLoop();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
 
   function pressGas() {
     takeWheel();
@@ -1150,7 +1105,6 @@
     var rect = routeBar.getBoundingClientRect();
     var p = clamp((clientX - rect.left) / rect.width, 0, 1);
     pos = p * maxM();
-    relocate();
     speed = 0;
     try {
       window.scrollTo({ top: pos * PX_PER_M, behavior: 'instant' });
