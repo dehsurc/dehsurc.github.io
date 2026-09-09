@@ -59,6 +59,7 @@
   // reaches 30 m up the road, and thins out towards the end of that range the
   // way the evidence does.
   var PERCEPTION_M = 30;
+  var EDGE_M = 4;           // soft edge on a finished stretch, in metres
   var ROAD_PX_PER_M = 6;    // strip pixels to the metre
   var CAR_X = 0.26;         // the car's fixed position across the strip
   var MIN_VIEWPORT = 900;   // below this the road hides and the links return
@@ -125,6 +126,7 @@
   var segs = [];                       // committed, sorted, non-overlapping
   var live = { a: 0, b: 0 };           // the one being driven right now
   var outro = 0;                       // end-of-route flourish, 0 to 1
+  var arrived = false;                 // latched at the end of the route
   var rpm = IDLE;
   var throttle = 0, brake = 0;
   var holdGas = false, holdBrake = false;
@@ -472,12 +474,13 @@
        Drive and you watch it laid down ahead of you; a stretch you never drove
        has nothing on it. */
     function drawSeg(seg) {
+      /* Only the road ahead of the car is still being predicted, and only on
+         the stretch it is actually on. Everything behind is finished work and
+         gets a soft edge, not a range of guesswork: a long fade there reads as
+         the map being erased off the back of the strip. */
       var onIt = pos >= seg.a - PERCEPTION_M && pos <= seg.b + PERCEPTION_M;
-      // Only the stretch under the car is still being predicted. The rest is
-      // finished work, and gets a soft edge rather than a range of guesswork.
-      var reach = onIt ? PERCEPTION_M : 5;
-      var backM = seg.a - reach;
-      var frontM = onIt ? Math.max(seg.b, pos + PERCEPTION_M) : seg.b + reach;
+      var backM = seg.a - EDGE_M;
+      var frontM = onIt ? Math.max(seg.b, pos + PERCEPTION_M) : seg.b + EDGE_M;
       var x0 = sx(backM), x1 = sx(seg.a), x2 = sx(seg.b), x3 = sx(frontM);
       if (x3 < 0 || x0 > W) return;
 
@@ -508,7 +511,7 @@
 
       function conf(m) {
         if (m >= seg.a && m <= seg.b) return 1;
-        if (m < seg.a) return clamp((m - backM) / reach, 0, 1);
+        if (m < seg.a) return clamp((m - backM) / EDGE_M, 0, 1);
         return clamp((frontM - m) / Math.max(0.001, frontM - seg.b), 0, 1);
       }
 
@@ -576,7 +579,7 @@
         ctx.textBaseline = 'middle';
         ctx.fillStyle = 'rgba(' + ink + ', 0.8)';
         ctx.font = '700 15px ' + FACE;
-        ctx.fillText('THANK YOU FOR DRIVING', W / 2, mid - 6);
+        ctx.fillText('THANK YOU FOR DRIVING ReSMap', W / 2, mid - 6);
         ctx.fillStyle = 'rgba(' + ink + ', 0.45)';
         ctx.font = '600 10px ' + FACE;
         ctx.fillText('END OF ROUTE  ·  ' + (routeM / 1000).toFixed(2) + ' KM',
@@ -939,7 +942,12 @@
       ownScroll = sy;
     }
 
-    var atEnd = pos >= maxM() - 0.02 && !dragging;
+    /* Arrival latches. Browsers report a fractional scrollY at the bottom of
+       a page, so an exact test flickers, and letting go of the accelerator
+       must not put the flourish away. */
+    if (pos >= maxM() - 1.5) arrived = true;
+    else if (pos < maxM() - 6) arrived = false;
+    var atEnd = arrived && !dragging;
     outro = clamp(outro + (atEnd ? dt / 1.2 : -dt / 0.35), 0, 1);
 
     draw();
@@ -1120,13 +1128,19 @@
     if (e.metaKey || e.ctrlKey || e.altKey || road.hidden) return;
     if (editable(document.activeElement)) return;
     var k = e.key.toLowerCase();
-    if (k === 'w') { e.preventDefault(); pressGas(); }
-    else if (k === 's') { e.preventDefault(); pressBrake(); }
+    if (k === 'w') { e.preventDefault(); clearTimeout(liftTimer); pressGas(); }
+    else if (k === 's') { e.preventDefault(); clearTimeout(liftTimer); pressBrake(); }
     else if (k === 'r' || k === 'd') setGear(k.toUpperCase());
   });
+  /* Auto-repeat sends a keyup between every keydown on X11, which switched
+     the pedal off as fast as it went on. A held key is one whose release has
+     not survived a couple of frames. */
+  var liftTimer = 0;
   document.addEventListener('keyup', function (e) {
     var k = e.key.toLowerCase();
-    if (k === 'w' || k === 's') release();
+    if (k !== 'w' && k !== 's') return;
+    clearTimeout(liftTimer);
+    liftTimer = setTimeout(release, 60);
   });
 
   /* The route bar is the whole document, and dragging it seeks one to one.

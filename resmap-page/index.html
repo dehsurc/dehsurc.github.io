@@ -22,7 +22,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700&display=swap">
-<link rel="stylesheet" href="style.css?v=19">
+<link rel="stylesheet" href="style.css?v=20">
 
 <!-- Set the theme before first paint so there is no flash. -->
 <script>
@@ -546,6 +546,8 @@
 
 <!-- The cockpit: gear selector and pedals, where they are in a car. -->
 <div id="cockpit" hidden>
+  <button id="wipe" type="button" title="Clear the map built so far">Clear map</button>
+
   <div class="cluster">
     <canvas id="gauge" width="240" height="240" aria-hidden="true"></canvas>
 
@@ -559,10 +561,7 @@
     </div>
   </div>
 
-  <p class="readout">
-    <span id="trip">0.00 / 0.00 km</span>
-    <button id="wipe" type="button" title="Clear the map built so far">Clear map</button>
-  </p>
+  <p class="readout"><span id="trip">0.00 / 0.00 km</span></p>
   <p class="nextup" id="nextup" aria-live="off"></p>
 
   <div class="pedals">
@@ -582,15 +581,13 @@
     </button>
   </div>
 
-  <p class="keys">W accel &middot; S brake &middot; D R gear</p>
-
   <button id="cockpit-toggle" type="button" aria-expanded="true" aria-label="Collapse the cockpit">
     <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 6.2 8 10.4l4.5-4.2"/></svg>
   </button>
 </div>
 
-<script src="failure.js?v=19"></script>
-<script src="drive.js?v=19"></script>
-<script src="main.js?v=19"></script>
+<script src="failure.js?v=20"></script>
+<script src="drive.js?v=20"></script>
+<script src="main.js?v=20"></script>
 </body>
 </html>

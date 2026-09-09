@@ -236,9 +236,9 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
    gutter, so it never sits over the content. The top bar sticks below it, and
    anchors have to clear both. */
 .has-road body { padding-top: var(--road-h); }
-.has-road .topbar { top: var(--road-h); }
-.has-road { scroll-padding-top: calc(var(--road-h) + 3.6rem); }
-.has-road { --chrome: calc(var(--road-h) + 2.6rem); }
+.has-road .topbar { display: none; }
+.has-road { scroll-padding-top: calc(var(--road-h) + 1rem); }
+.has-road { --chrome: calc(var(--road-h) + 1rem); }
 
 .nextup {
   grid-column: 1 / -1;
@@ -346,7 +346,7 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
   right: 1rem; bottom: 1rem;
   z-index: 55;
   width: 13.5rem;
-  padding: .6rem .65rem .55rem;
+  padding: 1.5rem .65rem .55rem;
   border: 1px solid var(--rule-dark);
   border-radius: 5px;
   background: var(--bar);
@@ -448,7 +448,6 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
 #lever.grabbing #knob { cursor: grabbing; transition: none; }
 
 .readout {
-  display: flex; align-items: baseline; justify-content: space-between; gap: .4rem;
   margin: 0;
   font-size: 10px;
   letter-spacing: .03em;
@@ -456,15 +455,17 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
   color: var(--ink-faint);
 }
 #wipe {
-  flex: none;
+  position: absolute; top: .34rem; left: .55rem;
   padding: 0;
   border: 0; background: none;
   color: var(--ink-faint);
   font: inherit; font-size: 10px;
+  letter-spacing: .02em;
   text-decoration: underline; text-underline-offset: 2px;
   cursor: pointer;
 }
 #wipe:hover { color: var(--ink); }
+#cockpit.shut #wipe { display: none; }
 
 .pedals { display: grid; grid-template-columns: 1fr 1fr; gap: .35rem; }
 
@@ -508,12 +509,6 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
 
 #cockpit.moving .pedal.gas { color: #fff; background: var(--go); border-color: var(--go); }
 
-.keys {
-  margin: .45rem 0 0;
-  font-size: 9.5px; line-height: 1.4;
-  letter-spacing: .02em;
-  color: var(--ink-faint);
-}
 
 /* ---------- section reveal ---------- */
 

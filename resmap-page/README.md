@@ -68,16 +68,22 @@ longitudinal half of the paper's 60 x 30 m setting) and thins out across that
 range, because distant evidence is sparse and the prediction there is a guess.
 Every stretch driven stays drawn, and only the model extends one: scrolling
 past a stretch you never drove leaves it bare. Drive away from one and a new
-one starts without erasing the old. **Clear map** in the cockpit wipes them
-all.
+one starts without erasing the old. Only the road *ahead* of the car is still
+a prediction and gets the long fade; behind it is finished work and gets a
+4 m soft edge, so a driven stretch does not look like it is being erased off
+the back of the strip. **Clear map** at the top of the cockpit wipes them all.
 
-Reaching the end of the document sends the car off the right-hand side and
-the road says thank you; driving back up takes it back.
+Reaching the end of the document sends the car off the right-hand side and the
+road says thank you. Arrival latches, because browsers report a fractional
+`scrollY` at the bottom of a page and because letting go of the accelerator
+must not put the flourish away; driving back up more than six metres takes it
+back.
 
 Each section is a junction with a **guide sign** at its true position, green
 with its section number set like an exit number, standing on two posts that run
-down into the verge. Every section needs an entry in the top bar's link list,
-since that is where the signs take their short names from. The next junction
+down into the verge. The signs are the navigation, so the top bar is hidden while the road is up;
+it stays in the markup, and comes back below 900 px, because that is where the
+signs take their short names from. The next junction
 and its distance are called out in the cockpit, next to the trip meter. Under the road runs the **route bar**: the whole document, with a
 tick per section, and dragging it seeks one to one. Seeking is explicitly
 instant, because `html` carries `scroll-behavior: smooth` and a smooth scroll
