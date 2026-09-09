@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
-<title>매일 영어 퀴즈</title>
+<title>매일 영어 단어</title>
 <style>
 :root{
   --bg:#EEF1F5; --paper:#FFFFFF; --ink:#14213D; --muted:#5B6478; --line:#CBD2DE;
@@ -40,6 +40,11 @@ h1{font-size:22px;margin:0 0 4px;font-weight:700;letter-spacing:-0.01em}
 .hint{font-size:14px;color:var(--muted);margin:-10px 0 14px}
 input.ans{width:100%;padding:14px;border:1.5px solid var(--line);border-radius:10px;font-size:18px;font-family:var(--serif);background:#FBFCFD}
 .choices button{display:block;width:100%;text-align:left;padding:13px 14px;margin-bottom:8px;background:#FBFCFD;border:1.5px solid var(--line);border-radius:10px;font-family:var(--serif);font-size:17px;line-height:1.4;color:var(--ink)}
+.choices button.ko{font-family:var(--sans);font-size:17px}
+.word{font-family:var(--serif);font-size:34px;font-weight:600;letter-spacing:-.01em;line-height:1.15;margin:12px 0 2px;word-break:break-word}
+.pos{color:var(--muted);font-size:13px;margin:0 0 18px}
+.hintw{font-family:var(--serif);font-size:20px;color:var(--muted);letter-spacing:.06em;margin:0 0 14px}
+.result .ex{font-family:var(--serif);font-size:15px;opacity:.8;margin-top:4px}
 .choices button.ok{background:var(--okbg);border-color:var(--ok)}
 .choices button.no{background:var(--nobg);border-color:var(--no)}
 .result{border-radius:10px;padding:12px 14px;margin-top:14px;font-size:15px}
@@ -263,15 +268,285 @@ M('e44','v',3,'대화를 정중히 끝낼 때 가장 자연스러운 것은?',["
 M('e45','v',3,'"저희 랩에서 이 방향으로 계속 연구하고 있어요"',["Our lab has been working in this direction for a while.","Our lab is working this direction since a while.","Our lab works to this direction from a while."],0,'work in this direction'),
 ];
 
+/* ---------- 단어장 ---------- */
+// W: 단어 (새 단어는 객관식, 틀린 단어는 직접 입력으로 다시)
+const W=(id,level,pos,en,ko,ex)=>({id,type:'w',level,pos,en,ko,ex,kind:'word',q:ko});
+const WORDS=[
+// ---- Lv1 동사 ----
+W('w001',1,'v','submit','제출하다','submit a paper'),
+W('w002',1,'v','accept','받아들이다','the paper was accepted'),
+W('w003',1,'v','reject','거절하다','reject a submission'),
+W('w004',1,'v','improve','향상시키다','improve accuracy'),
+W('w005',1,'v','reduce','줄이다','reduce the error'),
+W('w006',1,'v','increase','늘리다','increase the batch size'),
+W('w007',1,'v','compare','비교하다','compare A with B'),
+W('w008',1,'v','require','필요로 하다','require extra labels'),
+W('w009',1,'v','provide','제공하다','provide a baseline'),
+W('w010',1,'v','explain','설명하다','explain the figure'),
+W('w011',1,'v','describe','기술하다','describe the method'),
+W('w012',1,'v','suggest','제시하다','the results suggest that'),
+W('w013',1,'v','avoid','피하다','avoid overfitting'),
+W('w014',1,'v','allow','가능하게 하다','allow faster training'),
+W('w015',1,'v','apply','적용하다','apply the same filter'),
+W('w016',1,'v','attend','참석하다','attend a conference'),
+W('w017',1,'v','prepare','준비하다','prepare the slides'),
+W('w018',1,'v','present','발표하다','present a poster'),
+W('w019',1,'v','discuss','논의하다','discuss the results'),
+W('w020',1,'v','expect','예상하다','I would expect it to work'),
+W('w021',1,'v','measure','측정하다','measure the latency'),
+W('w022',1,'v','remove','제거하다','remove this module'),
+W('w023',1,'v','replace','교체하다','replace A with B'),
+W('w024',1,'v','repeat','반복하다','repeat the experiment'),
+W('w025',1,'v','collect','모으다','collect more data'),
+W('w026',1,'v','include','포함시키다','include the appendix'),
+W('w027',1,'v','mention','언급하다','as I mentioned earlier'),
+W('w028',1,'v','notice','알아차리다','we noticed a drop'),
+W('w029',1,'v','focus','집중하다','focus on perception'),
+W('w030',1,'v','depend','~에 달려 있다','it depends on the resolution'),
+W('w031',1,'v','rely','의존하다','rely on HD maps'),
+W('w032',1,'v','affect','영향을 주다','it affects performance'),
+W('w033',1,'v','consider','고려하다','consider two cases'),
+W('w034',1,'v','choose','고르다','choose the threshold'),
+W('w035',1,'v','follow','따르다','we follow the standard protocol'),
+W('w036',1,'v','solve','해결하다','solve the problem'),
+W('w037',1,'v','train','학습시키다','train the model on 8 GPUs'),
+W('w038',1,'v','check','확인하다','let me check the log'),
+W('w039',1,'v','share','공유하다','share the same backbone'),
+W('w040',1,'v','send','보내다','I will send you the paper'),
+// ---- Lv1 명사 ----
+W('w041',1,'n','result','결과','the results show that'),
+W('w042',1,'n','method','방법','our method'),
+W('w043',1,'n','approach','접근법','a simple approach'),
+W('w044',1,'n','goal','목표','the goal is to reduce'),
+W('w045',1,'n','issue','문제점','a minor issue'),
+W('w046',1,'n','limitation','한계','the main limitation'),
+W('w047',1,'n','advantage','장점','the main advantage'),
+W('w048',1,'n','drawback','단점','one drawback is'),
+W('w049',1,'n','example','예시','for example'),
+W('w050',1,'n','detail','세부 사항','in more detail'),
+W('w051',1,'n','purpose','목적','the purpose of this work'),
+W('w052',1,'n','process','과정','the training process'),
+W('w053',1,'n','amount','양','a large amount of data'),
+W('w054',1,'n','rate','비율','the error rate'),
+W('w055',1,'n','speed','속도','inference speed'),
+W('w056',1,'n','accuracy','정확도','high accuracy'),
+W('w057',1,'n','error','오차','reduce the error'),
+W('w058',1,'n','sample','표본','a random sample'),
+W('w059',1,'n','setting','설정','the default setting'),
+W('w060',1,'n','version','버전','the camera-ready version'),
+W('w061',1,'n','feature','특징','a feature map'),
+W('w062',1,'n','output','출력','the model output'),
+W('w063',1,'n','input','입력','the input image'),
+W('w064',1,'n','reason','이유','the main reason is'),
+W('w065',1,'n','effort','노력','with little effort'),
+W('w066',1,'n','schedule','일정','a tight schedule'),
+W('w067',1,'n','deadline','마감 기한','the deadline is Friday'),
+W('w068',1,'n','field','분야','in this field'),
+W('w069',1,'n','draft','초안','the first draft'),
+W('w070',1,'n','scene','장면','an urban scene'),
+// ---- Lv1 형용사·부사 ----
+W('w071',1,'a','recent','최근의','recent work'),
+W('w072',1,'a','similar','비슷한','a similar approach'),
+W('w073',1,'a','different','다른','a different setting'),
+W('w074',1,'a','available','이용 가능한','publicly available'),
+W('w075',1,'a','useful','유용한','a useful comment'),
+W('w076',1,'a','clear','분명한','a clear improvement'),
+W('w077',1,'a','simple','단순한','a simple baseline'),
+W('w078',1,'a','common','흔한','a common mistake'),
+W('w079',1,'a','possible','가능한','as soon as possible'),
+W('w080',1,'a','correct','올바른','the correct label'),
+W('w081',1,'ad','exactly','정확히','not exactly'),
+W('w082',1,'ad','actually','사실은','that is actually our future work'),
+W('w083',1,'ad','probably','아마','it is probably a bug'),
+W('w084',1,'ad','finally','마지막으로','finally, we show that'),
+W('w085',1,'ad','however','하지만','however, it fails at night'),
+W('w086',1,'ad','instead','대신에','instead of LiDAR'),
+W('w087',1,'ad','although','비록 ~이지만','although it is simple'),
+W('w088',1,'ad','whether','~인지 아닌지','whether it helps or not'),
+W('w089',1,'ad','between','~사이에','between two frames'),
+W('w090',1,'ad','during','~하는 동안','during training'),
+// ---- Lv2 동사 ----
+W('w091',2,'v','evaluate','평가하다','evaluate on nuScenes'),
+W('w092',2,'v','estimate','추정하다','estimate the depth'),
+W('w093',2,'v','predict','예측하다','predict the trajectory'),
+W('w094',2,'v','observe','관찰하다','we observe a clear gain'),
+W('w095',2,'v','obtain','얻다','obtain similar results'),
+W('w096',2,'v','achieve','달성하다','achieve 90% accuracy'),
+W('w097',2,'v','assume','가정하다','we assume access to GPS'),
+W('w098',2,'v','indicate','나타내다','the results indicate that'),
+W('w099',2,'v','demonstrate','입증하다','demonstrate the effectiveness'),
+W('w100',2,'v','investigate','조사하다','investigate the cause'),
+W('w101',2,'v','analyze','분석하다','analyze failure cases'),
+W('w102',2,'v','verify','검증하다','verify the claim'),
+W('w103',2,'v','modify','수정하다','modify the loss'),
+W('w104',2,'v','adjust','조정하다','adjust the threshold'),
+W('w105',2,'v','extend','확장하다','extend it to 3D'),
+W('w106',2,'v','address','(문제를) 다루다','address this issue'),
+W('w107',2,'v','handle','처리하다','handle occlusion'),
+W('w108',2,'v','leverage','활용하다','leverage extra data'),
+W('w109',2,'v','incorporate','통합해 넣다','incorporate map priors'),
+W('w110',2,'v','integrate','결합하다','integrate two branches'),
+W('w111',2,'v','introduce','도입하다','introduce a new module'),
+W('w112',2,'v','propose','(연구를) 제안하다','we propose a method'),
+W('w113',2,'v','outperform','능가하다','outperform the baseline by 3 points'),
+W('w114',2,'v','degrade','저하되다','performance degrades in rain'),
+W('w115',2,'v','converge','수렴하다','the model converges in 12 epochs'),
+W('w116',2,'v','generalize','일반화되다','generalize to unseen scenes'),
+W('w117',2,'v','overfit','과적합되다','overfit to the training set'),
+W('w118',2,'v','annotate','라벨을 달다','annotate every frame'),
+W('w119',2,'v','deploy','실제로 배치하다','deploy on a real car'),
+W('w120',2,'v','reproduce','재현하다','reproduce the reported numbers'),
+W('w121',2,'v','highlight','부각시키다','highlight the difference'),
+W('w122',2,'v','clarify','명확히 하다','let me clarify that'),
+W('w123',2,'v','summarize','요약하다','to summarize'),
+W('w124',2,'v','conclude','결론짓다','we conclude that'),
+W('w125',2,'v','confirm','확인해 주다','that confirms our finding'),
+W('w126',2,'v','refer','참조하다','refer to Table 2'),
+W('w127',2,'v','consist','구성되다','it consists of two branches'),
+W('w128',2,'v','contribute','기여하다','both parts contribute to the gain'),
+W('w129',2,'v','contain','담고 있다','it contains 1000 frames'),
+W('w130',2,'v','involve','수반하다','it involves extra cost'),
+W('w131',2,'v','occur','발생하다','errors occur at night'),
+W('w132',2,'v','remain','여전히 ~이다','it remains an open problem'),
+W('w133',2,'v','vary','제각기 다르다','results vary across seeds'),
+// ---- Lv2 명사 ----
+W('w134',2,'n','trade-off','절충 관계','a trade-off between speed and accuracy'),
+W('w135',2,'n','baseline','기준 모델','a strong baseline'),
+W('w136',2,'n','benchmark','벤치마크','a public benchmark'),
+W('w137',2,'n','ablation','요소 제거 실험','an ablation study'),
+W('w138',2,'n','threshold','임계값','a confidence threshold'),
+W('w139',2,'n','assumption','가정','a strong assumption'),
+W('w140',2,'n','constraint','제약','a hard constraint'),
+W('w141',2,'n','contribution','기여','our main contribution'),
+W('w142',2,'n','evidence','증거','empirical evidence'),
+W('w143',2,'n','insight','통찰','an interesting insight'),
+W('w144',2,'n','intuition','직관','the intuition behind it'),
+W('w145',2,'n','motivation','동기','the motivation of this work'),
+W('w146',2,'n','novelty','참신성','the novelty is limited'),
+W('w147',2,'n','overhead','부가 비용','computational overhead'),
+W('w148',2,'n','pipeline','전체 처리 과정','the whole pipeline'),
+W('w149',2,'n','robustness','견고함','robustness to noise'),
+W('w150',2,'n','scalability','확장성','scalability to larger scenes'),
+W('w151',2,'n','supervision','정답 신호','extra supervision'),
+W('w152',2,'n','annotation','주석 라벨','human annotation'),
+W('w153',2,'n','latency','지연 시간','low latency'),
+W('w154',2,'n','margin','차이 폭','by a large margin'),
+W('w155',2,'n','metric','평가 지표','the evaluation metric'),
+W('w156',2,'n','gap','격차','the domain gap'),
+W('w157',2,'n','trend','경향','a consistent trend'),
+W('w158',2,'n','variance','분산','high variance across runs'),
+W('w159',2,'n','bias','편향','dataset bias'),
+W('w160',2,'n','noise','잡음','sensor noise'),
+W('w161',2,'n','outlier','이상치','remove outliers'),
+W('w162',2,'n','subset','부분 집합','a subset of the data'),
+W('w163',2,'n','setup','실험 구성','the same setup'),
+W('w164',2,'n','checkpoint','저장된 가중치','load a checkpoint'),
+W('w165',2,'n','seed','난수 시드','three random seeds'),
+W('w166',2,'n','survey','개괄 논문','a recent survey'),
+W('w167',2,'n','rebuttal','반론문','write the rebuttal'),
+W('w168',2,'n','appendix','부록','see the appendix'),
+// ---- Lv2 형용사·부사 ----
+W('w169',2,'a','consistent','일관된','consistent gains'),
+W('w170',2,'a','significant','상당한','a significant improvement'),
+W('w171',2,'a','marginal','미미한','only a marginal gain'),
+W('w172',2,'a','sufficient','충분한','sufficient evidence'),
+W('w173',2,'a','feasible','실현 가능한','computationally feasible'),
+W('w174',2,'a','reliable','믿을 만한','a reliable estimate'),
+W('w175',2,'a','robust','견고한','robust to bad weather'),
+W('w176',2,'a','sparse','희소한','sparse annotations'),
+W('w177',2,'a','dense','조밀한','dense depth'),
+W('w178',2,'a','coarse','대략적인','a coarse estimate'),
+W('w179',2,'a','redundant','중복된','redundant computation'),
+W('w180',2,'a','straightforward','간단명료한','a straightforward extension'),
+W('w181',2,'a','preliminary','예비의','preliminary results'),
+W('w182',2,'a','subsequent','이후의','subsequent frames'),
+W('w183',2,'a','previous','이전의','the previous work'),
+W('w184',2,'ad','respectively','각각','3.2 and 4.1, respectively'),
+W('w185',2,'ad','roughly','대략','roughly two days'),
+W('w186',2,'ad','slightly','약간','slightly better'),
+W('w187',2,'ad','substantially','상당히','substantially faster'),
+W('w188',2,'ad','typically','일반적으로','it typically takes an hour'),
+W('w189',2,'ad','nevertheless','그럼에도 불구하고','nevertheless, it works well'),
+W('w190',2,'ad','whereas','반면에','whereas ours runs in real time'),
+W('w191',2,'ad','regarding','~에 관하여','regarding your question'),
+W('w192',2,'ad','despite','~에도 불구하고','despite the noise'),
+// ---- Lv3 동사 ----
+W('w193',3,'v','alleviate','완화하다','alleviate the problem'),
+W('w194',3,'v','facilitate','용이하게 하다','facilitate faster training'),
+W('w195',3,'v','hinder','방해하다','hinder generalization'),
+W('w196',3,'v','undermine','약화시키다','undermine the claim'),
+W('w197',3,'v','attribute','~의 탓으로 돌리다','we attribute the gain to the gate'),
+W('w198',3,'v','accommodate','수용하다','accommodate longer sequences'),
+W('w199',3,'v','approximate','근사하다','approximate the integral'),
+W('w200',3,'v','formulate','정식화하다','formulate it as regression'),
+W('w201',3,'v','derive','유도해 내다','derive the gradient'),
+W('w202',3,'v','impose','부과하다','impose a constraint'),
+W('w203',3,'v','enforce','강제로 지키게 하다','enforce temporal consistency'),
+W('w204',3,'v','preserve','보존하다','preserve fine details'),
+W('w205',3,'v','discard','버리다','discard low-confidence boxes'),
+W('w206',3,'v','truncate','잘라내다','truncate the sequence'),
+W('w207',3,'v','aggregate','한데 모으다','aggregate features over time'),
+W('w208',3,'v','propagate','전파하다','the error propagates'),
+W('w209',3,'v','interpolate','보간하다','interpolate between frames'),
+W('w210',3,'v','quantify','정량화하다','quantify the effect'),
+W('w211',3,'v','circumvent','우회하다','circumvent this limitation'),
+W('w212',3,'v','elaborate','자세히 설명하다','could you elaborate on that'),
+W('w213',3,'v','justify','정당화하다','justify the design choice'),
+W('w214',3,'v','speculate','추측하다','we can only speculate'),
+// ---- Lv3 명사 ----
+W('w215',3,'n','counterpart','상응하는 것','its 2D counterpart'),
+W('w216',3,'n','caveat','유의할 점','one caveat is that'),
+W('w217',3,'n','discrepancy','불일치','a discrepancy between the two'),
+W('w218',3,'n','rationale','그렇게 한 이유','the rationale behind this design'),
+W('w219',3,'n','premise','전제','the underlying premise'),
+W('w220',3,'n','paradigm','방식 체계','a new training paradigm'),
+W('w221',3,'n','hypothesis','가설','test this hypothesis'),
+W('w222',3,'n','criterion','기준','the selection criterion'),
+W('w223',3,'n','magnitude','규모','an order of magnitude faster'),
+W('w224',3,'n','tendency','성향','a tendency to overfit'),
+W('w225',3,'n','consensus','합의','there is no consensus yet'),
+W('w226',3,'n','ambiguity','모호함','resolve the ambiguity'),
+W('w227',3,'n','granularity','세분화 정도','at a finer granularity'),
+W('w228',3,'n','fidelity','충실도','high-fidelity simulation'),
+W('w229',3,'n','saliency','두드러진 정도','a saliency map'),
+// ---- Lv3 형용사·부사 ----
+W('w230',3,'a','plausible','그럴듯한','a plausible explanation'),
+W('w231',3,'a','negligible','무시할 만한','negligible overhead'),
+W('w232',3,'a','inherent','내재된','an inherent limitation'),
+W('w233',3,'a','explicit','명시적인','explicit supervision'),
+W('w234',3,'a','implicit','암묵적인','an implicit representation'),
+W('w235',3,'a','orthogonal','별개의','orthogonal to our work'),
+W('w236',3,'a','agnostic','구애받지 않는','sensor-agnostic'),
+W('w237',3,'a','deterministic','결정론적인','a deterministic policy'),
+W('w238',3,'a','stochastic','확률적인','stochastic sampling'),
+W('w239',3,'a','exhaustive','빠짐없는','an exhaustive search'),
+W('w240',3,'a','rigorous','엄밀한','a rigorous proof'),
+W('w241',3,'a','compelling','설득력 있는','compelling results'),
+W('w242',3,'a','promising','유망한','a promising direction'),
+W('w243',3,'a','counterintuitive','직관에 반하는','a counterintuitive result'),
+W('w244',3,'a','empirical','실험에 근거한','empirical results'),
+W('w245',3,'a','theoretical','이론적인','a theoretical guarantee'),
+W('w246',3,'a','arbitrary','임의의','an arbitrary order'),
+W('w247',3,'a','subtle','미묘한','a subtle difference'),
+W('w248',3,'a','seamless','매끄러운','seamless integration'),
+W('w249',3,'ad','accordingly','그에 따라','we adjust the weight accordingly'),
+W('w250',3,'ad','predominantly','주로','predominantly urban scenes'),
+W('w251',3,'ad','albeit','비록 ~일지라도','albeit slower'),
+W('w252',3,'ad','thereby','그렇게 함으로써','thereby reducing the cost'),
+W('w253',3,'ad','hence','따라서','hence the improvement'),
+];
+
 /* ---------- 상태 ---------- */
 const KEY='engquiz-state-v3';
-const EXTRA_N=5, MAX_REVIEW=8, EVENING_TARGET=8, EVENING_NEW_MAX=6;
+const POS={v:'동사',n:'명사',a:'형용사',ad:'부사·연결어'};
+const EXTRA_N=10, MAX_REVIEW=12, EVENING_NEW_MAX=10, SESSION_V=2;
 let S=null, memMode=false, view='home', ui={};
 
 function fmt(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function today(){return fmt(new Date())}
 function addDays(s,n){const [y,m,d]=s.split('-').map(Number);return fmt(new Date(y,m-1,d+n))}
-function defaultState(){return{level:2,streak:0,lastDone:'',history:{},review:{},recent:[],day:null,session:null,packs:[],totals:{answered:0,correct:0},log:[],morningN:18}}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function defaultState(){return{level:2,streak:0,lastDone:'',history:{},review:{},recent:[],day:null,session:null,packs:[],totals:{answered:0,correct:0},log:[],morningN:18,wordN:30}}
 function ensureDay(){const t=today();if(!S.day||S.day.date!==t){S.day={date:t,morning:null,evening:null};S.session=null}}
 
 async function load(){
@@ -280,53 +555,112 @@ async function load(){
     S=Object.assign(defaultState(),raw?JSON.parse(raw):{});
     localStorage.setItem(KEY+':probe','1');localStorage.removeItem(KEY+':probe');
   }catch(e){memMode=true;S=defaultState()}
+  // 예전 버전에서 풀다 만 세션은 새 화면과 형식이 달라서 정리 (기록·오답 노트는 그대로 유지)
+  if(S.session&&S.session.v!==SESSION_V)S.session=null;
+  if(S.day){if(S.day.morning&&S.day.morning.v!==SESSION_V)S.day.morning=null;if(S.day.evening&&S.day.evening.v!==SESSION_V)S.day.evening=null}
 }
 async function save(){
   if(memMode)return;
   try{localStorage.setItem(KEY,JSON.stringify(S))}
   catch(e){console.error(e);toast('저장 실패 — 시크릿 모드인지 확인해주세요')}
 }
-function allQ(){const m={};BANK.forEach(q=>m[q.id]=q);(S.packs||[]).forEach(p=>p.forEach(q=>m[q.id]=q));return m}
+function allQ(){const m={};BANK.forEach(q=>m[q.id]=q);WORDS.forEach(q=>m[q.id]=q);(S.packs||[]).forEach(p=>p.forEach(q=>m[q.id]=q));return m}
+function isWord(q){return !!q&&q.kind==='word'}
 
 /* ---------- 출제 ---------- */
 function dueReviews(Q){const t=today();return Object.keys(S.review).filter(id=>Q[id]&&S.review[id].due<=t).sort((a,b)=>S.review[a].due.localeCompare(S.review[b].due))}
-function pickNew(n,Q,exclude){
+function pickNewWords(n,Q,exclude){
+  if(n<=0)return [];
+  const t=today();
+  const ids=Object.keys(Q).filter(id=>isWord(Q[id])&&!exclude.has(id)&&!S.review[id]&&!(S.history[id]&&S.history[id].lastSeen===t));
+  const fresh=ids.filter(id=>!S.history[id]),seen=ids.filter(id=>S.history[id]);
+  const out=[];
+  for(const lv of [1,2,3]){if(out.length>=n)break;out.push(...shuffle(fresh.filter(id=>Q[id].level===lv)).slice(0,n-out.length))}
+  if(out.length<n){seen.sort((a,b)=>String(S.history[a].lastSeen).localeCompare(String(S.history[b].lastSeen)));out.push(...seen.slice(0,n-out.length))}
+  return shuffle(out);
+}
+function pickNew(n,Q,exclude){ // 문장 은행 (문법·어휘)
+  if(n<=0)return [];
   const order=[S.level,S.level-1,S.level+1].filter(l=>l>=1&&l<=3);
   const rank=id=>{const h=S.history[id];return [order.indexOf(Q[id].level),h?1:0,h?h.lastSeen:'',Math.random()]};
   const cmp=(a,b)=>{const ra=rank(a),rb=rank(b);for(let i=0;i<4;i++){if(ra[i]<rb[i])return -1;if(ra[i]>rb[i])return 1}return 0};
   const t=today();
-  const ids=Object.keys(Q).filter(id=>!exclude.has(id)&&!S.review[id]&&order.includes(Q[id].level)&&!(S.history[id]&&S.history[id].lastSeen===t));
+  const ids=Object.keys(Q).filter(id=>!isWord(Q[id])&&!exclude.has(id)&&!S.review[id]&&order.includes(Q[id].level)&&!(S.history[id]&&S.history[id].lastSeen===t));
   const g=ids.filter(id=>Q[id].type==='g').sort(cmp), v=ids.filter(id=>Q[id].type==='v').sort(cmp);
   const out=[];let wantG=Math.ceil(n/2),wantV=n-wantG;
   out.push(...g.slice(0,wantG));out.push(...v.slice(0,wantV));
   if(out.length<n){const rest=[...g.slice(wantG),...v.slice(wantV)].sort(cmp);out.push(...rest.slice(0,n-out.length))}
-  // 섞되 순서 무작위
-  for(let i=out.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[out[i],out[j]]=[out[j],out[i]]}
-  return out;
+  return shuffle(out);
 }
-function buildSession(mode){
+function firstSense(s){return String(s).replace(/\([^)]*\)/g,' ').split(',')[0].replace(/\s+/g,' ').trim()}
+function makeOpts(w,words,n){
+  n=n||4;
+  const used=new Set([firstSense(w.ko)]);
+  const ok=x=>x.id!==w.id&&x.en!==w.en&&!used.has(firstSense(x.ko));
+  const same=shuffle(words.filter(x=>x.pos===w.pos&&x.level===w.level&&ok(x)));
+  const near=shuffle(words.filter(x=>x.pos===w.pos&&x.level!==w.level&&ok(x)));
+  const any=shuffle(words.filter(x=>x.pos!==w.pos&&ok(x)));
+  const picks=[];
+  for(const c of [...same,...near,...any]){
+    if(picks.length>=n-1)break;
+    if(used.has(firstSense(c.ko)))continue;
+    used.add(firstSense(c.ko));picks.push(c);
+  }
+  const opts=shuffle([w,...picks]);
+  return {opts:opts.map(o=>o.id),ans:opts.findIndex(o=>o.id===w.id)};
+}
+function buildPlan(qids,Q,typed){
+  const words=Object.keys(Q).map(id=>Q[id]).filter(isWord);
+  const plan={};
+  qids.forEach(id=>{
+    const q=Q[id];if(!isWord(q))return;
+    if(typed.has(id)){plan[id]={mode:'type'};return}
+    plan[id]=Object.assign({mode:'mc',dir:S.history[id]?'ko2en':'en2ko'},makeOpts(q,words));
+  });
+  return plan;
+}
+function buildSession(mode,set){
   ensureDay();
   const Q=allQ(),t=today();
-  let due=[],retest=[],n;
-  if(mode==='morning'){n=S.morningN||18;due=dueReviews(Q).slice(0,MAX_REVIEW)}
-  else if(mode==='evening'){
+  set=set||'word';
+  const inSet=id=>Q[id]&&(set==='word'?isWord(Q[id]):!isWord(Q[id]));
+  let due=[],retest=[],n=0;
+  if(mode==='morning'){
+    n=set==='word'?(S.wordN||30):(S.morningN||18);
+    due=dueReviews(Q).filter(inSet).slice(0,MAX_REVIEW);
+  }else if(mode==='evening'){
     const m=S.day.morning;
-    retest=m?m.results.filter(r=>!r.ok).map(r=>r.id).filter(id=>Q[id]):[];
-    n=retest.length+Math.min(EVENING_NEW_MAX,Math.max(2,EVENING_TARGET-retest.length));
-  }else{n=EXTRA_N}
-  const fresh=pickNew(n-due.length-retest.length,Q,new Set([...due,...retest]));
+    retest=m?m.results.filter(r=>!r.ok).map(r=>r.id).filter(inSet):[];
+    n=retest.length+EVENING_NEW_MAX;
+  }else if(mode==='redo'){
+    const s=S.session;
+    retest=s?s.results.filter(r=>!r.ok).map(r=>r.id).filter(inSet):[];
+    n=retest.length;
+  }else{ // extra
+    n=EXTRA_N;
+    due=dueReviews(Q).filter(inSet).slice(0,5);
+  }
+  const pick=set==='word'?pickNewWords:pickNew;
+  const fresh=pick(n-due.length-retest.length,Q,new Set([...due,...retest]));
   const qids=[...due,...retest,...fresh];
-  S.session={date:t,mode,qids,reviewSet:due,retestSet:retest,idx:0,results:[],done:false};
+  const typed=new Set([...due,...retest]); // 틀렸던 단어는 직접 입력
+  S.session={v:SESSION_V,date:t,mode,set,qids,reviewSet:due,retestSet:retest,idx:0,results:[],plan:buildPlan(qids,Q,typed),done:false};
 }
 
 /* ---------- 채점 ---------- */
 function norm(s){
-  s=String(s).toLowerCase().replace(/[\u2019\u2018`]/g,"'").replace(/[.,!?;:"\u201c\u201d()]/g,' ').replace(/\s+/g,' ').trim();
+  s=String(s).toLowerCase().replace(/[’‘`]/g,"'").replace(/[.,!?;:"“”()]/g,' ').replace(/\s+/g,' ').trim();
   const rep=[[/^'m\b/,'am'],[/\bi'm\b/g,'i am'],[/\bcan't\b/g,'cannot'],[/\bwon't\b/g,'will not'],[/n't\b/g,' not'],[/'re\b/g,' are'],[/'ve\b/g,' have'],[/'ll\b/g,' will'],[/'d\b/g,' would'],[/\bthat's\b/g,'that is'],[/\bit's\b/g,'it is'],[/\bwhat's\b/g,'what is'],[/\bthere's\b/g,'there is'],[/\bhere's\b/g,'here is'],[/\bcan not\b/g,'cannot']];
   rep.forEach(([r,t])=>s=s.replace(r,t));
   return s.replace(/\s+/g,' ').trim();
 }
+function normWord(s){return String(s).toLowerCase().replace(/[^a-z]/g,'')}
 function grade(q,input){
+  if(isWord(q)){
+    const p=S.session.plan[q.id]||{mode:'type'};
+    if(p.mode==='mc')return Number(input)===p.ans;
+    const u=normWord(input);return !!u&&u===normWord(q.en);
+  }
   if(q.kind==='mc')return Number(input)===q.ans;
   const u=norm(input);if(!u)return false;
   return q.a.some(a=>norm(a)===u);
@@ -336,21 +670,13 @@ function record(id,ok,kind){ // kind: 'new' | 'review' | 'retest'
   const h=S.history[id]||{seen:0,correct:0,wrong:0,lastSeen:''};
   h.seen++;if(ok)h.correct++;else h.wrong++;h.lastSeen=t;S.history[id]=h;
   if(kind==='retest'){
-    if(!ok)S.review[id]={due:addDays(t,1),stage:0}; // 저녁에도 틀리면 내일 다시(이미 그렇게 잡혀 있음)
-    // 저녁에 맞혀도 내일 확인은 그대로 남김
+    if(!ok)S.review[id]={due:addDays(t,1),stage:0};
   }else{
     if(!ok){S.review[id]={due:addDays(t,1),stage:0}}
     else if(kind==='review'){const r=S.review[id];if(!r||r.stage>=2)delete S.review[id];else{r.stage++;r.due=addDays(t,r.stage===1?3:7)}}
-    if(kind==='new'){S.recent.push(ok?1:0);if(S.recent.length>20)S.recent.shift()}
+    if(kind==='new'){S.recent.push(ok?1:0);if(S.recent.length>40)S.recent.shift()}
   }
   S.totals.answered++;if(ok)S.totals.correct++;
-}
-function adjustLevel(){
-  const r=S.recent;if(r.length<10)return null;
-  const acc=r.reduce((a,b)=>a+b,0)/r.length;
-  if(acc>=0.85&&S.level<3){S.level++;S.recent=[];return 'up'}
-  if(acc<=0.5&&S.level>1){S.level--;S.recent=[];return 'down'}
-  return null;
 }
 function finishSession(){
   const s=S.session,t=today();s.done=true;ensureDay();
@@ -363,15 +689,17 @@ function finishSession(){
     S.day.evening=s;
     const l=S.log.find(x=>x.date===t);if(l){l.ec=c;l.en=n}
   }
-  s.levelChange=adjustLevel();
 }
 
 /* ---------- 렌더 ---------- */
 const $=id=>document.getElementById(id);
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
-function qhtml(q){const ko=/[\uac00-\ud7a3]/.test(q.q)&&q.level===3;return `<p class="q${ko?' ko':''}">${esc(q.q).replace(/_{3,}/g,'<span class="blank"></span>')}</p>`}
+function qhtml(q){const ko=/[가-힣]/.test(q.q)&&q.level===3;return `<p class="q${ko?' ko':''}">${esc(q.q).replace(/_{3,}/g,'<span class="blank"></span>')}</p>`}
 function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(ui.tt);ui.tt=setTimeout(()=>t.classList.remove('show'),1800)}
-function typeLabel(q){return q.type==='g'?'문법':'어휘'}
+function typeLabel(q){return isWord(q)?'단어':q.type==='g'?'문법':'어휘'}
+function maskWord(en){return en.split('').map((c,i)=>i===0||c==='-'||c===' '?c:'_').join(' ')}
+function wordCount(Q){return Object.keys(Q).filter(id=>isWord(Q[id])).length}
+function learnedCount(Q){return Object.keys(S.history).filter(id=>isWord(Q[id])&&!S.review[id]&&S.history[id].correct>0).length}
 
 function render(){
   const app=$('app');
@@ -385,16 +713,16 @@ function render(){
   app.innerHTML=banner+body;
   const tabs=[['home','오늘'],['notes','오답 노트'],['stats','기록'],['settings','설정']];
   $('nav').innerHTML=tabs.map(([k,l])=>`<button class="${(view===k||(k==='home'&&view==='quiz'))?'on':''}" data-v="${k}">${l}</button>`).join('');
-  $('nav').querySelectorAll('button').forEach(b=>b.onclick=()=>{view=b.dataset.v;render()});
+  $('nav').querySelectorAll('button').forEach(b=>b.onclick=()=>{clearTimeout(ui.auto);view=b.dataset.v;render()});
   bind();
 }
 
 function statusBar(){
   const Q=allQ();const due=dueReviews(Q).length;
   return `<div class="status">
-    <div><b>Lv ${S.level}</b><span>난이도</span></div>
     <div><b>${S.streak}일</b><span>연속</span></div>
     <div><b>${due}</b><span>오늘 복습</span></div>
+    <div><b>${learnedCount(Q)}</b><span>외운 단어</span></div>
   </div>`;
 }
 function homeView(){
@@ -403,63 +731,94 @@ function homeView(){
   const dateStr=new Date().toLocaleDateString('ko-KR',{month:'long',day:'numeric',weekday:'short'});
   const resuming=s&&s.date===t&&!s.done;
   let morning='',evening='';
-  // 아침
   if(resuming&&s.mode==='morning'){
-    morning=`<div class="card"><p style="margin:0 0 4px">아침 퀴즈</p><p class="sub" style="margin:0 0 14px">${s.idx}/${s.qids.length} 진행 중</p><button class="btn" data-act="resume">이어서 풀기</button></div>`;
+    morning=`<div class="card"><p style="margin:0 0 4px">오늘의 단어</p><p class="sub" style="margin:0 0 14px">${s.idx}/${s.qids.length} 진행 중</p><button class="btn" data-act="resume">이어서 풀기</button></div>`;
   }else if(d.morning){
     const c=d.morning.results.filter(x=>x.ok).length,n=d.morning.results.length;
-    morning=`<div class="card"><p style="margin:0 0 4px">아침 퀴즈 완료</p><p class="sub" style="margin:0">${n}문제 중 ${c}개 정답 · 틀린 ${n-c}문제는 저녁에 다시</p></div>`;
+    morning=`<div class="card"><p style="margin:0 0 4px">오늘의 단어 완료</p><p class="sub" style="margin:0">${n}개 중 ${c}개 정답 · 틀린 ${n-c}개는 저녁에 직접 입력으로</p></div>`;
   }else{
-    const due=Math.min(dueReviews(Q).length,MAX_REVIEW),n=S.morningN||18;
-    morning=`<div class="card"><p style="margin:0 0 4px">아침 퀴즈 · 약 20분</p><p class="sub" style="margin:0 0 14px">복습 ${due}문제 + 새 문제 ${n-due}문제</p><button class="btn" data-act="startMorning" ${resuming?'disabled':''}>시작</button></div>`;
+    const due=Math.min(dueReviews(Q).filter(id=>isWord(Q[id])).length,MAX_REVIEW),n=S.wordN||30;
+    morning=`<div class="card"><p style="margin:0 0 4px">오늘의 단어 · 약 ${Math.round(n/3)}분</p><p class="sub" style="margin:0 0 14px">새 단어 ${Math.max(0,n-due)}개 객관식${due?` + 틀렸던 ${due}개 직접 입력`:''}</p><button class="btn" data-act="startMorning" ${resuming?'disabled':''}>시작</button></div>`;
   }
-  // 저녁
   if(resuming&&s.mode==='evening'){
     evening=`<div class="card"><p style="margin:0 0 4px">저녁 복습</p><p class="sub" style="margin:0 0 14px">${s.idx}/${s.qids.length} 진행 중</p><button class="btn" data-act="resume">이어서 풀기</button></div>`;
   }else if(d.evening){
     const c=d.evening.results.filter(x=>x.ok).length,n=d.evening.results.length;
-    evening=`<div class="card"><p style="margin:0 0 4px">저녁 복습 완료</p><p class="sub" style="margin:0 0 14px">${n}문제 중 ${c}개 정답</p><button class="btn secondary" data-act="extra">${EXTRA_N}문제 더 풀기</button></div>`;
+    evening=`<div class="card"><p style="margin:0 0 4px">저녁 복습 완료</p><p class="sub" style="margin:0 0 14px">${n}개 중 ${c}개 정답</p><button class="btn secondary" data-act="extra">단어 ${EXTRA_N}개 더</button></div>`;
   }else if(d.morning){
     const w=d.morning.results.filter(x=>!x.ok).length;
-    const nn=Math.min(EVENING_NEW_MAX,Math.max(2,EVENING_TARGET-w));
-    evening=`<div class="card"><p style="margin:0 0 4px">저녁 복습 · 약 10분</p><p class="sub" style="margin:0 0 14px">아침에 틀린 ${w}문제 다시 + 새 문제 ${nn}문제</p><button class="btn" data-act="startEvening" ${resuming?'disabled':''}>시작</button></div>`;
+    evening=`<div class="card"><p style="margin:0 0 4px">저녁 복습 · 약 5분</p><p class="sub" style="margin:0 0 14px">아침에 틀린 ${w}개 직접 입력 + 새 단어 ${EVENING_NEW_MAX}개</p><button class="btn" data-act="startEvening" ${resuming?'disabled':''}>시작</button></div>`;
   }else{
-    evening=`<div class="card" style="opacity:.55"><p style="margin:0 0 4px">저녁 복습</p><p class="sub" style="margin:0">아침 퀴즈를 끝내면 열려요. 아침에 틀린 문제로 만들어집니다.</p></div>`;
+    evening=`<div class="card" style="opacity:.55"><p style="margin:0 0 4px">저녁 복습</p><p class="sub" style="margin:0">오늘의 단어를 끝내면 열려요.</p></div>`;
   }
-  return `<h1>매일 영어 퀴즈</h1><p class="sub">${dateStr}</p>${statusBar()}${morning}${evening}
-  <p class="note">아침에 틀린 문제는 저녁에 한 번 더, 다음 날 아침에 또 나옵니다. 그때 맞히면 3일 뒤 → 7일 뒤 확인 후 졸업. 최근 20문제 정답률 85% 이상이면 난이도가 올라가고 50% 이하면 내려갑니다.</p>`;
+  const sent=`<div class="card"><p style="margin:0 0 4px">문장 연습</p><p class="sub" style="margin:0 0 14px">예전 문법·회화 문장 ${EXTRA_N}문제 (원할 때만)</p><button class="btn secondary" data-act="sent" ${resuming?'disabled':''}>문장으로 풀기</button></div>`;
+  return `<h1>매일 영어 단어</h1><p class="sub">${dateStr}</p>${statusBar()}${morning}${evening}${sent}
+  <p class="note">새 단어는 객관식으로 빠르게, 틀린 단어만 직접 입력으로 다시 나옵니다. 틀리면 저녁 → 내일 → 3일 뒤 → 7일 뒤 순서로 확인하고 졸업해요.</p>`;
+}
+
+function wordBody(q,s,r){
+  const p=s.plan[q.id]||{mode:'type'};
+  const Q=allQ();
+  if(p.mode==='mc'){
+    const ko=p.dir==='en2ko';
+    const head=ko
+      ? `<p class="word">${esc(q.en)}</p><p class="pos">${POS[q.pos]||''}</p>`
+      : `<p class="q ko" style="margin-bottom:16px">${esc(q.ko)}</p>`;
+    const choices=p.opts.map((id,i)=>{
+      const o=Q[id]||q;const label=ko?o.ko:o.en;
+      let cls=ko?'ko':'';
+      if(r){if(i===p.ans)cls+=' ok';else if(Number(r.input)===i)cls+=' no'}
+      return `<button data-choice="${i}" class="${cls.trim()}" ${r?'disabled':''}>${esc(label)}</button>`;
+    }).join('');
+    return head+`<div class="choices">${choices}</div>`;
+  }
+  return `<p class="q ko" style="margin-bottom:8px">${esc(q.ko)}</p>
+    <p class="hintw">${esc(maskWord(q.en))}</p>
+    <input class="ans" id="ansInput" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="영어 단어" ${r?'disabled':''} value="${r?esc(r.input):''}">
+    ${r?'':'<button class="btn" style="margin-top:12px" data-act="check">확인</button>'}`;
 }
 
 function quizView(){
   const s=S.session,Q=allQ();
   if(s.done)return summaryView();
   const q=Q[s.qids[s.idx]];
+  if(!q){s.idx++;if(s.idx>=s.qids.length)finishSession();return quizView()}
   const isRev=s.reviewSet.includes(q.id),isRetest=(s.retestSet||[]).includes(q.id);
   const r=ui.result;
-  let answer='';
-  if(q.kind==='fill'){
-    answer=`<input class="ans" id="ansInput" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="영어로 입력" ${r?'disabled':''} value="${r?esc(r.input):''}">
-      ${r?'':'<button class="btn" style="margin-top:12px" data-act="check">확인</button>'}`;
+  const word=isWord(q);
+  let body;
+  if(word)body=wordBody(q,s,r);
+  else if(q.kind==='fill'){
+    body=qhtml(q)+(q.level===3?'<p class="hint">문장 전체를 영어로. 대소문자·마침표는 신경 쓰지 않아도 돼요.</p>':'')+
+      `<input class="ans" id="ansInput" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="영어로 입력" ${r?'disabled':''} value="${r?esc(r.input):''}">
+       ${r?'':'<button class="btn" style="margin-top:12px" data-act="check">확인</button>'}`;
   }else{
-    answer=`<div class="choices">${q.choices.map((c,i)=>{
+    body=qhtml(q)+`<div class="choices">${q.choices.map((c,i)=>{
       let cls='';if(r){if(i===q.ans)cls='ok';else if(Number(r.input)===i)cls='no'}
       return `<button data-choice="${i}" class="${cls}" ${r?'disabled':''}>${esc(c)}</button>`}).join('')}</div>`;
   }
   let res='';
   if(r){
-    const ansText=q.kind==='fill'?q.a[0]:q.choices[q.ans];
-    res=`<div class="result ${r.ok?'ok':'no'}">${r.ok?(isRetest?'정답 — 내일 아침에 한 번 더 확인':'정답'):(isRetest?'오답 — 내일 아침에 다시':'오답 — 저녁에 다시 나와요')}
-      ${r.ok?'':`<span class="a">${esc(ansText)}</span>`}
-      ${q.exp?`<div class="exp">${esc(q.exp)}</div>`:''}</div>
-      <button class="btn" style="margin-top:14px" data-act="next">${s.idx+1>=s.qids.length?'결과 보기':'다음'}</button>`;
+    const last=s.idx+1>=s.qids.length;
+    if(word){
+      const head=r.ok?'정답':(isRetest||isRev?'오답 — 내일 한 번 더':'오답 — 저녁에 직접 입력으로 다시');
+      res=`<div class="result ${r.ok?'ok':'no'}">${head}
+        <span class="a">${esc(q.en)} — ${esc(q.ko)}</span>
+        ${q.ex?`<div class="ex">${esc(q.ex)}</div>`:''}</div>`;
+    }else{
+      const ansText=q.kind==='fill'?q.a[0]:q.choices[q.ans];
+      res=`<div class="result ${r.ok?'ok':'no'}">${r.ok?'정답':'오답'}
+        ${r.ok?'':`<span class="a">${esc(ansText)}</span>`}
+        ${q.exp?`<div class="exp">${esc(q.exp)}</div>`:''}</div>`;
+    }
+    res+=`<button class="btn" style="margin-top:14px" data-act="next">${last?'결과 보기':'다음'}</button>`;
   }
-  return `<div class="progress"><span>${s.idx+1} / ${s.qids.length}</span><span>${({morning:'아침 퀴즈',evening:'저녁 복습',extra:'추가 연습'})[s.mode]}</span></div>
+  const modeName={morning:'오늘의 단어',evening:'저녁 복습',extra:'추가 연습',redo:'틀린 단어 다시'}[s.mode]||'연습';
+  return `<div class="progress"><span>${s.idx+1} / ${s.qids.length}</span><span>${modeName}</span></div>
     <div class="bar"><i style="width:${(s.idx/s.qids.length)*100}%"></i></div>
     <div class="card">
-      <div><span class="tag">${typeLabel(q)}</span><span class="tag">Lv ${q.level}</span>${isRev?'<span class="tag review">복습</span>':''}${isRetest?'<span class="tag review">아침 오답</span>':''}</div>
-      ${qhtml(q)}
-      ${q.kind==='fill'&&q.level===3?'<p class="hint">문장 전체를 영어로. 대소문자·마침표는 신경 쓰지 않아도 돼요.</p>':''}
-      ${answer}${res}
+      <div><span class="tag">${typeLabel(q)}</span><span class="tag">Lv ${q.level}</span>${isRev?'<span class="tag review">복습</span>':''}${isRetest?'<span class="tag review">틀렸던 것</span>':''}</div>
+      ${body}${res}
     </div>`;
 }
 
@@ -467,68 +826,78 @@ function summaryView(){
   const s=S.session,Q=allQ();
   const c=s.results.filter(x=>x.ok).length,n=s.results.length;
   const wrong=s.results.filter(x=>!x.ok);
-  const title=({morning:'아침 퀴즈 완료',evening:'저녁 복습 완료',extra:'추가 연습 완료'})[s.mode];
-  const next=s.mode==='morning'?`틀린 ${wrong.length}문제는 저녁 7시 20분에 다시 나와요`:s.mode==='evening'?`틀린 ${wrong.length}문제는 내일 아침에 다시`:`틀린 ${wrong.length}문제는 내일 다시`;
-  let lv='';
-  if(s.levelChange==='up')lv=`<div class="level-note">최근 정답률이 높아서 난이도가 Lv ${S.level}로 올라갔어요.</div>`;
-  if(s.levelChange==='down')lv=`<div class="level-note">최근 정답률이 낮아서 난이도를 Lv ${S.level}로 낮췄어요. 다시 쌓아 올리면 됩니다.</div>`;
+  const title={morning:'오늘의 단어 완료',evening:'저녁 복습 완료',extra:'추가 연습 완료',redo:'다시 풀기 완료'}[s.mode]||'완료';
+  const next=s.mode==='morning'?`틀린 ${wrong.length}개는 저녁에 직접 입력으로 다시 나와요`:`틀린 ${wrong.length}개는 내일 다시 나와요`;
+  const list=wrong.map(w=>{
+    const q=Q[w.id];if(!q)return '';
+    if(isWord(q))return `<li><div class="meta">단어 · Lv ${q.level}</div><div class="qq"><b>${esc(q.en)}</b> — ${esc(q.ko)}</div>${q.ex?`<div class="meta">${esc(q.ex)}</div>`:''}</li>`;
+    const a=q.kind==='fill'?q.a[0]:q.choices[q.ans];
+    return `<li><div class="meta">${typeLabel(q)}</div><div class="qq">${esc(q.q)}</div><div class="qq" style="color:var(--ok)">${esc(a)}</div></li>`;
+  }).join('');
   return `<div class="card summary"><p style="margin:0">${title}</p>
     <div class="big">${c} / ${n}</div>
-    <p class="sub" style="margin:0">${wrong.length?next:'전부 맞혔어요'}</p>${lv}
-    ${wrong.length?`<ul class="list" style="margin-top:14px">${wrong.map(w=>{const q=Q[w.id];const a=q.kind==='fill'?q.a[0]:q.choices[q.ans];return `<li><div class="meta">${typeLabel(q)}</div><div class="qq">${esc(q.q)}</div><div class="qq" style="color:var(--ok)">${esc(a)}</div></li>`}).join('')}</ul>`:''}
-    <button class="btn" style="margin-top:16px" data-act="home">홈으로</button>
+    <p class="sub" style="margin:0">${wrong.length?next:'전부 맞혔어요'}</p>
+    ${wrong.length?`<ul class="list" style="margin-top:14px">${list}</ul>
+      <button class="btn" style="margin-top:6px" data-act="redo">틀린 ${wrong.length}개 바로 다시</button>
+      <button class="btn secondary" data-act="home">홈으로</button>`
+    :`<button class="btn" style="margin-top:16px" data-act="home">홈으로</button>`}
   </div>`;
 }
 
 function notesView(){
   const Q=allQ(),t=today();
   const ids=Object.keys(S.review).filter(id=>Q[id]).sort((a,b)=>S.review[a].due.localeCompare(S.review[b].due));
-  if(!ids.length)return `<h1>오답 노트</h1><p class="sub">틀린 문제가 자동으로 쌓입니다</p><div class="empty">아직 비어 있어요.<br>틀린 문제가 생기면 여기서 다시 볼 수 있어요.</div>`;
+  if(!ids.length)return `<h1>오답 노트</h1><p class="sub">틀린 것이 자동으로 쌓입니다</p><div class="empty">아직 비어 있어요.<br>틀린 단어가 생기면 여기서 다시 볼 수 있어요.</div>`;
   const stageName=['1일 뒤','3일 뒤','7일 뒤'];
-  return `<h1>오답 노트</h1><p class="sub">${ids.length}문제 · 소리 내어 3번씩 읽어두세요</p>
-    <ul class="list">${ids.map(id=>{const q=Q[id],r=S.review[id],h=S.history[id]||{wrong:0};const a=q.kind==='fill'?q.a[0]:q.choices[q.ans];
+  return `<h1>오답 노트</h1><p class="sub">${ids.length}개 · 다음에 나올 때는 직접 입력이에요</p>
+    <ul class="list">${ids.map(id=>{const q=Q[id],r=S.review[id],h=S.history[id]||{wrong:0};
       const dueTxt=r.due<=t?'오늘':r.due===addDays(t,1)?'내일':r.due;
-      return `<li><div class="meta">${typeLabel(q)} · ${h.wrong}번 틀림 · 다음 확인 ${dueTxt} (${stageName[r.stage]||''} 단계)</div><div class="qq">${esc(q.q)}</div><div class="qq" style="color:var(--ok)">${esc(a)}</div>${q.exp?`<div class="meta">${esc(q.exp)}</div>`:''}</li>`}).join('')}</ul>`;
+      const meta=`<div class="meta">${typeLabel(q)} · ${h.wrong}번 틀림 · 다음 확인 ${dueTxt} (${stageName[r.stage]||''} 단계)</div>`;
+      if(isWord(q))return `<li>${meta}<div class="qq"><b>${esc(q.en)}</b> — ${esc(q.ko)}</div>${q.ex?`<div class="meta">${esc(q.ex)}</div>`:''}</li>`;
+      const a=q.kind==='fill'?q.a[0]:q.choices[q.ans];
+      return `<li>${meta}<div class="qq">${esc(q.q)}</div><div class="qq" style="color:var(--ok)">${esc(a)}</div>${q.exp?`<div class="meta">${esc(q.exp)}</div>`:''}</li>`}).join('')}</ul>`;
 }
 
 function statsView(){
   const t=today();const days=[];for(let i=6;i>=0;i--)days.push(addDays(t,-i));
   const byDate={};S.log.forEach(l=>byDate[l.date]=l);
-  const bars=days.map(d=>{const l=byDate[d];const h=l?Math.max(8,Math.round(l.c/l.n*100)):0;return `<div class="${l?'':'empty'}" style="height:${l?h:3}%" title="${d}${l?` 아침 ${l.c}/${l.n}`:''}${l&&l.en!=null?` 저녁 ${l.ec}/${l.en}`:''}"></div>`}).join('');
+  const bars=days.map(d=>{const l=byDate[d];const h=l?Math.max(8,Math.round(l.c/l.n*100)):0;return `<div class="${l?'':'empty'}" style="height:${l?h:3}%" title="${d}${l?` ${l.c}/${l.n}`:''}"></div>`}).join('');
   const labels=days.map(d=>`<div>${Number(d.slice(8))}일</div>`).join('');
   const acc=S.totals.answered?Math.round(S.totals.correct/S.totals.answered*100):0;
-  const rec=S.recent.length?Math.round(S.recent.reduce((a,b)=>a+b,0)/S.recent.length*100):null;
-  const Q=allQ();const seen=Object.keys(S.history).filter(id=>Q[id]).length,total=Object.keys(Q).length;
-  return `<h1>기록</h1><p class="sub">최근 7일 아침 퀴즈 정답률</p>
+  const Q=allQ();
+  const total=wordCount(Q),learned=learnedCount(Q);
+  const seenW=Object.keys(S.history).filter(id=>isWord(Q[id])).length;
+  return `<h1>기록</h1><p class="sub">최근 7일 정답률</p>
     <div class="card"><div class="weekchart">${bars}</div><div class="weeklabels">${labels}</div></div>
     ${statusBar()}
     <div class="card">
+      <p style="margin:0 0 8px">단어 진행 <b>${learned}</b> / ${total}</p>
+      <div class="bar" style="margin-bottom:12px"><i style="width:${total?Math.round(learned/total*100):0}%"></i></div>
+      <p style="margin:0 0 6px">본 적 있는 단어 <b>${seenW}</b>개</p>
       <p style="margin:0 0 6px">전체 정답률 <b>${acc}%</b> (${S.totals.correct}/${S.totals.answered})</p>
-      <p style="margin:0 0 6px">최근 새 문제 정답률 <b>${rec===null?'-':rec+'%'}</b> (${S.recent.length}/20 누적)</p>
-      <p style="margin:0 0 6px">풀어본 문제 <b>${seen}</b> / ${total}</p>
-      <p style="margin:0">오답 노트 <b>${Object.keys(S.review).length}</b>문제</p>
+      <p style="margin:0">오답 노트 <b>${Object.keys(S.review).length}</b>개</p>
     </div>
-    <p class="note">85% 이상이면 다음 난이도, 50% 이하면 이전 난이도로 조정됩니다. 20문제가 쌓여야 판단해요.</p>`;
+    <p class="note">한 번 맞히고 오답 노트에서 졸업한 단어를 "외운 단어"로 셉니다.</p>`;
 }
 
 function settingsView(){
-  return `<h1>설정</h1><p class="sub">문제 추가와 초기화</p>
-    <div class="card"><p style="margin:0 0 8px">문제 팩 추가</p>
-      <p class="note" style="margin:0 0 10px">Claude가 만들어준 문제 팩(JSON)을 붙여넣으면 은행에 합쳐집니다. 같은 id는 덮어써요.</p>
-      <textarea id="packInput" placeholder='[{"id":"g61","type":"g","level":1,"kind":"fill","q":"...","a":["..."],"exp":"..."}]'></textarea>
-      <button class="btn secondary" style="margin-top:10px" data-act="addPack">팩 추가</button>
-      <p class="note" style="margin:10px 0 0">추가된 팩: ${(S.packs||[]).length}개 · 문제 ${(S.packs||[]).reduce((a,p)=>a+p.length,0)}개</p>
+  return `<h1>설정</h1><p class="sub">문제 수와 기록 관리</p>
+    <div class="card"><p style="margin:0 0 8px">하루 단어 수</p>
+      <div class="row">${[20,30,40].map(n=>`<button class="btn ${(S.wordN||30)===n?'':'secondary'}" data-wn="${n}">${n}개</button>`).join('')}</div>
+      <p class="note" style="margin:10px 0 0">30개가 대략 10분입니다. 저녁 복습은 틀린 단어 + 새 단어 ${EVENING_NEW_MAX}개로 자동 구성돼요.</p>
     </div>
-    <div class="card"><p style="margin:0 0 8px">아침 퀴즈 문제 수</p>
-      <div class="row">${[14,18,22].map(n=>`<button class="btn ${(S.morningN||18)===n?'':'secondary'}" data-mn="${n}">${n}문제</button>`).join('')}</div>
-      <p class="note" style="margin:10px 0 0">18문제가 대략 20분입니다. 저녁 복습은 아침 오답 + 새 문제로 자동 구성돼요.</p>
-    </div>
-    <div class="card"><p style="margin:0 0 8px">난이도 직접 설정</p>
+    <div class="card"><p style="margin:0 0 8px">문장 연습 난이도</p>
       <div class="row">${[1,2,3].map(l=>`<button class="btn ${S.level===l?'':'secondary'}" data-level="${l}">Lv ${l}</button>`).join('')}</div>
-      <p class="note" style="margin:10px 0 0">Lv1 형태 채우기 · Lv2 시제 선택과 오류 수정 · Lv3 문장 통째로 영작</p>
+      <p class="note" style="margin:10px 0 0">문장 연습에만 적용됩니다. Lv1 형태 채우기 · Lv2 시제와 오류 수정 · Lv3 문장 통째로 영작</p>
+    </div>
+    <div class="card"><p style="margin:0 0 8px">문제 팩 추가</p>
+      <p class="note" style="margin:0 0 10px">Claude가 만들어준 단어 팩(JSON)을 붙여넣으면 은행에 합쳐집니다. 같은 id는 덮어써요.</p>
+      <textarea id="packInput" placeholder='[{"id":"w301","type":"w","level":2,"kind":"word","pos":"v","en":"refine","ko":"다듬다","ex":"refine the estimate"}]'></textarea>
+      <button class="btn secondary" style="margin-top:10px" data-act="addPack">팩 추가</button>
+      <p class="note" style="margin:10px 0 0">추가된 팩: ${(S.packs||[]).length}개 · ${(S.packs||[]).reduce((a,p)=>a+p.length,0)}개 문항</p>
     </div>
     <div class="card"><p style="margin:0 0 8px">초기화</p>
-      <p class="note" style="margin:0 0 10px">기록·오답 노트·난이도가 전부 지워집니다. 추가한 문제 팩은 남아요.</p>
+      <p class="note" style="margin:0 0 10px">기록·오답 노트가 전부 지워집니다. 추가한 팩은 남아요.</p>
       <button class="btn ghost" data-act="reset">모든 기록 지우기</button>
     </div>
     <div class="card"><p style="margin:0 0 8px">기록 백업 / 옮기기</p>
@@ -542,24 +911,27 @@ function settingsView(){
 function bind(){
   document.querySelectorAll('[data-act]').forEach(b=>b.onclick=()=>act(b.dataset.act));
   document.querySelectorAll('[data-choice]').forEach(b=>b.onclick=()=>submit(b.dataset.choice));
-  document.querySelectorAll('[data-mn]').forEach(b=>b.onclick=async()=>{S.morningN=Number(b.dataset.mn);await save();render()});
-  document.querySelectorAll('[data-level]').forEach(b=>b.onclick=async()=>{S.level=Number(b.dataset.level);S.recent=[];await save();toast(`Lv ${S.level}로 설정`);render()});
+  document.querySelectorAll('[data-wn]').forEach(b=>b.onclick=async()=>{S.wordN=Number(b.dataset.wn);await save();render()});
+  document.querySelectorAll('[data-level]').forEach(b=>b.onclick=async()=>{S.level=Number(b.dataset.level);await save();toast(`문장 연습 Lv ${S.level}`);render()});
   const inp=$('ansInput');
-  if(inp){if(!ui.result)setTimeout(()=>inp.focus(),50);inp.onkeydown=e=>{if(e.key==='Enter'&&!ui.result)submit(inp.value)}}
+  if(inp){if(!ui.result)setTimeout(()=>inp.focus(),50);inp.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();ui.result?act('next'):submit(inp.value)}}}
 }
 async function act(a){
-  if(a==='startMorning'){buildSession('morning');ui.result=null;view='quiz';await save();render()}
-  else if(a==='startEvening'){buildSession('evening');ui.result=null;view='quiz';await save();render()}
-  else if(a==='extra'){buildSession('extra');ui.result=null;view='quiz';await save();render()}
+  clearTimeout(ui.auto);
+  if(a==='startMorning'){buildSession('morning','word');ui.result=null;view='quiz';await save();render()}
+  else if(a==='startEvening'){buildSession('evening','word');ui.result=null;view='quiz';await save();render()}
+  else if(a==='extra'){buildSession('extra','word');ui.result=null;view='quiz';await save();render()}
+  else if(a==='sent'){buildSession('extra','sent');ui.result=null;view='quiz';await save();render()}
+  else if(a==='redo'){const set=S.session&&S.session.set||'word';buildSession('redo',set);ui.result=null;view='quiz';await save();render()}
   else if(a==='resume'){ui.result=null;view='quiz';render()}
   else if(a==='check'){const inp=$('ansInput');submit(inp?inp.value:'')}
   else if(a==='next'){const s=S.session;s.idx++;ui.result=null;if(s.idx>=s.qids.length)finishSession();await save();render();window.scrollTo(0,0)}
   else if(a==='home'){view='home';render()}
   else if(a==='addPack'){addPack()}
-  else if(a==='exportState'){const t=$('packInput');if(t){t.value=JSON.stringify(S);t.scrollIntoView({block:'center'});toast('아래 칸에 복사해 두세요')}}
+  else if(a==='exportState'){const t=$('packInput');if(t){t.value=JSON.stringify(S);t.scrollIntoView({block:'center'});toast('아래 칸 내용을 복사해 두세요')}}
   else if(a==='importState'){const t=$('packInput');if(!t||!t.value.trim()){toast('아래 칸에 백업 내용을 붙여넣으세요');return}
-    try{const o=JSON.parse(t.value);if(!o.history||!o.totals)throw 0;S=Object.assign(defaultState(),o);await save();toast('복원했어요');view='home';render()}catch(e){toast('백업 형식이 아니에요')}}
-  else if(a==='reset'){if(confirm('모든 기록을 지울까요? 되돌릴 수 없어요.')){const packs=S.packs||[];S=defaultState();S.packs=packs;await save();toast('초기화했어요');render()}}
+    try{const o=JSON.parse(t.value);if(!o.history||!o.totals)throw 0;S=Object.assign(defaultState(),o);S.session=null;await save();toast('복원했어요');view='home';render()}catch(e){toast('백업 형식이 아니에요')}}
+  else if(a==='reset'){if(confirm('모든 기록을 지울까요? 되돌릴 수 없어요.')){const packs=S.packs||[];S=defaultState();S.packs=packs;await save();toast('초기화했어요');view='home';render()}}
 }
 async function submit(input){
   if(ui.result)return;
@@ -570,14 +942,16 @@ async function submit(input){
   s.results.push({id:q.id,ok});
   ui.result={ok,input};
   await save();render();
+  if(ok){clearTimeout(ui.auto);ui.auto=setTimeout(()=>act('next'),650)} // 맞히면 알아서 다음으로
 }
 async function addPack(){
   const ta=$('packInput');let arr;
   try{arr=JSON.parse(ta.value)}catch(e){toast('JSON 형식이 아니에요');return}
   if(!Array.isArray(arr)){toast('배열 형태여야 해요');return}
-  const bad=arr.find(q=>!q.id||!q.type||!q.level||!q.kind||!q.q||(q.kind==='fill'&&!Array.isArray(q.a))||(q.kind==='mc'&&(!Array.isArray(q.choices)||typeof q.ans!=='number')));
-  if(bad){toast('형식이 맞지 않는 문제가 있어요');return}
-  S.packs=S.packs||[];S.packs.push(arr);await save();toast(`${arr.length}문제 추가`);render();
+  const bad=arr.find(q=>!q.id||!q.type||!q.level||!q.kind||(q.kind==='word'&&(!q.en||!q.ko))||(q.kind==='fill'&&!Array.isArray(q.a))||(q.kind==='mc'&&(!Array.isArray(q.choices)||typeof q.ans!=='number')));
+  if(bad){toast('형식이 맞지 않는 문항이 있어요');return}
+  arr.forEach(q=>{if(q.kind==='word'&&!q.q)q.q=q.ko});
+  S.packs=S.packs||[];S.packs.push(arr);await save();toast(`${arr.length}개 추가`);render();
 }
 
 /* ---------- 시작 ---------- */
