@@ -448,12 +448,23 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
 #lever.grabbing #knob { cursor: grabbing; transition: none; }
 
 .readout {
+  display: flex; align-items: baseline; justify-content: space-between; gap: .4rem;
   margin: 0;
   font-size: 10px;
   letter-spacing: .03em;
   font-variant-numeric: lining-nums tabular-nums;
   color: var(--ink-faint);
 }
+#wipe {
+  flex: none;
+  padding: 0;
+  border: 0; background: none;
+  color: var(--ink-faint);
+  font: inherit; font-size: 10px;
+  text-decoration: underline; text-underline-offset: 2px;
+  cursor: pointer;
+}
+#wipe:hover { color: var(--ink); }
 
 .pedals { display: grid; grid-template-columns: 1fr 1fr; gap: .35rem; }
 

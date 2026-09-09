@@ -50,7 +50,7 @@
      scrolls at 250 px/s and 90 km/h at 450, so the whole gearbox gets used
      over a document this length instead of the car spending its life in
      second. */
-  var PX_PER_M = 18;        // document pixels to the metre
+  var PX_PER_M = 32;        // document pixels to the metre
   var FOLLOW_K = 4.5;         // how hard the car chases a page you scroll yourself
   var FOLLOW_SMOOTH = 5.5;   // and how smoothly that chase changes speed
   var FOLLOW_SNAP = 60;     // m of gap past which it stops chasing and relocates
@@ -59,7 +59,7 @@
   // reaches 30 m up the road, and thins out towards the end of that range the
   // way the evidence does.
   var PERCEPTION_M = 30;
-  var ROAD_PX_PER_M = 9;    // strip pixels to the metre
+  var ROAD_PX_PER_M = 6;    // strip pixels to the metre
   var CAR_X = 0.26;         // the car's fixed position across the strip
   var MIN_VIEWPORT = 900;   // below this the road hides and the links return
 
@@ -72,6 +72,7 @@
    * ---------------------------------------------------------------- */
 
   var MASS = 1500;                                  // kg
+  var PEAK_NM = 320;                                // engine torque scale
   var WHEEL_R = 0.32;                               // m
   var FINAL = 3.9;                                  // final drive ratio
   var EFF = 0.85;                                   // driveline efficiency
@@ -90,7 +91,7 @@
   // range, and tails off before the redline. A parabola is close enough.
   function torque(r) {
     var t = clamp((r - 700) / (REDLINE - 700), 0, 1);
-    return 210 * (0.58 + 1.55 * t - 1.30 * t * t);
+    return PEAK_NM * (0.58 + 1.55 * t - 1.30 * t * t);
   }
 
   // Off throttle, the engine drags the car back through the same gearing. It
@@ -117,11 +118,13 @@
   var shifting = 0;         // seconds of torque cut left
   var speed = 0;            // m/s, signed: positive is down the page
   var pos = 0;              // metres from the top of the document
-  /* The stretch the car has actually driven, and so built a map of. Only the
-     model advances it: scrolling the page by hand is not driving, and a road
-     that arrives already mapped has nothing left to show you. Leave the
-     stretch and it starts again from wherever you are. */
-  var mapFrom = 0, mappedTo = 0;
+  /* Every stretch the car has actually driven, and so built a map of. Only
+     the model extends them: scrolling the page by hand is not driving, and a
+     road that arrives already mapped has nothing left to show you. Drive away
+     from one stretch and a new one starts, and both stay drawn. */
+  var segs = [];                       // committed, sorted, non-overlapping
+  var live = { a: 0, b: 0 };           // the one being driven right now
+  var outro = 0;                       // end-of-route flourish, 0 to 1
   var rpm = IDLE;
   var throttle = 0, brake = 0;
   var holdGas = false, holdBrake = false;
@@ -288,11 +291,37 @@
     relocate();
   }
 
-  /* Off the end of what has been driven, the map is not yours any more. */
+  /* Driving extends the stretch under the car. */
+  function drove() {
+    if (pos < live.a) live.a = pos;
+    if (pos > live.b) live.b = pos;
+  }
+
+  /* Landing outside it puts it away and starts a new one where you are. What
+     was drawn stays drawn: you did drive it. */
   function relocate() {
-    if (pos > mappedTo + PERCEPTION_M || pos < mapFrom - PERCEPTION_M) {
-      mapFrom = mappedTo = pos;
-    }
+    if (pos >= live.a - PERCEPTION_M && pos <= live.b + PERCEPTION_M) return;
+    commit();
+    live = { a: pos, b: pos };
+  }
+
+  function commit() {
+    if (live.b - live.a < 0.5) return;
+    segs.push({ a: live.a, b: live.b });
+    segs.sort(function (p, q) { return p.a - q.a; });
+    var out = [];
+    segs.forEach(function (seg) {
+      var last = out[out.length - 1];
+      if (last && seg.a <= last.b + 1) last.b = Math.max(last.b, seg.b);
+      else out.push({ a: seg.a, b: seg.b });
+    });
+    segs = out;
+  }
+
+  function clearMap() {
+    segs = [];
+    live = { a: pos, b: pos };
+    draw();
   }
 
   /* ---------------------------------------------------------------- *
@@ -435,48 +464,54 @@
     /* The map the car has built, in its class colours with the per-polyline
        vertices a predicted map is drawn with.
 
-       It is not the whole road. It is the stretch actually driven, solid,
-       with the perception range hanging off each end of it: the model
-       predicts over a region of interest around the ego, so the map runs on
-       a little way up the road and thins out across that range, because
-       distant evidence is sparse and the prediction there is a guess. Drive
-       and you watch it laid down ahead of you; scroll past a stretch you
-       never drove and there is nothing there to see. */
-    var backM = mapFrom - PERCEPTION_M;
-    var frontM = Math.max(mappedTo, pos + PERCEPTION_M);
-    var x0 = sx(backM), x1 = sx(mapFrom), x2 = sx(mappedTo), x3 = sx(frontM);
-    var clipL = Math.max(0, x0), clipR = Math.min(W, x3);
+       It is not the whole road. It is the stretches actually driven, solid,
+       with the perception range hanging off the ends of the one the car is on:
+       the model predicts over a region of interest around the ego, so the map
+       runs a little way up the road ahead and thins out across that range,
+       because distant evidence is sparse and the prediction there is a guess.
+       Drive and you watch it laid down ahead of you; a stretch you never drove
+       has nothing on it. */
+    function drawSeg(seg) {
+      var onIt = pos >= seg.a - PERCEPTION_M && pos <= seg.b + PERCEPTION_M;
+      // Only the stretch under the car is still being predicted. The rest is
+      // finished work, and gets a soft edge rather than a range of guesswork.
+      var reach = onIt ? PERCEPTION_M : 5;
+      var backM = seg.a - reach;
+      var frontM = onIt ? Math.max(seg.b, pos + PERCEPTION_M) : seg.b + reach;
+      var x0 = sx(backM), x1 = sx(seg.a), x2 = sx(seg.b), x3 = sx(frontM);
+      if (x3 < 0 || x0 > W) return;
 
-    function shade(kind) {
-      var hex = colour(kind);
-      var grd = ctx.createLinearGradient(0, 0, W, 0);
-      var a0 = clamp(x0 / W, 0, 1), a1 = clamp(x1 / W, 0, 1);
-      var a2 = clamp(x2 / W, 0, 1), a3 = clamp(x3 / W, 0, 1);
-      var st = [];
-      if (a1 > 0) {
-        st.push([0, 0]);
-        if (a0 > 0) st.push([a0, 0]);
-        if (a1 > a0 + 0.0005) st.push([a0 + (a1 - a0) * 0.5, 0.5]);
+      var clipL = Math.max(0, x0), clipR = Math.min(W, x3);
+      if (clipR <= clipL) return;
+
+      function shade(kind) {
+        var hex = colour(kind);
+        var grd = ctx.createLinearGradient(0, 0, W, 0);
+        var a0 = clamp(x0 / W, 0, 1), a1 = clamp(x1 / W, 0, 1);
+        var a2 = clamp(x2 / W, 0, 1), a3 = clamp(x3 / W, 0, 1);
+        var st = [];
+        if (a1 > 0) {
+          st.push([0, 0]);
+          if (a0 > 0) st.push([a0, 0]);
+          if (a1 > a0 + 0.0005) st.push([a0 + (a1 - a0) * 0.5, 0.5]);
+        }
+        st.push([a1, 1]);
+        if (a2 > a1) st.push([a2, 1]);
+        if (a3 > a2 + 0.0005) st.push([a2 + (a3 - a2) * 0.5, 0.5]);
+        if (a3 < 1) st.push([a3, 0]);
+        st.push([1, 0]);
+        st.forEach(function (p) {
+          grd.addColorStop(p[0], p[1] === 1 ? hex : rgba(hex, p[1]));
+        });
+        return grd;
       }
-      st.push([a1, 1]);
-      if (a2 > a1) st.push([a2, 1]);
-      if (a3 > a2 + 0.0005) st.push([a2 + (a3 - a2) * 0.5, 0.5]);
-      if (a3 < 1) st.push([a3, 0]);
-      st.push([1, 0]);
-      st.forEach(function (s) {
-        grd.addColorStop(s[0], s[1] === 1 ? hex : rgba(hex, s[1]));
-      });
-      return grd;
-    }
 
-    // How confident the map is at one point, for elements drawn whole.
-    function conf(m) {
-      if (m >= mapFrom && m <= mappedTo) return 1;
-      if (m < mapFrom) return clamp((m - backM) / PERCEPTION_M, 0, 1);
-      return clamp((frontM - m) / Math.max(0.001, frontM - mappedTo), 0, 1);
-    }
+      function conf(m) {
+        if (m >= seg.a && m <= seg.b) return 1;
+        if (m < seg.a) return clamp((m - backM) / reach, 0, 1);
+        return clamp((frontM - m) / Math.max(0.001, frontM - seg.b), 0, 1);
+      }
 
-    if (clipR > clipL) {
       ctx.save();
       ctx.beginPath();
       ctx.rect(clipL, 0, clipR - clipL, H);
@@ -485,11 +520,11 @@
       var bound = shade('boundary');
       ctx.strokeStyle = bound;
       ctx.fillStyle = bound;
-      ctx.lineWidth = 1.6;
+      ctx.lineWidth = 1.8;
       [edgeT, edgeB].forEach(function (y) {
         ctx.beginPath();
-        ctx.moveTo(clipL, y);
-        ctx.lineTo(clipR, y);
+        ctx.moveTo(0, y);
+        ctx.lineTo(W, y);
         ctx.stroke();
         var m0 = Math.floor(backM / VERT) * VERT;
         for (var m = m0; m <= frontM + VERT; m += VERT) {
@@ -501,13 +536,16 @@
         }
       });
 
+      /* Canvas measures a dash pattern from the start of the path, so this
+         line has to begin where the plain one under it begins or the two sets
+         of dashes sit out of step. The clip decides how much of it shows. */
       ctx.strokeStyle = shade('divider');
-      ctx.lineWidth = 1.3;
+      ctx.lineWidth = 1.4;
       ctx.setLineDash([DASH, GAP]);
       ctx.lineDashOffset = ((-sx(0)) % PERIOD + PERIOD) % PERIOD;
       ctx.beginPath();
-      ctx.moveTo(clipL, mid);
-      ctx.lineTo(clipR, mid);
+      ctx.moveTo(0, mid);
+      ctx.lineTo(W, mid);
       ctx.stroke();
       ctx.setLineDash([]);
       ctx.lineDashOffset = 0;
@@ -521,7 +559,31 @@
       ctx.restore();
     }
 
-    drawCar(carX, mid);
+    segs.forEach(drawSeg);
+    drawSeg(live);
+
+    /* End of the route: the car carries on off the right-hand side and the
+       road says thank you. Drive back up and it takes it back. */
+    var offX = carX + outro * (W + 90 - carX);
+    drawCar(offX, mid);
+
+    if (outro > 0.02) {
+      var fade = clamp((outro - 0.35) / 0.4, 0, 1);
+      if (fade > 0) {
+        ctx.save();
+        ctx.globalAlpha = fade;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = 'rgba(' + ink + ', 0.8)';
+        ctx.font = '700 15px ' + FACE;
+        ctx.fillText('THANK YOU FOR DRIVING', W / 2, mid - 6);
+        ctx.fillStyle = 'rgba(' + ink + ', 0.45)';
+        ctx.font = '600 10px ' + FACE;
+        ctx.fillText('END OF ROUTE  ·  ' + (routeM / 1000).toFixed(2) + ' KM',
+                     W / 2, mid + 12);
+        ctx.restore();
+      }
+    }
 
     /* Signs sit at their true position and slide in from the right, the way
        they do on the road. Off-strip ones are not drawn at all. */
@@ -631,8 +693,7 @@
     if (pos >= top) { pos = top; speed = 0; }
     if (pos <= 0) { pos = 0; speed = 0; }
 
-    if (pos > mappedTo) mappedTo = pos;
-    if (pos < mapFrom) mapFrom = pos;
+    drove();
     rpm = rpmAt(speed);
   }
 
@@ -878,10 +939,14 @@
       ownScroll = sy;
     }
 
+    var atEnd = pos >= maxM() - 0.02 && !dragging;
+    outro = clamp(outro + (atEnd ? dt / 1.2 : -dt / 0.35), 0, 1);
+
     draw();
     hud(dt);
 
-    var busy = dragging || Math.abs(needleV) > 0.008 || (owned
+    var busy = dragging || Math.abs(needleV) > 0.008 ||
+      (atEnd ? outro < 1 : outro > 0) || (owned
       ? (Math.abs(speed) > 0.02 || holdGas || holdBrake || throttle > 0.02 || brake > 0.02)
       : Math.abs(observed) > 0.05);
     idleFor = busy ? 0 : idleFor + dt;
@@ -962,6 +1027,9 @@
     g = 0;
     shifting = 0;
     showLever();
+
+  var wipeBtn = document.getElementById('wipe');
+  if (wipeBtn) wipeBtn.addEventListener('click', clearMap);
     hud();
     startLoop();
   }

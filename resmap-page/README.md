@@ -66,9 +66,13 @@ The map does not stop at the car. The model predicts over a region of interest
 around the ego, so it runs `PERCEPTION_M` up the road ahead (30 m, the
 longitudinal half of the paper's 60 x 30 m setting) and thins out across that
 range, because distant evidence is sparse and the prediction there is a guess.
-Behind the car it is confirmed and solid, and the confirmed extent is the
-furthest point reached rather than the current one: reversing does not unmap
-the road you already drove.
+Every stretch driven stays drawn, and only the model extends one: scrolling
+past a stretch you never drove leaves it bare. Drive away from one and a new
+one starts without erasing the old. **Clear map** in the cockpit wipes them
+all.
+
+Reaching the end of the document sends the car off the right-hand side and
+the road says thank you; driving back up takes it back.
 
 Each section is a junction with a **guide sign** at its true position, green
 with its section number set like an exit number, standing on two posts that run
