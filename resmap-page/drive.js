@@ -54,6 +54,11 @@
   var FOLLOW_K = 4.5;         // how hard the car chases a page you scroll yourself
   var FOLLOW_SMOOTH = 5.5;   // and how smoothly that chase changes speed
   var FOLLOW_SNAP = 60;     // m of gap past which it stops chasing and relocates
+  // The model predicts a map over a region of interest around the ego, not a
+  // trail behind it. 60 x 30 m is the paper's main setting, so the prediction
+  // reaches 30 m up the road, and thins out towards the end of that range the
+  // way the evidence does.
+  var PERCEPTION_M = 30;
   var ROAD_PX_PER_M = 9;    // strip pixels to the metre
   var CAR_X = 0.26;         // the car's fixed position across the strip
   var MIN_VIEWPORT = 900;   // below this the road hides and the links return
@@ -157,6 +162,14 @@
     pavement = v('--road-surface', '#d6d9df');
     paint = v('--road-line', '#fbfcfd');
     sign = v('--sign', '#16673c');
+  }
+
+  /* A hex colour at an alpha, for the fade over the predicted stretch. */
+  function rgba(hex, a) {
+    var h = hex.replace('#', '');
+    if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+    var n = parseInt(h, 16);
+    return 'rgba(' + ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')';
   }
 
   function box(c, x, y, w, h, r) {
@@ -404,27 +417,51 @@
     ctx.globalAlpha = 1;
     stops.forEach(function (s) { crossing(sx(s.m), paint, 2.6, 0.75); });
 
-    /* Behind it the map has been built: the same elements in their class
-       colours, with the per-polyline vertices a predicted map is drawn with.
-       The extent is the furthest point reached, not the current one, because
-       reversing does not unmap the road you already drove. */
-    var builtTo = Math.min(W, sx(mappedTo));
-    if (builtTo > 0) {
+    /* The map, in its class colours with the per-polyline vertices a predicted
+       map is drawn with.
+    
+       It does not stop at the car. The model predicts over a region of
+       interest around the ego, so the map runs on up the road to the edge of
+       the perception range, and thins out across it: distant evidence is
+       sparse and the prediction there is a guess. Behind the car it is
+       confirmed and drawn solid, and the confirmed extent is the furthest
+       point reached rather than the current one, because reversing does not
+       unmap the road you already drove. */
+    var solidX = Math.min(W, sx(mappedTo));
+    var predictX = Math.min(W, sx(Math.max(mappedTo, pos + PERCEPTION_M)));
+
+    // Solid to the confirmed extent, then fading out across what is left of
+    // the perception range. One gradient does both.
+    function shade(kind) {
+      var hex = colour(kind);
+      var a = clamp(solidX / W, 0, 1);
+      var b = clamp(predictX / W, 0, 1);
+      if (!(b > a + 0.001)) return hex;
+      var grd = ctx.createLinearGradient(0, 0, W, 0);
+      grd.addColorStop(0, hex);
+      grd.addColorStop(a, hex);
+      grd.addColorStop(a + (b - a) * 0.5, rgba(hex, 0.5));
+      grd.addColorStop(b, rgba(hex, 0));
+      return grd;
+    }
+
+    if (predictX > 0) {
       ctx.save();
       ctx.beginPath();
-      ctx.rect(0, 0, builtTo, H);
+      ctx.rect(0, 0, predictX, H);
       ctx.clip();
 
-      ctx.strokeStyle = colour('boundary');
-      ctx.fillStyle = colour('boundary');
+      var bound = shade('boundary');
+      ctx.strokeStyle = bound;
+      ctx.fillStyle = bound;
       ctx.lineWidth = 1.6;
       [edgeT, edgeB].forEach(function (y) {
         ctx.beginPath();
         ctx.moveTo(0, y);
-        ctx.lineTo(builtTo, y);
+        ctx.lineTo(predictX, y);
         ctx.stroke();
         var m0 = Math.floor((pos - carX / ROAD_PX_PER_M) / VERT) * VERT;
-        for (var m = m0; sx(m) < builtTo + VERT * ROAD_PX_PER_M; m += VERT) {
+        for (var m = m0; sx(m) < predictX + VERT * ROAD_PX_PER_M; m += VERT) {
           var vx = sx(m);
           if (vx < -4) continue;
           ctx.beginPath();
@@ -433,18 +470,25 @@
         }
       });
 
-      ctx.strokeStyle = colour('divider');
+      ctx.strokeStyle = shade('divider');
       ctx.lineWidth = 1.3;
       ctx.setLineDash([DASH, GAP]);
       ctx.lineDashOffset = ((-sx(0)) % PERIOD + PERIOD) % PERIOD;
       ctx.beginPath();
       ctx.moveTo(0, mid);
-      ctx.lineTo(builtTo, mid);
+      ctx.lineTo(predictX, mid);
       ctx.stroke();
       ctx.setLineDash([]);
       ctx.lineDashOffset = 0;
 
-      stops.forEach(function (s) { crossing(sx(s.m), colour('crossing'), 2.6, 1); });
+      // A crossing is one element, so it takes one confidence rather than a
+      // gradient across itself.
+      var far = Math.max(mappedTo, pos + PERCEPTION_M);
+      stops.forEach(function (s) {
+        var a = s.m <= mappedTo ? 1
+              : 1 - clamp((s.m - mappedTo) / Math.max(0.001, far - mappedTo), 0, 1);
+        if (a > 0.02) crossing(sx(s.m), colour('crossing'), 2.6, a);
+      });
       ctx.restore();
     }
 

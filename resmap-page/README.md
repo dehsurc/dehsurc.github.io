@@ -58,12 +58,17 @@ world slides past the car rather than the car sliding along a track ,  that is
 what driving looks like from the driver's seat, and it is the only way the
 speed reads as speed.
 
-Ahead of the car the road is bare surface with plain markings. Behind it the
-same elements are drawn in their map class colours, with the per-polyline
-vertices a predicted map is drawn with, because the car is building the map as
-it drives. That is the subject of the paper, and it is what makes a progress
-indicator mean something. The extent is the furthest point reached rather than
-the current one: reversing does not unmap the road you already drove.
+The road carries the map the car is building, in its class colours and with
+the per-polyline vertices a predicted map is drawn with. That is the subject of
+the paper, and it is what makes a progress indicator mean something.
+
+The map does not stop at the car. The model predicts over a region of interest
+around the ego, so it runs `PERCEPTION_M` up the road ahead (30 m, the
+longitudinal half of the paper's 60 x 30 m setting) and thins out across that
+range, because distant evidence is sparse and the prediction there is a guess.
+Behind the car it is confirmed and solid, and the confirmed extent is the
+furthest point reached rather than the current one: reversing does not unmap
+the road you already drove.
 
 Each section is a junction with a **guide sign** at its true position, green
 with its section number set like an exit number, standing on two posts that run
