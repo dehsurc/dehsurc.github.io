@@ -72,7 +72,8 @@ the perception range hangs off the front of it, and backing up takes the map
 with you. There is nothing to remember and nothing to clear.
 
 Reaching the end of the document sends the car off the right-hand side and the
-road says thank you. Arrival latches, because browsers report a fractional
+road says thank you. The map goes with it, so the road under that sign is drawn
+like the rest of the route rather than stopping where the car used to sit. Arrival latches, because browsers report a fractional
 `scrollY` at the bottom of a page and because letting go of the accelerator
 must not put the flourish away; driving back up more than six metres takes it
 back.

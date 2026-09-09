@@ -434,8 +434,14 @@
        the ego, so the map runs on to the edge of the perception range and thins
        out across it: distant evidence is sparse and the prediction there is a
        guess. Back up and the map goes with you. */
-    var edgeX = sx(pos);
-    var predictX = sx(pos + PERCEPTION_M);
+    /* On the way out the car keeps mapping. The extent follows it off the
+       right-hand side, so the road under the sign it leaves you with is drawn
+       like the rest of the route rather than stopping where the car used to
+       sit. */
+    var offX = carX + outro * (W + 90 - carX);
+    var extentM = pos + (offX - carX) / ROAD_PX_PER_M;
+    var edgeX = offX;
+    var predictX = sx(extentM + PERCEPTION_M);
     var clipR = Math.min(W, predictX);
 
     if (clipR > 0) {
@@ -455,8 +461,8 @@
       // A crossing is one element, so it takes one confidence rather than a
       // gradient across itself.
       function conf(m) {
-        if (m <= pos) return 1;
-        return clamp((pos + PERCEPTION_M - m) / PERCEPTION_M, 0, 1);
+        if (m <= extentM) return 1;
+        return clamp((extentM + PERCEPTION_M - m) / PERCEPTION_M, 0, 1);
       }
 
       ctx.save();
@@ -474,7 +480,7 @@
         ctx.lineTo(W, y);
         ctx.stroke();
         var m0 = Math.floor((pos - carX / ROAD_PX_PER_M) / VERT) * VERT;
-        for (var m = m0; m <= pos + PERCEPTION_M + VERT; m += VERT) {
+        for (var m = m0; m <= extentM + PERCEPTION_M + VERT; m += VERT) {
           var vx = sx(m);
           if (vx < -4 || vx > clipR + 4) continue;
           ctx.beginPath();
@@ -506,7 +512,6 @@
 
     /* End of the route: the car carries on off the right-hand side and the
        road says thank you. Drive back up and it takes it back. */
-    var offX = carX + outro * (W + 90 - carX);
     drawCar(offX, mid);
 
     if (outro > 0.02) {
@@ -892,7 +897,7 @@
     if (pos >= maxM() - 1.5) arrived = true;
     else if (pos < maxM() - 6) arrived = false;
     var atEnd = arrived && !dragging;
-    outro = clamp(outro + (atEnd ? dt / 1.2 : -dt / 0.35), 0, 1);
+    outro = clamp(outro + (atEnd ? dt / 1.2 : -dt / 0.25), 0, 1);
 
     draw();
     hud(dt);
@@ -1027,11 +1032,15 @@
   if (topBtn) {
     topBtn.addEventListener('click', function () {
       // Navigation, not a drive control: come off the pedals and let the
-      // browser's own smooth scroll take it from there.
+      // browser's own smooth scroll take it from there. Asking for the top is
+      // also done with the route, so the sign goes now rather than fading out
+      // somewhere on the way up.
       holdGas = holdBrake = false;
       throttle = 0;
       brake = 0;
       speed = 0;
+      arrived = false;
+      outro = 0;
       stopLoop();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
@@ -1163,11 +1172,13 @@
     });
   }
 
+  /* Scrolling starts the loop rather than drawing a single frame of it. The
+     follower, the needle and the arrival all live in there, and a lone frame
+     leaves them frozen: that is why the sign at the end used to hang about
+     after you had scrolled away from it, with the car still off the edge. The
+     loop idles itself out half a second after the page stops moving. */
   window.addEventListener('scroll', function () {
-    if (raf) return;
-    syncFromScroll();
-    draw();
-    hud();
+    if (!raf) startLoop();
   }, { passive: true });
 
   window.addEventListener('resize', resize);
