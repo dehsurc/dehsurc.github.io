@@ -59,6 +59,9 @@
   // reaches 30 m up the road, and thins out towards the end of that range the
   // way the evidence does.
   var PERCEPTION_M = 30;
+  /* The tagline under the sign, the way a town-exit sign carries one. The
+     claim is the thing worth leaving someone with. */
+  var OUTRO_LINE = '40.9 mAP WITH ALL SIX CAMERAS DOWN';
   var EDGE_M = 4;           // soft edge on a finished stretch, in metres
   var ROAD_PX_PER_M = 6;    // strip pixels to the metre
   var CAR_X = 0.26;         // the car's fixed position across the strip
@@ -526,8 +529,7 @@
         ctx.fillText('THANK YOU FOR VISITING ReSMap', W / 2, mid - 6);
         ctx.fillStyle = 'rgba(' + ink + ', 0.45)';
         ctx.font = '600 10px ' + FACE;
-        ctx.fillText('END OF ROUTE  ·  ' + (routeM / 1000).toFixed(2) + ' KM',
-                     W / 2, mid + 12);
+        ctx.fillText(OUTRO_LINE, W / 2, mid + 12);
         ctx.restore();
       }
     }
