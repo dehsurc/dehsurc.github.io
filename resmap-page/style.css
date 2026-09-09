@@ -345,7 +345,7 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
   position: fixed;
   right: 1rem; bottom: 1rem;
   z-index: 55;
-  width: 11.5rem;
+  width: 13.5rem;
   padding: .6rem .65rem .55rem;
   border: 1px solid var(--rule-dark);
   border-radius: 5px;
@@ -381,85 +381,78 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
 }
 #cockpit.shut #cockpit-toggle svg { transform: rotate(180deg); }
 
-.dials {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  align-items: baseline;
-  gap: 0 .4rem;
-  margin-bottom: .5rem;
+.cluster {
+  display: flex; align-items: center; gap: .5rem;
+  margin-bottom: .45rem;
 }
-.dials .speed { grid-column: 1; margin: 0; display: flex; align-items: baseline; gap: .2rem; }
-.dials .speed b {
-  font-size: 23px; font-weight: 600; line-height: 1;
-  letter-spacing: -.03em;
-  font-variant-numeric: lining-nums tabular-nums;
-  color: var(--ink);
-}
-.dials .speed span {
-  font-size: 9px; font-weight: 500;
-  letter-spacing: .06em; text-transform: uppercase;
-  color: var(--ink-faint);
-}
-.gear-now {
-  /* Clears the collapse chevron, which sits in the same corner. */
-  grid-column: 2; justify-self: end; margin: 0 1.35rem 0 0;
-  font-size: 14px; font-weight: 700;
-  letter-spacing: .02em;
-  font-variant-numeric: lining-nums;
-  color: var(--ink);
-}
-.tacho {
-  grid-column: 1 / -1;
+
+/* Analogue, because a needle sweeping a scale reads as speed and a number
+   changing does not. Ticks, rev counter and gear are all drawn in drive.js. */
+#gauge {
   display: block;
-  height: 3px;
-  margin-top: .35rem;
-  border-radius: 2px;
-  background: var(--rule);
-  overflow: hidden;
+  width: 7.5rem; height: 7.5rem;
+  margin-left: -.15rem;
 }
-.tacho u {
-  display: block; height: 100%; width: 0;
-  border-radius: 2px;
-  background: var(--go);
-  text-decoration: none;
-  transition: background .12s linear;
+
+/* The gate: R above D, the way an automatic is laid out. */
+.lever {
+  position: relative;
+  flex: 1 1 auto;
+  height: 6.4rem;
+  min-width: 2.4rem;
 }
-.tacho u.red { background: var(--stop); }
-.trip {
-  grid-column: 1 / -1;
-  margin: .3rem 0 0;
+.lever .gate {
+  position: absolute;
+  left: 50%; top: .5rem; bottom: .5rem;
+  width: 12px;
+  margin-left: -6px;
+  border-radius: 6px;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--rule-dark);
+}
+.lever .mark {
+  position: absolute;
+  left: 50%; margin-left: 10px;
+  font-size: 10px; font-weight: 700;
+  letter-spacing: .04em;
+  color: var(--ink-faint);
+  transform: translateY(-50%);
+}
+.lever .mark.r { top: .95rem; }
+.lever .mark.d { top: calc(100% - .95rem); }
+#lever.in-r .mark.r { color: var(--stop); }
+#lever.in-d .mark.d { color: var(--go); }
+
+#knob {
+  position: absolute;
+  left: 50%;
+  width: 26px; height: 20px;
+  margin-left: -13px;
+  padding: 0;
+  border: 1px solid var(--rule-dark);
+  border-radius: 5px;
+  background: linear-gradient(var(--bar), var(--surface));
+  cursor: grab;
+  touch-action: none;
+  transform: translateY(-50%);
+  transition: top .16s cubic-bezier(.2, .7, .3, 1);
+}
+#knob::before {
+  content: "";
+  position: absolute; inset: 5px 6px;
+  border-top: 1px solid var(--rule-dark);
+  border-bottom: 1px solid var(--rule-dark);
+  opacity: .7;
+}
+#knob:hover { border-color: var(--ink-faint); }
+#lever.grabbing #knob { cursor: grabbing; transition: none; }
+
+.readout {
+  margin: 0;
   font-size: 10px;
   letter-spacing: .03em;
   font-variant-numeric: lining-nums tabular-nums;
   color: var(--ink-faint);
-}
-
-.gears {
-  display: grid; grid-template-columns: repeat(2, 1fr); gap: .3rem;
-  margin-bottom: .4rem;
-}
-.gears button {
-  padding: .3rem 0;
-  border: 1px solid var(--rule-dark);
-  border-radius: 3px;
-  background: none;
-  color: var(--ink-faint);
-  font: inherit; font-size: 11px; font-weight: 700;
-  letter-spacing: .04em;
-  cursor: pointer;
-  transition: color .15s ease, border-color .15s ease, background .15s ease;
-}
-.gears button:hover { color: var(--ink); border-color: var(--ink); }
-.gears button[aria-checked="true"] {
-  color: var(--paper);
-  background: var(--ink);
-  border-color: var(--ink);
-}
-.gears button[data-gear="R"][aria-checked="true"] {
-  background: var(--stop); border-color: var(--stop); color: #fff;
-}
-.gears button[data-gear="D"][aria-checked="true"] {
-  background: var(--go); border-color: var(--go); color: #fff;
 }
 
 .pedals { display: grid; grid-template-columns: 1fr 1fr; gap: .35rem; }
@@ -476,9 +469,28 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
   cursor: pointer;
   transition: color .15s ease, border-color .15s ease, background .15s ease;
 }
-.pedal svg { width: 17px; height: 17px; fill: currentColor; }
+.pedal svg {
+  width: 20px; height: 20px; fill: currentColor;
+  /* The pedal arm swings on its top hinge, so travel is a rotation, and the
+     amount of it is however far the model says the pedal is down. */
+  transform: perspective(46px) rotateX(calc(var(--travel, 0) * 38deg));
+  transform-origin: 50% 12%;
+}
 .pedal .floor { stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; fill: none; opacity: .5; }
-.pedal:active { transform: translateY(1px); }
+.pedal {
+  --travel: 0;
+  position: relative;
+  overflow: hidden;
+}
+/* How hard it is down, behind the glyph. */
+.pedal::after {
+  content: "";
+  position: absolute; left: 0; right: 0; bottom: 0;
+  height: calc(var(--travel, 0) * 100%);
+  background: currentColor;
+  opacity: .13;
+  pointer-events: none;
+}
 
 .pedal.gas:hover, .pedal.gas:active { color: var(--go); border-color: var(--go); }
 .pedal.brake:hover, .pedal.brake:active { color: var(--stop); border-color: var(--stop); }

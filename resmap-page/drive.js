@@ -78,8 +78,8 @@
   var GEARS = [3.55, 2.05, 1.35, 1.00, 0.78];       // five forward ratios
   var REV_RATIO = 3.30;
   var IDLE = 780, REDLINE = 6500;                   // rpm
-  var DRAG_K = 0.42;                                // ½·rho·Cd·A
-  var C_RR = 0.013;                                 // rolling resistance
+  var DRAG_K = 0.55;                                // ½·rho·Cd·A
+  var C_RR = 0.017;                                 // rolling resistance
   var GRAV = 9.81;
   var BRAKE_MAX = 9200;                             // N, about 6 m/s²
   var SHIFT_T = 0.16;                               // s of torque cut per shift
@@ -93,8 +93,10 @@
     return 210 * (0.58 + 1.55 * t - 1.30 * t * t);
   }
 
-  // Off throttle, the engine drags the car back through the same gearing.
-  function engineBrake(r) { return 22 + r * 0.012; }
+  // Off throttle, the engine drags the car back through the same gearing. It
+  // is deliberately strong: lifting off has to be something you can see happen
+  // on the page, not a number quietly declining.
+  function engineBrake(r) { return 46 + r * 0.024; }
 
   function ratio() {
     return gear === 'R' ? REV_RATIO : GEARS[g];
@@ -128,7 +130,9 @@
   var ownScroll = -1, wasBehaviour = '', driving = false;
   var stops = [], routeM = 1, dragging = false;
   var W = 0, H = 0, dpr = 1;
-  var shownKmh = -1, shownGear = '', shownNext = '';
+  var shownNext = '';
+  var stopCol = '#b53228';
+  var FACE = '-apple-system, BlinkMacSystemFont, system-ui, sans-serif';
 
   function clamp(v, lo, hi) { return v < lo ? lo : (v > hi ? hi : v); }
   function maxScroll() {
@@ -573,10 +577,11 @@
    * ---------------------------------------------------------------- */
 
   function step(dt) {
-    // Pedal travel. Real pedals move fast but not instantly, and lifting off
-    // is quicker than pressing down.
-    throttle += ((holdGas ? 1 : 0) - throttle) * Math.min(1, dt * (holdGas ? 20 : 16));
-    brake += ((holdBrake ? 1 : 0) - brake) * Math.min(1, dt * (holdBrake ? 14 : 18));
+    // Pedal travel. Taking up over about half a second rather than snapping
+    // to the floor is what makes a dab different from holding it down, which
+    // is the whole of the control you have with a mouse.
+    throttle += ((holdGas ? 1 : 0) - throttle) * Math.min(1, dt * (holdGas ? 5.5 : 15));
+    brake += ((holdBrake ? 1 : 0) - brake) * Math.min(1, dt * (holdBrake ? 7 : 18));
 
     var dir = gear === 'R' ? -1 : 1;
     var v = speed;
@@ -635,33 +640,128 @@
    * Readouts
    * ---------------------------------------------------------------- */
 
-  var kmhEl  = document.getElementById('kmh');
-  var rpmEl  = document.getElementById('rpm-fill');
-  var gearEl = document.getElementById('gear-now');
+  var gaugeEl = document.getElementById('gauge');
+  var gctx = gaugeEl && gaugeEl.getContext ? gaugeEl.getContext('2d') : null;
   var tripEl = document.getElementById('trip');
   var nextEl = document.getElementById('nextup');
+  var gasBtnEl = document.getElementById('pedal-gas');
+  var brakeBtnEl = document.getElementById('pedal-brake');
+
+  var V_MAX = 200;                 // km/h at the end of the scale
+  var SWEEP = Math.PI * 1.5;       // 270 degrees of it
+  var START = Math.PI * 0.75;      // beginning at the lower left
+
+  // A needle has mass. It is driven as a spring toward the reading rather than
+  // snapped to it, which is what makes acceleration something you watch happen
+  // rather than a number that changes.
+  var needle = 0, needleV = 0;
+
+  function swingNeedle(target, dt) {
+    var k = 190, c = 22;           // stiffness and damping, lightly underdamped
+    needleV += ((target - needle) * k - needleV * c) * dt;
+    needle += needleV * dt;
+    if (Math.abs(target - needle) < 0.0004 && Math.abs(needleV) < 0.004) {
+      needle = target;
+      needleV = 0;
+    }
+  }
+
+  function gauge() {
+    if (!gctx) return;
+    var S = 240, C = S / 2;
+    gctx.setTransform(1, 0, 0, 1, 0, 0);
+    gctx.clearRect(0, 0, S, S);
+
+    var ink = neutral();
+    var faceR = 108;
+
+    // Face.
+    gctx.fillStyle = pavement;
+    gctx.beginPath();
+    gctx.arc(C, C, faceR, 0, Math.PI * 2);
+    gctx.fill();
+    gctx.strokeStyle = 'rgba(' + ink + ', 0.22)';
+    gctx.lineWidth = 2;
+    gctx.stroke();
+
+    // Speed scale.
+    for (var v = 0; v <= V_MAX; v += 10) {
+      var a = START + (v / V_MAX) * SWEEP;
+      var major = v % 40 === 0;
+      var r1 = faceR - 10, r0 = r1 - (major ? 15 : 8);
+      gctx.strokeStyle = 'rgba(' + ink + ', ' + (major ? 0.72 : 0.34) + ')';
+      gctx.lineWidth = major ? 3 : 1.8;
+      gctx.beginPath();
+      gctx.moveTo(C + Math.cos(a) * r0, C + Math.sin(a) * r0);
+      gctx.lineTo(C + Math.cos(a) * r1, C + Math.sin(a) * r1);
+      gctx.stroke();
+      if (major) {
+        var rt = r0 - 15;
+        gctx.fillStyle = 'rgba(' + ink + ', 0.62)';
+        gctx.font = '600 19px ' + FACE;
+        gctx.textAlign = 'center';
+        gctx.textBaseline = 'middle';
+        gctx.fillText(String(v), C + Math.cos(a) * rt, C + Math.sin(a) * rt);
+      }
+    }
+
+    // Rev counter, an arc inside the scale with the last of it in the red.
+    var rFrac = clamp((rpm - IDLE) / (REDLINE - IDLE), 0, 1);
+    var rR = faceR - 40;
+    gctx.lineCap = 'butt';
+    gctx.strokeStyle = 'rgba(' + ink + ', 0.13)';
+    gctx.lineWidth = 7;
+    gctx.beginPath();
+    gctx.arc(C, C, rR, START, START + SWEEP);
+    gctx.stroke();
+    if (rFrac > 0.002) {
+      gctx.strokeStyle = rpm > REDLINE * 0.88 ? stopCol : accent;
+      gctx.beginPath();
+      gctx.arc(C, C, rR, START, START + SWEEP * rFrac);
+      gctx.stroke();
+    }
+
+    // Gear, where the odometer window is on a real one.
+    gctx.fillStyle = gear === 'R' ? stopCol : 'rgba(' + ink + ', 0.75)';
+    gctx.font = '700 22px ' + FACE;
+    gctx.textAlign = 'center';
+    gctx.textBaseline = 'middle';
+    gctx.fillText(gear === 'D' ? 'D' + (g + 1) : 'R', C, C + 40);
+
+    gctx.fillStyle = 'rgba(' + ink + ', 0.42)';
+    gctx.font = '600 13px ' + FACE;
+    gctx.fillText('km/h', C, C + 66);
+
+    // Needle.
+    var na = START + clamp(needle, 0, 1) * SWEEP;
+    var tip = faceR - 16, tail = 22;
+    gctx.strokeStyle = stopCol;
+    gctx.lineWidth = 4;
+    gctx.lineCap = 'round';
+    gctx.beginPath();
+    gctx.moveTo(C - Math.cos(na) * tail, C - Math.sin(na) * tail);
+    gctx.lineTo(C + Math.cos(na) * tip, C + Math.sin(na) * tip);
+    gctx.stroke();
+    gctx.fillStyle = 'rgba(' + ink + ', 0.85)';
+    gctx.beginPath();
+    gctx.arc(C, C, 9, 0, Math.PI * 2);
+    gctx.fill();
+  }
 
   function metres(m) {
     if (m < 15) return 'arriving';
     return m > 950 ? (m / 1000).toFixed(1) + ' km' : Math.round(m / 10) * 10 + ' m';
   }
 
-  function hud() {
-    var kmh = Math.round(Math.abs(speed) * 3.6);
-    if (kmh !== shownKmh) {
-      shownKmh = kmh;
-      if (kmhEl) kmhEl.textContent = String(kmh);
-    }
-    if (rpmEl) {
-      rpmEl.style.width = clamp((rpm - IDLE) / (REDLINE - IDLE), 0, 1) * 100 + '%';
-      rpmEl.classList.toggle('red', rpm > REDLINE * 0.88);
-    }
+  function hud(dt) {
+    swingNeedle(clamp(Math.abs(speed) * 3.6 / V_MAX, 0, 1), dt || 0.016);
+    gauge();
 
-    var label = gear === 'D' ? 'D' + (g + 1) : gear;
-    if (label !== shownGear) {
-      shownGear = label;
-      if (gearEl) gearEl.textContent = label;
-    }
+    // The pedals carry their own travel, so the glyph goes down under your
+    // foot and stays down while you hold it.
+    if (gasBtnEl) gasBtnEl.style.setProperty('--travel', throttle.toFixed(3));
+    if (brakeBtnEl) brakeBtnEl.style.setProperty('--travel', brake.toFixed(3));
+
     if (tripEl) {
       tripEl.textContent = (pos / 1000).toFixed(2) + ' / ' + (routeM / 1000).toFixed(2) + ' km';
     }
@@ -779,9 +879,9 @@
     }
 
     draw();
-    hud();
+    hud(dt);
 
-    var busy = dragging || (owned
+    var busy = dragging || Math.abs(needleV) > 0.008 || (owned
       ? (Math.abs(speed) > 0.02 || holdGas || holdBrake || throttle > 0.02 || brake > 0.02)
       : Math.abs(observed) > 0.05);
     idleFor = busy ? 0 : idleFor + dt;
@@ -820,7 +920,34 @@
 
   var gasBtn = document.getElementById('pedal-gas');
   var brakeBtn = document.getElementById('pedal-brake');
-  var gearBtns = Array.prototype.slice.call(cockpit.querySelectorAll('[data-gear]'));
+  /* The lever.
+   *
+   * A gate with R at the top and D at the bottom, the way an automatic is laid
+   * out. Drag the knob and it follows your hand; let go and it drops into the
+   * detent it is nearest. Refused, it springs back to where it was.
+   */
+  var lever = document.getElementById('lever');
+  var knob = document.getElementById('knob');
+  var GATE = { R: 0, D: 1 };
+  var dragKnob = false, knobT = 1;
+
+  // The detents are 0.95rem in from each end, so the knob travels between them
+  // in the gate's own terms rather than in numbers that have to be kept in step
+  // with the stylesheet.
+  function knobTop(t) { return 'calc(0.95rem + (100% - 1.9rem) * ' + t.toFixed(4) + ')'; }
+
+  function showLever() {
+    knobT = GATE[gear];
+    if (knob) {
+      knob.style.top = knobTop(knobT);
+      knob.setAttribute('aria-valuenow', String(knobT));
+      knob.setAttribute('aria-valuetext', gear === 'R' ? 'Reverse' : 'Drive');
+    }
+    if (lever) {
+      lever.classList.toggle('in-r', gear === 'R');
+      lever.classList.toggle('in-d', gear === 'D');
+    }
+  }
 
   function baulk() {
     cockpit.classList.add('baulk');
@@ -828,35 +955,56 @@
   }
 
   function setGear(next) {
-    if (next === gear) return;
+    if (next === gear) { showLever(); return; }
     // You cannot slam a moving car into the other direction.
-    if (Math.abs(speed) > 1.2) { baulk(); return; }
+    if (Math.abs(speed) > 1.2) { baulk(); showLever(); return; }
     gear = next;
     g = 0;
     shifting = 0;
-    gearBtns.forEach(function (b) {
-      var on = b.dataset.gear === gear;
-      b.setAttribute('aria-checked', String(on));
-      b.tabIndex = on ? 0 : -1;
-    });
-    shownGear = '';
+    showLever();
     hud();
     startLoop();
   }
 
-  gearBtns.forEach(function (b, i) {
-    b.tabIndex = b.dataset.gear === gear ? 0 : -1;
-    b.addEventListener('click', function () { setGear(b.dataset.gear); });
-    b.addEventListener('keydown', function (e) {
-      var d = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1
-            : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0;
-      if (!d) return;
+  if (knob && lever) {
+    function gateBox() { return lever.getBoundingClientRect(); }
+
+    knob.addEventListener('pointerdown', function (e) {
+      dragKnob = true;
+      lever.classList.add('grabbing');
+      try { knob.setPointerCapture(e.pointerId); } catch (err) { /* none to take */ }
       e.preventDefault();
-      var t = gearBtns[(i + d + gearBtns.length) % gearBtns.length];
-      t.focus();
-      setGear(t.dataset.gear);
     });
-  });
+    knob.addEventListener('pointermove', function (e) {
+      if (!dragKnob) return;
+      var r = gateBox();
+      var t = clamp((e.clientY - r.top - 15) / Math.max(1, r.height - 30), 0, 1);
+      knob.style.top = knobTop(t);
+      knobT = t;
+    });
+    function drop(e) {
+      if (!dragKnob) return;
+      dragKnob = false;
+      lever.classList.remove('grabbing');
+      try { knob.releasePointerCapture(e.pointerId); } catch (err) { /* gone */ }
+      setGear(knobT < 0.5 ? 'R' : 'D');
+    }
+    knob.addEventListener('pointerup', drop);
+    knob.addEventListener('pointercancel', drop);
+
+    knob.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowUp') { e.preventDefault(); setGear('R'); }
+      else if (e.key === 'ArrowDown') { e.preventDefault(); setGear('D'); }
+    });
+
+    // Clicking the gate itself picks the nearer position.
+    lever.addEventListener('pointerdown', function (e) {
+      if (e.target === knob || dragKnob) return;
+      var r = gateBox();
+      setGear((e.clientY - r.top) / Math.max(1, r.height) < 0.5 ? 'R' : 'D');
+    });
+  }
+  showLever();
 
   function pressGas() {
     takeWheel();

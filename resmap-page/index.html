@@ -22,7 +22,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700&display=swap">
-<link rel="stylesheet" href="style.css?v=17">
+<link rel="stylesheet" href="style.css?v=18">
 
 <!-- Set the theme before first paint so there is no flash. -->
 <script>
@@ -546,18 +546,21 @@
 
 <!-- The cockpit: gear selector and pedals, where they are in a car. -->
 <div id="cockpit" hidden>
-  <div class="dials">
-    <p class="speed"><b id="kmh">0</b><span>km/h</span></p>
-    <p class="gear-now" id="gear-now">D1</p>
-    <i class="tacho"><u id="rpm-fill"></u></i>
-    <p class="trip" id="trip">0.00 / 0.00 km</p>
-    <p class="nextup" id="nextup" aria-live="off"></p>
+  <div class="cluster">
+    <canvas id="gauge" width="240" height="240" aria-hidden="true"></canvas>
+
+    <!-- A gate with two positions. Drag the knob, or use the arrow keys. -->
+    <div class="lever" id="lever">
+      <span class="gate" aria-hidden="true"></span>
+      <span class="mark r" aria-hidden="true">R</span>
+      <span class="mark d" aria-hidden="true">D</span>
+      <button id="knob" type="button" role="slider" aria-label="Gear selector"
+              aria-valuemin="0" aria-valuemax="1" aria-valuenow="1" aria-valuetext="Drive"></button>
+    </div>
   </div>
 
-  <div class="gears" role="radiogroup" aria-label="Gear selector">
-    <button type="button" role="radio" data-gear="R" aria-checked="false" title="Reverse, back up the page">R</button>
-    <button type="button" role="radio" data-gear="D" aria-checked="true"  title="Drive, down the page">D</button>
-  </div>
+  <p class="readout"><span id="trip">0.00 / 0.00 km</span></p>
+  <p class="nextup" id="nextup" aria-live="off"></p>
 
   <div class="pedals">
     <button id="pedal-brake" class="pedal brake" type="button" aria-label="Brake">
@@ -583,8 +586,8 @@
   </button>
 </div>
 
-<script src="failure.js?v=17"></script>
-<script src="drive.js?v=17"></script>
-<script src="main.js?v=17"></script>
+<script src="failure.js?v=18"></script>
+<script src="drive.js?v=18"></script>
+<script src="main.js?v=18"></script>
 </body>
 </html>
