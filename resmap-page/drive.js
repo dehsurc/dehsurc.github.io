@@ -592,8 +592,16 @@
 
     var drive = 0;
     if (shifting <= 0) {
-      var t = throttle * torque(rpm) - (1 - throttle) * engineBrake(rpm);
-      drive = dir * t * ratio() * FINAL * EFF / WHEEL_R;
+      var gearing = ratio() * FINAL * EFF / WHEEL_R;
+      drive = dir * throttle * torque(rpm) * gearing;
+      /* Engine braking opposes the way the wheels are turning, not the way
+         the gear is pointing, and a car that is not moving has nothing for it
+         to oppose. Signing it by the gear pushed the car backwards off the
+         end of the route the moment the throttle came off: held against the
+         end, speed is zero, and the braking term is the only force left. */
+      if (absV > 0.05) {
+        drive -= Math.sign(v) * (1 - throttle) * engineBrake(rpm) * gearing;
+      }
     }
 
     // Reverse is geared and governed the way reverse is: it will not run away
