@@ -222,13 +222,33 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
 }
 .bar.ours .bar-val { color: var(--ink); font-weight: 600; }
 
+/* Narrow screens stack the stage but keep it pinned, because a walkthrough
+   that plays while it slides off the top of the screen is a walkthrough you
+   do not see. Everything in it shrinks to fit one phone screen. */
 @media (max-width: 62rem) {
-  .stage-grid { grid-template-columns: 1fr; gap: 1.6rem; }
-  .rig svg { max-width: 15rem; }
-  .stage { min-height: 0; height: auto; padding: 2rem 0; }
+  .stage { min-height: 0; }
+  .stage-grid { grid-template-columns: 1fr; gap: 1rem; }
+  .rig svg { max-width: 10.5rem; }
+  .rig figcaption { display: none; }
+  .track { height: 300vh; }
+  .stage-head { margin-bottom: .9rem; padding-bottom: .45rem; }
+  .stage-step { font-size: 1rem; }
+  .bar { grid-template-columns: 7.5rem 1fr 2.6rem; gap: .5rem; padding: .22rem 0; }
+  .bar-name { font-size: 12px; }
+  .bar-name small { display: none; }
+  .bar-lane { height: 11px; }
+  .bar-val { font-size: 12px; }
+  .chart .tcap { font-size: 11px; }
+  /* Reserved: the note changes length between stages, and letting the block
+     resize under a scroll that is reading its position feeds back. */
+  .stage-note { min-height: 5.5em; margin-top: 1rem; font-size: 13.5px; }
+}
+
+/* Too short to pin anything: let it stack and run off its own passage
+   through the viewport, which failure.js falls back to on its own. */
+@media (max-width: 62rem) and (max-height: 34rem) {
+  .stage { height: auto; padding: 1.5rem 0; }
   .track { height: auto; }
-  /* Still reserved: the note changes length between stages, and letting the
-     block resize under a scroll that is reading its position feeds back. */
   .stage-note { min-height: 7.5em; }
 }
 
@@ -591,7 +611,7 @@ section + section { border-top: 1px solid var(--rule); }
      this preference; this is the belt to that pair of braces. */
   #road, #cockpit { display: none !important; }
   .has-road body { padding-top: 0; }
-  .has-road .topbar { top: 0; }
+  .has-road .topbar { display: block; top: 0; }
   .has-road .nav-scroll { display: block; }
 }
 
@@ -853,7 +873,7 @@ footer .small { margin-top: .4rem; }
 }
 
 @media print {
-  .topbar, .scene-picker, .bibtex button, #road, #cockpit { display: none; }
+  .topbar, .scene-picker, .bibtex button, #road, #cockpit, .corner { display: none; }
   /* The road reserves a band on screen; on paper there is nothing to reserve. */
   .has-road body { padding-top: 0; }
   body { font-size: 10.5pt; }

@@ -56,7 +56,6 @@
   // reaches 30 m up the road, and thins out towards the end of that range the
   // way the evidence does.
   var PERCEPTION_M = 30;
-  var EDGE_M = 4;           // soft edge on a finished stretch, in metres
   var ROAD_PX_PER_M = 6;    // strip pixels to the metre
   var CAR_X = 0.26;         // the car's fixed position across the strip
   var MIN_VIEWPORT = 900;   // below this the road hides and the links return
