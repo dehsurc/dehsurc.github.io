@@ -115,7 +115,11 @@
   var shifting = 0;         // seconds of torque cut left
   var speed = 0;            // m/s, signed: positive is down the page
   var pos = 0;              // metres from the top of the document
-  var mappedTo = 0;         // furthest point reached, and so mapped
+  /* The stretch the car has actually driven, and so built a map of. Only the
+     model advances it: scrolling the page by hand is not driving, and a road
+     that arrives already mapped has nothing left to show you. Leave the
+     stretch and it starts again from wherever you are. */
+  var mapFrom = 0, mappedTo = 0;
   var rpm = IDLE;
   var throttle = 0, brake = 0;
   var holdGas = false, holdBrake = false;
@@ -277,7 +281,14 @@
 
   function syncFromScroll() {
     pos = window.scrollY / PX_PER_M;
-    if (pos > mappedTo) mappedTo = pos;
+    relocate();
+  }
+
+  /* Off the end of what has been driven, the map is not yours any more. */
+  function relocate() {
+    if (pos > mappedTo + PERCEPTION_M || pos < mapFrom - PERCEPTION_M) {
+      mapFrom = mappedTo = pos;
+    }
   }
 
   /* ---------------------------------------------------------------- *
@@ -417,38 +428,54 @@
     ctx.globalAlpha = 1;
     stops.forEach(function (s) { crossing(sx(s.m), paint, 2.6, 0.75); });
 
-    /* The map, in its class colours with the per-polyline vertices a predicted
-       map is drawn with.
-    
-       It does not stop at the car. The model predicts over a region of
-       interest around the ego, so the map runs on up the road to the edge of
-       the perception range, and thins out across it: distant evidence is
-       sparse and the prediction there is a guess. Behind the car it is
-       confirmed and drawn solid, and the confirmed extent is the furthest
-       point reached rather than the current one, because reversing does not
-       unmap the road you already drove. */
-    var solidX = Math.min(W, sx(mappedTo));
-    var predictX = Math.min(W, sx(Math.max(mappedTo, pos + PERCEPTION_M)));
+    /* The map the car has built, in its class colours with the per-polyline
+       vertices a predicted map is drawn with.
 
-    // Solid to the confirmed extent, then fading out across what is left of
-    // the perception range. One gradient does both.
+       It is not the whole road. It is the stretch actually driven, solid,
+       with the perception range hanging off each end of it: the model
+       predicts over a region of interest around the ego, so the map runs on
+       a little way up the road and thins out across that range, because
+       distant evidence is sparse and the prediction there is a guess. Drive
+       and you watch it laid down ahead of you; scroll past a stretch you
+       never drove and there is nothing there to see. */
+    var backM = mapFrom - PERCEPTION_M;
+    var frontM = Math.max(mappedTo, pos + PERCEPTION_M);
+    var x0 = sx(backM), x1 = sx(mapFrom), x2 = sx(mappedTo), x3 = sx(frontM);
+    var clipL = Math.max(0, x0), clipR = Math.min(W, x3);
+
     function shade(kind) {
       var hex = colour(kind);
-      var a = clamp(solidX / W, 0, 1);
-      var b = clamp(predictX / W, 0, 1);
-      if (!(b > a + 0.001)) return hex;
       var grd = ctx.createLinearGradient(0, 0, W, 0);
-      grd.addColorStop(0, hex);
-      grd.addColorStop(a, hex);
-      grd.addColorStop(a + (b - a) * 0.5, rgba(hex, 0.5));
-      grd.addColorStop(b, rgba(hex, 0));
+      var a0 = clamp(x0 / W, 0, 1), a1 = clamp(x1 / W, 0, 1);
+      var a2 = clamp(x2 / W, 0, 1), a3 = clamp(x3 / W, 0, 1);
+      var st = [];
+      if (a1 > 0) {
+        st.push([0, 0]);
+        if (a0 > 0) st.push([a0, 0]);
+        if (a1 > a0 + 0.0005) st.push([a0 + (a1 - a0) * 0.5, 0.5]);
+      }
+      st.push([a1, 1]);
+      if (a2 > a1) st.push([a2, 1]);
+      if (a3 > a2 + 0.0005) st.push([a2 + (a3 - a2) * 0.5, 0.5]);
+      if (a3 < 1) st.push([a3, 0]);
+      st.push([1, 0]);
+      st.forEach(function (s) {
+        grd.addColorStop(s[0], s[1] === 1 ? hex : rgba(hex, s[1]));
+      });
       return grd;
     }
 
-    if (predictX > 0) {
+    // How confident the map is at one point, for elements drawn whole.
+    function conf(m) {
+      if (m >= mapFrom && m <= mappedTo) return 1;
+      if (m < mapFrom) return clamp((m - backM) / PERCEPTION_M, 0, 1);
+      return clamp((frontM - m) / Math.max(0.001, frontM - mappedTo), 0, 1);
+    }
+
+    if (clipR > clipL) {
       ctx.save();
       ctx.beginPath();
-      ctx.rect(0, 0, predictX, H);
+      ctx.rect(clipL, 0, clipR - clipL, H);
       ctx.clip();
 
       var bound = shade('boundary');
@@ -457,13 +484,13 @@
       ctx.lineWidth = 1.6;
       [edgeT, edgeB].forEach(function (y) {
         ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(predictX, y);
+        ctx.moveTo(clipL, y);
+        ctx.lineTo(clipR, y);
         ctx.stroke();
-        var m0 = Math.floor((pos - carX / ROAD_PX_PER_M) / VERT) * VERT;
-        for (var m = m0; sx(m) < predictX + VERT * ROAD_PX_PER_M; m += VERT) {
+        var m0 = Math.floor(backM / VERT) * VERT;
+        for (var m = m0; m <= frontM + VERT; m += VERT) {
           var vx = sx(m);
-          if (vx < -4) continue;
+          if (vx < clipL - 4 || vx > clipR + 4) continue;
           ctx.beginPath();
           ctx.arc(vx, y, 1.2, 0, Math.PI * 2);
           ctx.fill();
@@ -475,18 +502,16 @@
       ctx.setLineDash([DASH, GAP]);
       ctx.lineDashOffset = ((-sx(0)) % PERIOD + PERIOD) % PERIOD;
       ctx.beginPath();
-      ctx.moveTo(0, mid);
-      ctx.lineTo(predictX, mid);
+      ctx.moveTo(clipL, mid);
+      ctx.lineTo(clipR, mid);
       ctx.stroke();
       ctx.setLineDash([]);
       ctx.lineDashOffset = 0;
 
       // A crossing is one element, so it takes one confidence rather than a
       // gradient across itself.
-      var far = Math.max(mappedTo, pos + PERCEPTION_M);
       stops.forEach(function (s) {
-        var a = s.m <= mappedTo ? 1
-              : 1 - clamp((s.m - mappedTo) / Math.max(0.001, far - mappedTo), 0, 1);
+        var a = conf(s.m);
         if (a > 0.02) crossing(sx(s.m), colour('crossing'), 2.6, a);
       });
       ctx.restore();
@@ -602,6 +627,7 @@
     if (pos <= 0) { pos = 0; speed = 0; }
 
     if (pos > mappedTo) mappedTo = pos;
+    if (pos < mapFrom) mapFrom = pos;
     rpm = rpmAt(speed);
   }
 
@@ -748,7 +774,7 @@
       throttle = 0;
       brake = 0;
       rpm = rpmAt(speed);
-      if (pos > mappedTo) mappedTo = pos;
+      relocate();
       ownScroll = sy;
     }
 
@@ -783,7 +809,7 @@
     pos = window.scrollY / PX_PER_M;
     speed = 0;
     observed = 0;
-    if (pos > mappedTo) mappedTo = pos;
+    relocate();
     draw();
     hud();
   }
@@ -894,7 +920,7 @@
     var rect = routeBar.getBoundingClientRect();
     var p = clamp((clientX - rect.left) / rect.width, 0, 1);
     pos = p * maxM();
-    if (pos > mappedTo) mappedTo = pos;
+    relocate();
     speed = 0;
     try {
       window.scrollTo({ top: pos * PX_PER_M, behavior: 'instant' });
