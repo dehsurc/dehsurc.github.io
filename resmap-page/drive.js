@@ -70,7 +70,7 @@
    * ---------------------------------------------------------------- */
 
   var MASS = 1500;                                  // kg
-  var PEAK_NM = 320;                                // engine torque scale
+  var PEAK_NM = 420;                                // engine torque scale
   var WHEEL_R = 0.32;                               // m
   var FINAL = 3.9;                                  // final drive ratio
   var EFF = 0.85;                                   // driveline efficiency
@@ -95,7 +95,7 @@
   // Off throttle, the engine drags the car back through the same gearing. It
   // is deliberately strong: lifting off has to be something you can see happen
   // on the page, not a number quietly declining.
-  function engineBrake(r) { return 46 + r * 0.024; }
+  function engineBrake(r) { return 68 + r * 0.042; }
 
   function ratio() {
     return gear === 'R' ? REV_RATIO : GEARS[g];
@@ -571,7 +571,7 @@
     // Pedal travel. Taking up over about half a second rather than snapping
     // to the floor is what makes a dab different from holding it down, which
     // is the whole of the control you have with a mouse.
-    throttle += ((holdGas ? 1 : 0) - throttle) * Math.min(1, dt * (holdGas ? 5.5 : 15));
+    throttle += ((holdGas ? 1 : 0) - throttle) * Math.min(1, dt * (holdGas ? 8 : 15));
     brake += ((holdBrake ? 1 : 0) - brake) * Math.min(1, dt * (holdBrake ? 7 : 18));
 
     var dir = gear === 'R' ? -1 : 1;
@@ -584,8 +584,8 @@
     // gentle pull-away shift early and a floored one hold each gear out.
     if (shifting > 0) shifting -= dt;
     else if (gear === 'D') {
-      var up = 2600 + throttle * 3400;
-      var dn = 1250 + throttle * 900;
+      var up = 2900 + throttle * 3200;
+      var dn = 1950 + throttle * 700;
       if (g < GEARS.length - 1 && rpm > up) { g++; shifting = SHIFT_T; }
       else if (g > 0 && rpm < dn) { g--; shifting = SHIFT_T; }
     }
@@ -806,7 +806,12 @@
     if (!owned) {
       owned = true;
       pos = window.scrollY / PX_PER_M;
-      speed = clamp(observed, -45, 45);
+      /* Pick the page's own motion up, but only the half of it the gear
+         allows. Scrolling back up the page and then pressing the accelerator
+         used to hand the car that momentum whole, so it pulled away
+         backwards in D and the page climbed until the engine won. */
+      var v = clamp(observed, -45, 45);
+      speed = gear === 'R' ? Math.min(0, v) : Math.max(0, v);
       grabScroll();
     }
     startLoop();
