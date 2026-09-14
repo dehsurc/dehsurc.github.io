@@ -45,6 +45,13 @@ input.ans{width:100%;padding:14px;border:1.5px solid var(--line);border-radius:1
 .pos{color:var(--muted);font-size:13px;margin:0 0 18px}
 .hintw{font-family:var(--serif);font-size:20px;color:var(--muted);letter-spacing:.06em;margin:0 0 14px}
 .result .ex{font-family:var(--serif);font-size:15px;opacity:.8;margin-top:4px}
+.pos-inline{font-size:13px;color:var(--muted);margin-left:8px;font-family:var(--sans)}
+.ask{font-size:15px;color:var(--muted);margin:16px 0 8px}
+.tip{margin-top:10px;padding-top:10px;border-top:1px solid rgba(0,0,0,.12)}
+.tip-en{font-family:var(--serif);font-size:16px;margin:0 0 3px;color:var(--ink)}
+.tip-ko{font-size:14px;margin:0 0 8px;color:var(--muted)}
+.tip-pt{font-size:14px;margin:0;color:var(--ink);line-height:1.5}
+.list .tip{border-top-color:var(--line)}
 .choices button.ok{background:var(--okbg);border-color:var(--ok)}
 .choices button.no{background:var(--nobg);border-color:var(--no)}
 .result{border-radius:10px;padding:12px 14px;margin-top:14px;font-size:15px}
@@ -534,19 +541,386 @@ W('w250',3,'ad','predominantly','주로','predominantly urban scenes'),
 W('w251',3,'ad','albeit','비록 ~일지라도','albeit slower'),
 W('w252',3,'ad','thereby','그렇게 함으로써','thereby reducing the cost'),
 W('w253',3,'ad','hence','따라서','hence the improvement'),
+// ---- Lv3 추가: 토익 고난도·실무 ----
+W('w254',3,'v','streamline','간소화하다','streamline the approval process'),
+W('w255',3,'v','expedite','신속히 처리하다','expedite the shipment'),
+W('w256',3,'v','delegate','위임하다','delegate tasks to the team'),
+W('w257',3,'v','oversee','감독하다','oversee daily operations'),
+W('w258',3,'v','comply','준수하다','comply with the regulations'),
+W('w259',3,'v','adhere','고수하다','adhere to the schedule'),
+W('w260',3,'v','reimburse','환급해 주다','reimburse travel expenses'),
+W('w261',3,'v','waive','면제하다','waive the late fee'),
+W('w262',3,'v','postpone','연기하다','postpone the launch'),
+W('w263',3,'v','allocate','할당하다','allocate the budget'),
+W('w264',3,'v','compile','취합하다','compile a report'),
+W('w265',3,'v','endorse','지지하다','endorse the proposal'),
+W('w266',3,'v','undertake','착수하다','undertake a review'),
+W('w267',3,'v','disclose','공개하다','disclose the terms'),
+W('w268',3,'v','implement','시행하다','implement a new policy'),
+W('w269',3,'v','refrain','삼가다','refrain from smoking'),
+W('w270',3,'n','prerequisite','전제 조건','a prerequisite for approval'),
+W('w271',3,'n','itinerary','여행 일정표','a detailed itinerary'),
+W('w272',3,'n','inventory','재고','take inventory'),
+W('w273',3,'n','invoice','청구서','settle the invoice'),
+W('w274',3,'n','agenda','안건','the first item on the agenda'),
+W('w275',3,'n','venue','행사 장소','change the venue'),
+W('w276',3,'n','attendee','참석자','register each attendee'),
+W('w277',3,'n','surplus','잉여','a budget surplus'),
+W('w278',3,'n','scrutiny','면밀한 조사','under close scrutiny'),
+W('w279',3,'n','milestone','중요한 분기점','reach a milestone'),
+W('w280',3,'n','proponent','지지자','a proponent of reform'),
+W('w281',3,'n','leeway','여유','give some leeway'),
+W('w282',3,'a','forthcoming','곧 있을','the forthcoming release'),
+W('w283',3,'a','tentative','잠정적인','a tentative agreement'),
+W('w284',3,'a','contingent','~에 달린','contingent on approval'),
+W('w285',3,'a','stringent','엄격한','stringent safety rules'),
+W('w286',3,'a','lucrative','수익성 좋은','a lucrative contract'),
+W('w287',3,'a','prudent','신중한','a prudent decision'),
+W('w288',3,'a','meticulous','꼼꼼한','meticulous record keeping'),
+W('w289',3,'a','versatile','다재다능한','a versatile performer'),
+W('w290',3,'a','obsolete','한물간','obsolete equipment'),
+W('w291',3,'a','imminent','임박한','an imminent deadline'),
+W('w292',3,'a','pertinent','관련 있는','pertinent information'),
+W('w293',3,'a','unprecedented','전례 없는','unprecedented demand'),
+W('w294',3,'a','prevalent','널리 퍼진','a prevalent practice'),
+W('w295',3,'a','concise','짧고 간결한','a concise summary'),
+W('w296',3,'a','comprehensive','종합적인','a comprehensive review'),
+W('w297',3,'a','adverse','불리한','adverse weather conditions'),
+W('w298',3,'a','crucial','결정적으로 중요한','a crucial step'),
+W('w299',3,'a','inevitable','불가피한','an inevitable delay'),
 ];
+
+/* ---------- 예문·시험 포인트 ---------- */
+// "몰라서 틀렸어요"를 고른 단어에만 보여줍니다. [예문, 해석, 시험 포인트]
+const TIP={
+// ---- Lv1 ----
+submit:["All applications must be submitted by March 10.","모든 지원서는 3월 10일까지 제출되어야 합니다.","submit A by 기한 — Part5에서 by(완료) vs until(계속) 구분으로 출제"],
+accept:["The proposal was accepted without revision.","그 제안은 수정 없이 받아들여졌습니다.","accept vs receive — accept는 받아들이는 판단, receive는 그냥 받음"],
+reject:["The committee rejected the initial design.","위원회는 초기 설계안을 거부했습니다.","reject A(타동사) — reject about A처럼 전치사를 넣으면 오답"],
+improve:["The new layout improved customer satisfaction.","새 배치가 고객 만족도를 높였습니다.","improve는 타동사·자동사 둘 다 — improve by 3% (증가 폭)"],
+reduce:["The change reduced waiting time by half.","그 변경으로 대기 시간이 절반으로 줄었습니다.","reduce A by 폭 / reduce A to 도달점 — by와 to 구분 출제"],
+increase:["Sales increased sharply in the fourth quarter.","4분기에 매출이 급격히 늘었습니다.","동사 increase와 명사 increase(an increase in A) 품사 구분"],
+compare:["Compared with last year, costs are down.","작년과 비교하면 비용이 줄었습니다.","compare A with/to B — compared with 분사구문 형태로 자주 등장"],
+require:["All visitors are required to wear a badge.","모든 방문객은 배지를 착용해야 합니다.","be required to+동사원형 — Part5 어형 문제 단골"],
+provide:["We provide clients with monthly reports.","우리는 고객에게 월간 보고서를 제공합니다.","provide A with B = provide B to A — 짝 전치사 출제"],
+explain:["Could you explain the procedure to the new hires?","신입 직원들에게 절차를 설명해 주시겠어요?","explain me X는 오답 — explain X to me가 정답"],
+describe:["The manual describes each step in detail.","설명서가 각 단계를 자세히 기술합니다.","describe about은 오답 — describe는 바로 목적어"],
+suggest:["The data suggest that demand is rising.","그 자료는 수요가 늘고 있음을 시사합니다.","suggest that + 주어 + (should) 동사원형 — 제안 동사 가정법"],
+avoid:["Book early to avoid paying a surcharge.","추가 요금을 내지 않으려면 미리 예약하세요.","avoid + 동명사 — avoid to do는 오답"],
+allow:["The software allows users to edit offline.","그 소프트웨어는 사용자가 오프라인에서 편집할 수 있게 합니다.","allow 목적어 to부정사 — 목적격보어 자리 출제"],
+apply:["Apply the discount at checkout.","결제 시 할인을 적용하세요.","apply for 지원하다 / apply to 해당되다 — 전치사로 뜻이 갈림"],
+attend:["Over 200 people attended the seminar.","200명 넘게 세미나에 참석했습니다.","attend는 타동사 — attend to는 돌보다로 뜻이 달라짐"],
+prepare:["Please prepare for the audit next week.","다음 주 감사에 대비해 주세요.","prepare A(준비하다) vs prepare for A(대비하다) 구분"],
+present:["She will present the findings on Tuesday.","그가 화요일에 결과를 발표합니다.","동사 preSENT / 명사·형용사 PREsent — 강세와 품사 구분"],
+discuss:["We discussed the budget for an hour.","우리는 한 시간 동안 예산을 논의했습니다.","discuss about은 오답 — discuss는 바로 목적어"],
+expect:["We expect the shipment to arrive Friday.","배송이 금요일에 도착할 것으로 예상합니다.","expect A to do 형태, as expected(예상대로) 관용구"],
+measure:["The survey measures employee engagement.","그 설문은 직원 몰입도를 측정합니다.","명사 measure는 조치 — take measures to do 관용구"],
+remove:["Remove the old label before shipping.","배송 전에 옛 라벨을 제거하세요.","remove A from B — 짝 전치사 from"],
+replace:["We replaced the printer with a faster model.","프린터를 더 빠른 모델로 교체했습니다.","replace A with B — replace A to B는 오답"],
+repeat:["The training will be repeated next month.","그 교육은 다음 달에 다시 진행됩니다.","repeat again은 중복 표현이라 감점 요소"],
+collect:["The agency collects feedback twice a year.","그 기관은 일 년에 두 번 의견을 수집합니다.","collect(수집) vs gather(모으다) — 자료에는 collect가 자연스러움"],
+include:["The fee includes breakfast and parking.","요금에 조식과 주차가 포함됩니다.","including 전치사 / included 후치 수식 — 위치 구분 출제"],
+mention:["As mentioned earlier, the deadline has moved.","앞서 언급했듯이 마감일이 변경되었습니다.","as mentioned above/earlier — 메일과 지문에서 자주 등장"],
+notice:["We noticed a delay in the delivery.","배송에 지연이 있음을 알아차렸습니다.","명사 notice는 공지·통지 — until further notice(추후 공지까지)"],
+focus:["This quarter we focus on retention.","이번 분기에는 고객 유지에 집중합니다.","focus on — focus in/to는 오답"],
+depend:["The schedule depends on the weather.","일정은 날씨에 달려 있습니다.","depend on, depending on(~에 따라) 분사 형태도 출제"],
+rely:["Many firms rely on outside consultants.","많은 회사가 외부 컨설턴트에 의존합니다.","rely on = depend on — 자동사라 on이 반드시 필요"],
+affect:["The strike affected all outbound flights.","파업이 모든 출발편에 영향을 주었습니다.","동사 affect vs 명사 effect — 철자 구분이 Part5 단골"],
+consider:["We are considering opening a second branch.","2호점 개설을 고려 중입니다.","consider + 동명사 — consider to open은 오답"],
+choose:["Choose the option that fits your budget.","예산에 맞는 옵션을 고르세요.","choose-chose-chosen 불규칙 변화"],
+follow:["Please follow the safety guidelines.","안전 수칙을 따라 주세요.","the following(다음의) 형용사 용법도 자주 출제"],
+solve:["The update solved the login problem.","업데이트가 로그인 문제를 해결했습니다.","solve a problem / address an issue 짝 표현"],
+train:["New staff are trained for two weeks.","신입 직원은 2주간 교육을 받습니다.","train A to do, be trained in 분야"],
+check:["Check the inventory before ordering.","주문 전에 재고를 확인하세요.","check in/out, check on(살피다) 구동사로 자주 나옴"],
+share:["Both teams share the same workspace.","두 팀이 같은 작업 공간을 함께 씁니다.","share A with B — 전치사 with"],
+send:["I will send you the revised contract.","수정된 계약서를 보내드리겠습니다.","send A B = send B to A 4형식·3형식 전환"],
+result:["The results will be announced on Monday.","결과는 월요일에 발표됩니다.","result in 결과를 낳다 / result from 원인에서 비롯되다"],
+method:["This method cuts processing time in half.","이 방법은 처리 시간을 절반으로 줄입니다.","a method of/for doing — 뒤에 동명사"],
+approach:["We took a different approach this time.","이번에는 다른 접근법을 택했습니다.","an approach to doing — to 뒤는 동명사(to부정사 아님)"],
+goal:["Our goal is to expand into Asia.","우리 목표는 아시아로 확장하는 것입니다.","the goal is to+동사원형 — 보어 자리 부정사"],
+issue:["We resolved the billing issue promptly.","청구 문제를 신속히 해결했습니다.","동사 issue는 발급하다 — issue a permit"],
+limitation:["The study acknowledges several limitations.","그 연구는 몇 가지 한계를 인정합니다.","limitation(한계) vs limit(제한 수치) 구분"],
+advantage:["The location is a major advantage.","입지가 큰 장점입니다.","take advantage of ~을 활용하다 — 관용구 출제"],
+drawback:["The main drawback is the high cost.","주된 단점은 높은 비용입니다.","drawback = downside — 부정적 측면을 가리키는 명사"],
+example:["For example, shipping is free over 50 dollars.","예를 들어 50달러 이상은 무료 배송입니다.","for example / for instance 동의 표현"],
+detail:["I will send the details by email.","세부 사항은 이메일로 보내겠습니다.","in detail(자세히) — in details는 오답"],
+purpose:["The purpose of the survey is to gather feedback.","설문의 목적은 의견 수집입니다.","for the purpose of + 동명사"],
+process:["The hiring process takes about a month.","채용 절차는 한 달 정도 걸립니다.","in the process of doing — 진행 중"],
+amount:["A large amount of data was lost.","많은 양의 데이터가 유실되었습니다.","amount of + 불가산 / number of + 가산 — 수량 표현 구분"],
+rate:["The response rate rose to 40 percent.","응답률이 40퍼센트로 올랐습니다.","at a rate of, interest rate, exchange rate 짝 표현"],
+speed:["The device doubles the processing speed.","그 장치는 처리 속도를 두 배로 높입니다.","speed up(속도를 높이다) 구동사"],
+accuracy:["The report was praised for its accuracy.","그 보고서는 정확성으로 호평받았습니다.","형용사 accurate / 부사 accurately 파생어 출제"],
+error:["The invoice contained a minor error.","청구서에 사소한 오류가 있었습니다.","by error = by mistake, error in judgment"],
+sample:["Free samples are available at the booth.","부스에서 무료 샘플을 받을 수 있습니다.","a sample of — 명사·동사 모두 가능"],
+setting:["Change the setting in the control panel.","제어판에서 설정을 변경하세요.","in a clinical setting처럼 환경이라는 뜻도 출제"],
+version:["Please use the latest version of the form.","양식의 최신 버전을 사용해 주세요.","the latest version — 최상급 + 명사"],
+feature:["The app has a new search feature.","그 앱에는 새로운 검색 기능이 있습니다.","동사 feature는 특징으로 삼다 — feature 목적어"],
+output:["Factory output rose 12 percent.","공장 생산량이 12퍼센트 늘었습니다.","output(생산량) vs outcome(결과) 구분"],
+input:["Your input on the draft is welcome.","초안에 대한 의견을 환영합니다.","input은 의견이라는 뜻으로도 자주 사용"],
+reason:["The reason for the delay is unclear.","지연의 이유가 불분명합니다.","the reason for 명사 / the reason why 절"],
+effort:["Thank you for your effort on the project.","프로젝트에 기울인 노력에 감사합니다.","make an effort to do — 관용구"],
+schedule:["The meeting is scheduled for 3 p.m.","회의는 오후 3시로 예정되어 있습니다.","be scheduled for 시각 / ahead of schedule(예정보다 빨리)"],
+deadline:["We met the deadline with a day to spare.","하루 여유를 두고 마감을 맞췄습니다.","meet the deadline(맞추다) / extend the deadline(연장하다)"],
+field:["She is an expert in the field of logistics.","그는 물류 분야 전문가입니다.","in the field of — 분야를 말할 때 고정 표현"],
+draft:["Please review the draft before Friday.","금요일 전에 초안을 검토해 주세요.","a rough draft(초벌 원고), draft a proposal(동사)"],
+scene:["The photo shows a busy street scene.","그 사진은 붐비는 거리 장면을 보여줍니다.","behind the scenes(무대 뒤에서) 관용구"],
+recent:["Recent studies support this view.","최근 연구들이 이 견해를 뒷받침합니다.","부사 recently는 현재완료·과거와 함께 쓰임"],
+similar:["The two models are similar in size.","두 모델은 크기가 비슷합니다.","be similar to A — 전치사 to"],
+different:["The results were different from ours.","결과가 우리 것과 달랐습니다.","different from — different than는 비격식"],
+available:["The room is available on weekdays.","그 방은 평일에 이용 가능합니다.","be available to 사람 / for 용도 — Part5 빈출 형용사"],
+useful:["The manual is useful for beginners.","그 설명서는 초보자에게 유용합니다.","be useful for/to — 뒤에 대상"],
+clear:["Please give a clear explanation.","분명한 설명을 부탁드립니다.","clear A of B(치우다), make it clear that 절"],
+simple:["The setup is simple and quick.","설치는 간단하고 빠릅니다.","simple(단순한) vs simplistic(지나치게 단순한) 뉘앙스"],
+common:["Delays are common during the holidays.","연휴에는 지연이 흔합니다.","have A in common(공통점이 있다) 관용구"],
+possible:["Please reply as soon as possible.","가능한 한 빨리 답신 주세요.","as soon as possible — 최상급 관용구"],
+correct:["Make sure the address is correct.","주소가 올바른지 확인하세요.","동사 correct는 바로잡다 — correct an error"],
+exactly:["That is exactly what we need.","그게 바로 우리에게 필요한 것입니다.","not exactly(꼭 그렇지는 않다) 완곡 표현"],
+actually:["Actually, the flight leaves at noon.","사실은 항공편이 정오에 출발합니다.","문장 앞 부사 자리 — 정정하거나 덧붙일 때"],
+probably:["The order will probably arrive Monday.","주문품은 아마 월요일에 도착할 겁니다.","빈도·확신 부사는 일반동사 앞, be동사 뒤"],
+finally:["Finally, let me thank the sponsors.","마지막으로 후원사들께 감사드립니다.","finally(마침내) vs at last vs lastly 구분"],
+however:["However, the cost remains high.","하지만 비용은 여전히 높습니다.","접속부사라 앞뒤를 콤마·세미콜론으로 연결 — Part6 연결어 문제"],
+instead:["The meeting was held online instead.","회의는 대신 온라인으로 열렸습니다.","instead(부사, 단독) vs instead of(전치사, 뒤에 명사)"],
+although:["Although it rained, the event went on.","비가 왔지만 행사는 진행되었습니다.","although는 접속사(절) / despite는 전치사(명사) — Part5 단골"],
+whether:["Let me know whether you can attend.","참석 가능한지 알려 주세요.","whether or not 가능, if는 or not과 바로 못 씀"],
+between:["The office is between the bank and the park.","사무실은 은행과 공원 사이에 있습니다.","between A and B / among 셋 이상"],
+during:["The store is closed during renovations.","보수 기간 동안 매장은 문을 닫습니다.","during + 명사 / while + 절 — Part5 구분 출제"],
+};
+// ---- Lv2 ----
+Object.assign(TIP,{
+evaluate:["The committee will evaluate all bids.","위원회가 모든 입찰을 평가합니다.","evaluate = assess — 명사형 evaluation도 함께 출제"],
+estimate:["Costs are estimated at 2 million dollars.","비용은 200만 달러로 추정됩니다.","be estimated at 금액 / an estimate(견적서) 명사"],
+predict:["Analysts predict steady growth.","분석가들은 꾸준한 성장을 예측합니다.","predict that 절 / predictable(예측 가능한) 파생어"],
+observe:["We observed a sharp drop in traffic.","트래픽이 급감하는 것을 관찰했습니다.","observe는 관찰하다 + 준수하다(observe a rule) 두 뜻"],
+obtain:["You can obtain a permit at the front desk.","안내 데스크에서 허가증을 받을 수 있습니다.","obtain은 격식체 get — Part7 공지문에 자주"],
+achieve:["The team achieved its quarterly target.","팀은 분기 목표를 달성했습니다.","achieve a goal/target — 짝 명사 고정"],
+assume:["We assume the data are accurate.","자료가 정확하다고 가정합니다.","assume(가정하다) + 맡다(assume a role) 두 뜻"],
+indicate:["The chart indicates a downward trend.","도표는 하락 추세를 나타냅니다.","indicate that 절 — 자료 설명 문장의 기본 동사"],
+demonstrate:["The trial demonstrated clear benefits.","그 시험은 분명한 이점을 입증했습니다.","demonstrate = show 격식형, 시연하다라는 뜻도 있음"],
+investigate:["The firm is investigating the complaint.","회사가 그 불만 사항을 조사 중입니다.","investigate는 타동사 — investigate about은 오답"],
+analyze:["We analyzed three years of sales data.","3년치 매출 자료를 분석했습니다.","영국식 analyse / 명사 analysis(복수 analyses)"],
+verify:["Please verify your email address.","이메일 주소를 확인해 주세요.","verify(사실 확인) vs confirm(확정 통보) 뉘앙스 차이"],
+modify:["The contract was modified last week.","계약서가 지난주에 수정되었습니다.","modify = revise — 명사 modification"],
+adjust:["Adjust the settings to fit your needs.","필요에 맞게 설정을 조정하세요.","adjust to(적응하다) 자동사 용법도 출제"],
+extend:["We extended the deadline by one week.","마감을 일주일 연장했습니다.","extend a deadline/an invitation — 연장과 건네다 두 뜻"],
+address:["The memo addresses safety concerns.","그 메모는 안전 우려를 다룹니다.","명사는 주소, 동사는 다루다·연설하다 — 품사 구분 출제"],
+handle:["She handles all overseas accounts.","그가 모든 해외 거래처를 담당합니다.","handle = deal with — 뒤에 전치사 없이 목적어"],
+leverage:["We leveraged existing partnerships.","기존 제휴 관계를 활용했습니다.","비즈니스 영어에서 use의 격식형으로 자주 등장"],
+incorporate:["We incorporated your feedback into the draft.","의견을 초안에 반영했습니다.","incorporate A into B — 짝 전치사 into"],
+integrate:["The system integrates with existing tools.","그 시스템은 기존 도구와 연동됩니다.","integrate A with/into B — 자동사로도 사용"],
+introduce:["The company introduced a new policy.","회사가 새 정책을 도입했습니다.","introduce A to B(소개) / 도입하다 두 뜻"],
+propose:["They proposed extending the contract.","그들은 계약 연장을 제안했습니다.","propose + 동명사, propose that 주어 (should) 동사원형"],
+outperform:["Our fund outperformed the market.","우리 펀드가 시장 수익률을 앞질렀습니다.","outperform은 than을 쓰지 않음 — 바로 목적어"],
+degrade:["Image quality degrades at low light.","저조도에서는 화질이 떨어집니다.","자동사(저하되다)·타동사 모두 가능, 명사 degradation"],
+converge:["The estimates converge after ten rounds.","추정치는 열 번 반복 후 수렴합니다.","converge on/to a value — 논문 실험 서술 기본 동사"],
+generalize:["The findings may not generalize to other regions.","그 결과가 다른 지역에도 적용되지는 않을 수 있습니다.","generalize to A — 일반화 대상 앞에 to"],
+overfit:["The model overfits the small training set.","그 모델은 작은 학습 데이터에 과적합됩니다.","머신러닝 전용어 — overfitting 명사형으로 자주"],
+annotate:["Two experts annotated every image.","전문가 두 명이 모든 이미지에 라벨을 달았습니다.","annotate A with B, 명사 annotation"],
+deploy:["The update will be deployed next month.","업데이트는 다음 달에 배포됩니다.","소프트웨어 배포·인력 배치 둘 다 — 명사 deployment"],
+reproduce:["We could not reproduce their results.","그들의 결과를 재현할 수 없었습니다.","reproduce(재현) / reproducible(재현 가능한)"],
+highlight:["The report highlights three risks.","그 보고서는 세 가지 위험을 부각합니다.","highlight = emphasize — 뒤에 바로 목적어"],
+clarify:["Let me clarify one point.","한 가지만 분명히 하겠습니다.","clarify a point/an issue — 회의 표현으로 자주"],
+summarize:["To summarize, costs fell and sales rose.","요약하면 비용은 줄고 매출은 올랐습니다.","to summarize / in summary — 마무리 신호 표현"],
+conclude:["The study concludes that training helps.","그 연구는 교육이 도움이 된다고 결론짓습니다.","conclude that 절 / 명사 conclusion, in conclusion"],
+confirm:["Please confirm your reservation by email.","이메일로 예약을 확정해 주세요.","confirm a reservation/an appointment — Part3 빈출"],
+refer:["Refer to page 12 for details.","자세한 내용은 12쪽을 참조하세요.","refer to A — 자동사라 to가 반드시 필요"],
+consist:["The board consists of seven members.","이사회는 일곱 명으로 구성됩니다.","consist of는 수동태 불가 — be consisted of는 오답"],
+contribute:["Several factors contributed to the delay.","여러 요인이 지연의 원인이 되었습니다.","contribute to A — 기여하다·원인이 되다"],
+contain:["The package contains fragile items.","그 소포에는 깨지기 쉬운 물품이 들어 있습니다.","contain(안에 들어 있음) vs include(목록의 일부)"],
+involve:["The role involves frequent travel.","그 직무는 잦은 출장을 수반합니다.","involve + 동명사 — involve to do는 오답"],
+occur:["Errors occur when the file is too large.","파일이 너무 크면 오류가 발생합니다.","occur는 수동태 불가, occurred처럼 자음 두 번 쓰기"],
+remain:["The position remains open until filled.","그 자리는 충원될 때까지 계속 열려 있습니다.","remain은 2형식 — remain + 형용사(보어)"],
+vary:["Prices vary depending on the season.","가격은 계절에 따라 다릅니다.","vary from A to B, varying(다양한) 형용사형"],
+"trade-off":["There is a trade-off between cost and quality.","비용과 품질 사이에는 절충 관계가 있습니다.","a trade-off between A and B — 짝 전치사 between"],
+baseline:["Sales rose 10 percent above the baseline.","매출이 기준선보다 10퍼센트 올랐습니다.","비교 기준이 되는 수치·모델을 가리킴"],
+benchmark:["The index serves as an industry benchmark.","그 지수는 업계 기준으로 쓰입니다.","benchmark against A(~에 견주어 평가하다) 동사 용법"],
+ablation:["The ablation study shows each part matters.","요소 제거 실험은 각 부분이 중요함을 보여줍니다.","논문 전용어 — an ablation study 형태로 굳어짐"],
+threshold:["Sales passed the threshold for a bonus.","매출이 보너스 기준선을 넘었습니다.","above/below the threshold, a threshold of 수치"],
+assumption:["The forecast rests on two assumptions.","그 전망은 두 가지 가정에 기대고 있습니다.","make an assumption, on the assumption that 절"],
+constraint:["Budget constraints delayed the launch.","예산 제약으로 출시가 미뤄졌습니다.","time/budget constraints — 복수로 자주 사용"],
+contribution:["Her contribution to the project was vital.","그의 프로젝트 기여는 매우 중요했습니다.","a contribution to A — 전치사 to"],
+evidence:["There is little evidence of fraud.","사기의 증거가 거의 없습니다.","evidence는 불가산 — an evidence, evidences는 오답"],
+insight:["The survey gave useful insights into demand.","그 설문은 수요에 대한 유용한 통찰을 주었습니다.","insight into A — 짝 전치사 into"],
+intuition:["His intuition about the market proved right.","시장에 대한 그의 직관이 맞았습니다.","intuition about/behind — 논문에서는 the intuition behind"],
+motivation:["Her motivation for applying was clear.","그가 지원한 동기는 분명했습니다.","motivation for 명사 / to부정사, 형용사 motivated"],
+novelty:["Reviewers questioned the novelty of the work.","심사자들은 그 연구의 참신성에 의문을 제기했습니다.","논문 심사평 단골 명사 — lack of novelty"],
+overhead:["Cloud storage adds little overhead.","클라우드 저장은 부가 비용이 거의 없습니다.","overhead costs(간접비) — 비즈니스에서도 자주"],
+pipeline:["Three products are in the pipeline.","세 개 제품이 준비 중입니다.","in the pipeline(진행 중인) 관용 표현"],
+robustness:["We tested the robustness of the system.","시스템의 견고함을 시험했습니다.","형용사 robust의 명사형 — robustness to noise"],
+scalability:["Scalability is the main selling point.","확장성이 주된 강점입니다.","scalable(확장 가능한)의 명사형"],
+supervision:["The intern works under close supervision.","그 인턴은 밀착 지도를 받으며 일합니다.","under supervision — 머신러닝에서는 정답 신호"],
+annotation:["Manual annotation took three months.","수작업 라벨링에 3개월이 걸렸습니다.","annotate의 명사형 — 주석·라벨"],
+latency:["Low latency matters for live video.","실시간 영상에는 낮은 지연 시간이 중요합니다.","latency(지연 시간) vs delay(지연 사건) 뉘앙스"],
+margin:["We won by a narrow margin.","근소한 차이로 이겼습니다.","by a wide/narrow margin, profit margin(이익률)"],
+metric:["Revenue is the key metric this year.","올해 핵심 지표는 매출입니다.","performance metrics — 복수로 자주 사용"],
+gap:["There is a gap between plan and practice.","계획과 실행 사이에 격차가 있습니다.","a gap between A and B, bridge the gap(메우다)"],
+trend:["The upward trend continued all year.","상승 추세가 한 해 내내 이어졌습니다.","a trend toward A, trending(유행하는)"],
+variance:["The variance across branches is large.","지점 간 편차가 큽니다.","통계의 분산 + 차이 — at variance with(상충하는)"],
+bias:["The sample shows a clear bias.","그 표본에는 뚜렷한 편향이 있습니다.","bias toward/against A — 편향의 방향"],
+noise:["Background noise ruined the recording.","배경 소음이 녹음을 망쳤습니다.","불가산 명사 — noises는 특정 소리들일 때만"],
+outlier:["We excluded two outliers from the analysis.","분석에서 이상치 두 개를 제외했습니다.","통계 전용어 — remove/exclude outliers"],
+subset:["Only a subset of users saw the update.","일부 사용자만 업데이트를 받았습니다.","a subset of A — 전체 중 일부"],
+setup:["The setup takes about ten minutes.","설치에는 10분 정도 걸립니다.","명사 setup / 동사는 set up — 띄어쓰기로 품사 구분"],
+checkpoint:["Load the checkpoint from epoch 20.","20에폭 시점의 저장 가중치를 불러오세요.","머신러닝 저장 지점 + 검문소 두 뜻"],
+seed:["We repeated the run with three seeds.","세 개의 난수 시드로 실험을 반복했습니다.","random seed — 재현성 서술에 필수"],
+survey:["The survey covers recent methods.","그 개괄 논문은 최신 기법들을 다룹니다.","설문조사 + 개괄 논문 — conduct a survey"],
+rebuttal:["We addressed all points in the rebuttal.","반론문에서 모든 지적에 답했습니다.","논문 심사 절차 용어 — rebuttal period"],
+appendix:["Full tables appear in the appendix.","전체 표는 부록에 있습니다.","복수는 appendices — see the appendix"],
+consistent:["The results are consistent with earlier work.","그 결과는 기존 연구와 일치합니다.","be consistent with A — 짝 전치사 with"],
+significant:["There was a significant drop in demand.","수요가 상당히 감소했습니다.","significantly(부사)로 수치 변화 수식 — Part5 빈출"],
+marginal:["The change had only a marginal effect.","그 변경은 미미한 효과만 있었습니다.","marginal(미미한) vs margin(차이) 파생어 구분"],
+sufficient:["We have sufficient funds for the trip.","출장에 충분한 자금이 있습니다.","sufficient = enough 격식형 — sufficient to do"],
+feasible:["The plan is technically feasible.","그 계획은 기술적으로 실현 가능합니다.","명사 feasibility — a feasibility study(타당성 조사)"],
+reliable:["We need a reliable supplier.","믿을 만한 공급업체가 필요합니다.","rely의 형용사형 — reliability 명사"],
+robust:["The design is robust to temperature changes.","그 설계는 온도 변화에 강합니다.","be robust to A — 견디는 대상 앞에 to"],
+sparse:["Data for rural areas are sparse.","농촌 지역 자료는 희소합니다.","sparse vs scarce — sparse는 분포가 드문"],
+dense:["The city has a dense population.","그 도시는 인구가 밀집해 있습니다.","densely populated — 부사형과 함께 자주"],
+coarse:["A coarse estimate is enough for now.","지금은 대략적인 추정이면 충분합니다.","coarse(거친) vs course(과정) 철자·발음 혼동 주의"],
+redundant:["The second check is redundant.","두 번째 확인은 중복입니다.","영국식으로는 be made redundant(정리해고되다)"],
+straightforward:["The instructions are straightforward.","그 설명은 간단명료합니다.","straightforward = simple and clear 격식형"],
+preliminary:["These are preliminary figures.","이는 예비 수치입니다.","preliminary results/findings — 확정 전 단계"],
+subsequent:["Subsequent meetings were canceled.","이후 회의들은 취소되었습니다.","subsequent to A(~ 이후에) 전치사구 형태도 출제"],
+previous:["See the previous section for details.","자세한 내용은 앞 절을 보세요.","previous to = prior to(~ 이전에)"],
+respectively:["Costs rose 3 and 5 percent, respectively.","비용이 각각 3퍼센트와 5퍼센트 올랐습니다.","나열 순서대로 대응시킬 때 문미에 위치"],
+roughly:["The trip takes roughly two hours.","이동에는 대략 두 시간이 걸립니다.","roughly = approximately — 수치 앞 부사"],
+slightly:["Sales were slightly higher than expected.","매출이 예상보다 약간 높았습니다.","slightly + 비교급 — 비교급 강조 부사 출제"],
+substantially:["Costs fell substantially last quarter.","지난 분기에 비용이 상당히 줄었습니다.","substantially = significantly — 수치 변화 수식"],
+typically:["Orders typically ship within two days.","주문은 보통 이틀 안에 발송됩니다.","빈도부사는 일반동사 앞 — Part5 어휘 문제"],
+nevertheless:["The price is high. Nevertheless, demand is strong.","가격이 높습니다. 그럼에도 수요는 강합니다.","접속부사 — Part6 문맥 연결어 문제 단골"],
+whereas:["Sales rose, whereas profits fell.","매출은 올랐지만 이익은 떨어졌습니다.","whereas는 접속사 — 두 절을 대조"],
+regarding:["Regarding your inquiry, we will reply soon.","문의하신 건에 관해서는 곧 답변드리겠습니다.","regarding = concerning = about 격식형 전치사"],
+despite:["Despite the delay, the event was a success.","지연에도 불구하고 행사는 성공적이었습니다.","despite + 명사 / although + 절 — Part5 단골 함정"],
+});
+// ---- Lv3 ----
+Object.assign(TIP,{
+alleviate:["The new route alleviated traffic congestion.","새 노선이 교통 혼잡을 완화했습니다.","alleviate a problem/pain — 고통·문제를 덜어 줌"],
+facilitate:["The software facilitates remote collaboration.","그 소프트웨어는 원격 협업을 수월하게 합니다.","facilitate = make easier — 사람이 아니라 일이 목적어"],
+hinder:["Bad weather hindered the rescue effort.","악천후가 구조 작업을 방해했습니다.","hinder A from doing — 격식체 방해 동사"],
+undermine:["The scandal undermined public trust.","그 추문이 대중의 신뢰를 약화시켰습니다.","서서히 무너뜨린다는 뉘앙스 — 신뢰·권위와 짝"],
+attribute:["She attributes the gain to better training.","그는 그 성과를 더 나은 교육 덕으로 봅니다.","attribute A to B — 원인 B 앞에 to, 명사는 ATtribute"],
+accommodate:["The hall can accommodate 300 guests.","그 홀은 300명을 수용할 수 있습니다.","수용하다 + 편의를 봐주다 — 철자(c 두 개, m 두 개) 주의"],
+approximate:["The model approximates real traffic flow.","그 모델은 실제 교통 흐름을 근사합니다.","형용사 approximate(대략의), 부사 approximately"],
+formulate:["They formulated a long-term strategy.","그들은 장기 전략을 수립했습니다.","formulate a plan/policy — 체계를 세워 만들다"],
+derive:["The formula is derived from basic principles.","그 공식은 기본 원리에서 유도됩니다.","be derived from A / derive benefit from A"],
+impose:["The city imposed a fine on late filings.","시는 지연 신고에 벌금을 부과했습니다.","impose A on B — 짝 전치사 on"],
+enforce:["The rule is strictly enforced.","그 규정은 엄격히 시행됩니다.","enforce a law/rule — 명사 enforcement"],
+preserve:["Cold storage preserves the samples.","냉장 보관이 표본을 보존합니다.","preserve = keep in original state, 명사 preservation"],
+discard:["Discard any damaged parts.","손상된 부품은 폐기하세요.","discard = throw away 격식형 — 데이터에도 사용"],
+truncate:["The file name was truncated.","파일 이름이 잘렸습니다.","끝을 잘라 짧게 만듦 — 데이터·텍스트에 자주"],
+aggregate:["We aggregate results across regions.","지역별 결과를 한데 모읍니다.","동사 aggregate + 명사 aggregate(총계) — in the aggregate"],
+propagate:["The error propagates through the network.","오차가 네트워크를 타고 전파됩니다.","propagate through/across — 자동사·타동사 모두 가능"],
+interpolate:["Missing values were interpolated.","결측값은 보간으로 채웠습니다.","interpolate between A and B — 사이 값을 추정"],
+quantify:["It is hard to quantify the benefit.","그 이익을 수치로 나타내기는 어렵습니다.","quantify = measure in numbers, 형용사 quantitative"],
+circumvent:["They circumvented the restriction legally.","그들은 합법적으로 그 제한을 우회했습니다.","circumvent a rule/limitation — avoid의 격식형"],
+elaborate:["Could you elaborate on that point?","그 부분을 좀 더 설명해 주시겠어요?","elaborate on A — 자동사라 on 필요, 형용사는 정교한"],
+justify:["The results justify the extra cost.","그 결과가 추가 비용을 정당화합니다.","justify + 동명사, 명사 justification"],
+speculate:["Analysts speculate about a merger.","분석가들은 합병 가능성을 추측합니다.","speculate about/on A — 근거가 약한 추측"],
+counterpart:["He met his counterpart from the Tokyo office.","그는 도쿄 지사의 상대 담당자를 만났습니다.","직위·역할이 대응되는 상대를 가리킴"],
+caveat:["One caveat is the small sample size.","한 가지 유의점은 표본이 작다는 것입니다.","with the caveat that 절 — 단서를 붙일 때"],
+discrepancy:["There is a discrepancy between the two invoices.","두 청구서 사이에 불일치가 있습니다.","a discrepancy between A and B — 수치 차이"],
+rationale:["The rationale for the change was cost.","그 변경의 이유는 비용이었습니다.","the rationale for/behind A — 논리적 근거"],
+premise:["The plan rests on a false premise.","그 계획은 잘못된 전제에 서 있습니다.","premise(전제) vs premises(구내·건물) 복수형 주의"],
+paradigm:["Remote work marked a paradigm shift.","원격 근무는 방식의 전환을 뜻했습니다.","a paradigm shift — 고정 표현"],
+hypothesis:["The data support our hypothesis.","자료는 우리의 가설을 뒷받침합니다.","복수는 hypotheses — test/support a hypothesis"],
+criterion:["Price is not the only criterion.","가격만이 유일한 기준은 아닙니다.","복수는 criteria — 단수·복수 형태 구분 출제"],
+magnitude:["The magnitude of the loss surprised us.","손실의 규모가 우리를 놀라게 했습니다.","an order of magnitude(10배 단위) 관용구"],
+tendency:["There is a tendency to overestimate demand.","수요를 과대평가하는 경향이 있습니다.","a tendency to do / toward A"],
+consensus:["The board reached a consensus quickly.","이사회는 빠르게 합의에 이르렀습니다.","reach a consensus on A — 불가산 명사"],
+ambiguity:["The wording left some ambiguity.","그 표현은 모호함을 남겼습니다.","형용사 ambiguous — resolve the ambiguity"],
+granularity:["The report offers a finer granularity.","그 보고서는 더 세밀한 단위를 제공합니다.","fine-grained / coarse-grained와 짝으로 기억"],
+fidelity:["The copy has high fidelity to the original.","그 사본은 원본에 대한 충실도가 높습니다.","high-fidelity(고충실도) 형태로 자주"],
+saliency:["The saliency map shows where the model looks.","중요도 지도는 모델이 보는 곳을 보여 줍니다.","형용사 salient(두드러진) — a salient point"],
+plausible:["That is a plausible explanation.","그것은 그럴듯한 설명입니다.","가능성 있어 보인다는 뜻 — 사실 여부는 미확정"],
+negligible:["The difference is negligible.","그 차이는 무시할 만합니다.","negligible(무시할 만한) vs negligent(부주의한) 혼동 주의"],
+inherent:["Risk is inherent in any investment.","위험은 어떤 투자에도 내재합니다.","be inherent in A — 짝 전치사 in"],
+explicit:["The contract is explicit about penalties.","그 계약은 위약금에 대해 명시적입니다.","explicit(명시적) vs implicit(암묵적) 짝으로 출제"],
+implicit:["There was an implicit agreement.","암묵적인 합의가 있었습니다.","be implicit in A — 말하지 않아도 담긴"],
+orthogonal:["The two goals are orthogonal.","두 목표는 서로 별개입니다.","수학의 직교 + 서로 무관하다는 비유적 용법"],
+agnostic:["The tool is platform-agnostic.","그 도구는 플랫폼을 가리지 않습니다.","A-agnostic 형태 — A에 구애받지 않는"],
+deterministic:["The process is fully deterministic.","그 과정은 완전히 결정론적입니다.","같은 입력이면 같은 출력 — stochastic과 반대"],
+stochastic:["They used a stochastic sampling method.","확률적 표집 방식을 사용했습니다.","stochastic = random 학술 표현"],
+exhaustive:["The list is not exhaustive.","그 목록이 전부는 아닙니다.","exhaustive(빠짐없는) vs exhausting(지치게 하는) 구분"],
+rigorous:["The study followed a rigorous protocol.","그 연구는 엄격한 절차를 따랐습니다.","rigorous testing/analysis — 명사 rigor"],
+compelling:["She made a compelling argument.","그는 설득력 있는 주장을 폈습니다.","compelling evidence/reason — 마음을 움직이는"],
+promising:["The early data look promising.","초기 자료는 유망해 보입니다.","a promising candidate/direction — 전망이 밝은"],
+counterintuitive:["The finding is counterintuitive but robust.","그 결과는 직관에 반하지만 견고합니다.","counter-(반대) 접두사 — counterproductive와 함께"],
+empirical:["The claim needs empirical support.","그 주장에는 실증적 뒷받침이 필요합니다.","empirical(실험·관찰 기반) vs theoretical 짝"],
+theoretical:["The model has a theoretical guarantee.","그 모델에는 이론적 보장이 있습니다.","in theory vs in practice 대비 표현과 함께"],
+arbitrary:["The cutoff seems arbitrary.","그 기준선은 임의로 보입니다.","근거 없이 정했다는 부정적 뉘앙스"],
+subtle:["There is a subtle difference in tone.","어조에 미묘한 차이가 있습니다.","b는 묵음 — 발음 시험에서도 주의"],
+seamless:["The merger was a seamless transition.","그 합병은 매끄러운 전환이었습니다.","seamless integration — 이음매가 없는"],
+accordingly:["Costs rose, and prices were adjusted accordingly.","비용이 올라 가격도 그에 맞춰 조정되었습니다.","접속부사 — 앞 내용에 따른 조치를 말할 때"],
+predominantly:["The audience was predominantly students.","청중은 주로 학생이었습니다.","predominantly = mainly 격식형"],
+albeit:["The plan worked, albeit slowly.","그 계획은 느리긴 해도 효과가 있었습니다.","albeit + 형용사·부사구 — 뒤에 절이 오지 않음"],
+thereby:["Costs dropped, thereby raising margins.","비용이 줄어 그로써 이익률이 올랐습니다.","thereby + 동명사 — 결과를 덧붙이는 격식체"],
+hence:["Demand fell; hence the price cut.","수요가 줄었고 따라서 가격을 내렸습니다.","hence = therefore — 뒤에 명사구만 오기도 함"],
+});
+// ---- Lv3 추가분 ----
+Object.assign(TIP,{
+streamline:["The new system streamlined the approval process.","새 시스템이 승인 절차를 간소화했습니다.","streamline a process/operation — Part7 사내 공지 단골"],
+expedite:["We can expedite your order for a fee.","수수료를 내시면 주문을 신속 처리해 드립니다.","expedite = speed up 격식형 — expedited shipping(특급 배송)"],
+delegate:["Good managers delegate routine tasks.","좋은 관리자는 일상 업무를 위임합니다.","동사 deleGATE / 명사 DELegate(대표단) — 강세 구분"],
+oversee:["She oversees three regional offices.","그는 세 개 지사를 감독합니다.","oversee(감독하다) vs overlook(간과하다) 혼동 주의"],
+comply:["All vendors must comply with the policy.","모든 납품업체는 그 정책을 준수해야 합니다.","comply with — 자동사라 with 필수, 명사 compliance"],
+adhere:["Please adhere to the agreed schedule.","합의된 일정을 지켜 주세요.","adhere to A — 규칙·일정을 고수하다, 붙다라는 뜻도 있음"],
+reimburse:["The company reimburses travel expenses.","회사가 출장비를 환급해 줍니다.","reimburse 사람 for 비용 — 명사 reimbursement"],
+waive:["The bank waived the transfer fee.","은행이 송금 수수료를 면제했습니다.","waive a fee/requirement — wave(흔들다)와 철자 혼동 주의"],
+postpone:["The workshop was postponed until June.","워크숍은 6월로 연기되었습니다.","postpone + 동명사 — postpone to do는 오답"],
+allocate:["We allocated more funds to marketing.","마케팅에 더 많은 자금을 배정했습니다.","allocate A to B — 짝 전치사 to, 명사 allocation"],
+compile:["She compiled the data into one report.","그는 자료를 하나의 보고서로 취합했습니다.","compile A into B — 모아서 정리하다"],
+endorse:["The board endorsed the merger plan.","이사회가 합병안을 지지했습니다.","광고 모델의 보증·수표 배서라는 뜻도 있음"],
+undertake:["The firm undertook a full audit.","회사가 전면 감사에 착수했습니다.","undertake-undertook-undertaken 불규칙 변화"],
+disclose:["The report discloses all fees.","그 보고서는 모든 수수료를 공개합니다.","disclose = reveal 격식형 — 명사 disclosure"],
+implement:["We will implement the changes in May.","5월에 그 변경 사항을 시행합니다.","동사 implement + 명사 implement(도구) — 명사형 implementation"],
+refrain:["Please refrain from using flash photography.","플래시 촬영은 삼가 주세요.","refrain from + 동명사 — 안내 방송 단골 표현"],
+prerequisite:["A degree is a prerequisite for the role.","학위가 그 직무의 전제 조건입니다.","a prerequisite for/to A — 필수 선행 조건"],
+itinerary:["The travel agent sent a full itinerary.","여행사가 전체 일정표를 보내왔습니다.","Part7 출장 지문 단골 — schedule보다 구체적인 여정표"],
+inventory:["We take inventory at the end of each month.","매월 말에 재고를 조사합니다.","take/check inventory — in stock, out of stock과 함께"],
+invoice:["The invoice is due within 30 days.","청구서는 30일 이내에 결제해야 합니다.","invoice(청구서) vs receipt(영수증) 구분 출제"],
+agenda:["The budget is first on the agenda.","예산이 안건 중 첫 번째입니다.","on the agenda — 회의 지문 단골"],
+venue:["The venue was changed to the main hall.","행사 장소가 대강당으로 변경되었습니다.","venue = 행사가 열리는 장소 — place보다 구체적"],
+attendee:["Each attendee receives a name tag.","참석자마다 명찰을 받습니다.","-ee는 동작을 받는 사람 — employee, trainee와 같은 계열"],
+surplus:["The budget ended with a small surplus.","예산은 소폭 잉여로 마감되었습니다.","surplus(잉여) vs deficit(적자) 짝으로 출제"],
+scrutiny:["The contract came under close scrutiny.","그 계약은 면밀한 조사를 받았습니다.","under scrutiny — 고정 표현"],
+milestone:["Reaching 10,000 users was a milestone.","사용자 1만 명 달성은 중요한 분기점이었습니다.","reach/mark a milestone — 진행 단계의 이정표"],
+proponent:["She is a leading proponent of the reform.","그는 그 개혁의 주요 지지자입니다.","a proponent of A — opponent(반대자)와 짝"],
+leeway:["The schedule gives us some leeway.","그 일정에는 약간의 여유가 있습니다.","give/have leeway — 불가산 명사"],
+forthcoming:["Details of the forthcoming event will follow.","곧 있을 행사의 세부 사항은 추후 안내됩니다.","forthcoming = upcoming — 공지문 단골 형용사"],
+tentative:["We reached a tentative agreement.","우리는 잠정 합의에 이르렀습니다.","tentative schedule/agreement — 확정 전 단계, 부사 tentatively"],
+contingent:["The bonus is contingent on performance.","보너스는 성과에 달려 있습니다.","be contingent on A — depend on의 격식형"],
+stringent:["The lab follows stringent safety rules.","그 실험실은 엄격한 안전 규정을 따릅니다.","stringent requirements/standards — strict의 격식형"],
+lucrative:["Consulting proved to be lucrative work.","컨설팅은 수익성 좋은 일로 드러났습니다.","a lucrative contract/market — profitable과 동의"],
+prudent:["It would be prudent to wait.","기다리는 편이 신중할 것입니다.","prudent = careful and wise — 명사 prudence"],
+meticulous:["He keeps meticulous records.","그는 꼼꼼하게 기록을 관리합니다.","meticulous attention to detail — 고정 표현"],
+versatile:["The device is versatile and portable.","그 장치는 다용도이고 휴대가 쉽습니다.","사람에게는 다재다능한, 사물에는 다용도의"],
+obsolete:["The software is now obsolete.","그 소프트웨어는 이제 한물갔습니다.","become obsolete — outdated와 동의"],
+imminent:["A decision is imminent.","결정이 임박했습니다.","imminent(임박한) vs eminent(저명한) 철자 혼동 단골"],
+pertinent:["Please include only pertinent details.","관련 있는 세부 사항만 넣어 주세요.","be pertinent to A — relevant의 격식형"],
+unprecedented:["Demand reached unprecedented levels.","수요가 전례 없는 수준에 이르렀습니다.","un + precedent(선례) — 전례가 없는"],
+prevalent:["Remote work is prevalent in the industry.","그 업계에서는 원격 근무가 널리 퍼져 있습니다.","be prevalent among/in A — common의 격식형"],
+concise:["Keep the summary concise.","요약은 간결하게 해 주세요.","clear and concise — 문서 작성 지시 단골 짝"],
+comprehensive:["The manual offers comprehensive coverage.","그 설명서는 종합적으로 다룹니다.","comprehensive(종합적인) vs comprehensible(이해 가능한) 구분"],
+adverse:["The flight was canceled due to adverse weather.","악천후로 항공편이 취소되었습니다.","adverse effects/conditions — averse(싫어하는)와 혼동 주의"],
+crucial:["Timing is crucial in this deal.","이 거래에서는 시점이 결정적입니다.","be crucial to/for A — essential과 동의"],
+inevitable:["Some delay was inevitable.","약간의 지연은 불가피했습니다.","it is inevitable that 절 — 부사 inevitably"],
+});
 
 /* ---------- 상태 ---------- */
 const KEY='engquiz-state-v3';
 const POS={v:'동사',n:'명사',a:'형용사',ad:'부사·연결어'};
-const EXTRA_N=10, MAX_REVIEW=12, EVENING_NEW_MAX=10, SESSION_V=2;
+const EXTRA_N=10, MAX_REVIEW=10, EVENING_NEW_MAX=10, SESSION_V=3;
+// 복습 간격(일): 몰라서 틀린 단어는 3 → 8 → 20일, 실수는 5 → 16일 확인 후 졸업
+const SCHED_UNKNOWN=[3,8,20], SCHED_SLIP=[5,16];
 let S=null, memMode=false, view='home', ui={};
 
 function fmt(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function today(){return fmt(new Date())}
 function addDays(s,n){const [y,m,d]=s.split('-').map(Number);return fmt(new Date(y,m-1,d+n))}
+function dow(s){const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d).getDay()}
+function isWeekend(s){const w=dow(s);return w===0||w===6}
+function restDay(){return S.weekendOff!==false&&isWeekend(today())}
+function prevStudyDay(t){let d=addDays(t,-1);if(S.weekendOff!==false){let g=0;while(isWeekend(d)&&g<7){d=addDays(d,-1);g++}}return d}
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
-function defaultState(){return{level:2,streak:0,lastDone:'',history:{},review:{},recent:[],day:null,session:null,packs:[],totals:{answered:0,correct:0},log:[],morningN:18,wordN:30}}
+function defaultState(){return{level:2,minLevel:2,weekendOff:true,streak:0,lastDone:'',history:{},review:{},recent:[],day:null,session:null,packs:[],totals:{answered:0,correct:0},log:[],morningN:18,wordN:30}}
 function ensureDay(){const t=today();if(!S.day||S.day.date!==t){S.day={date:t,morning:null,evening:null};S.session=null}}
 
 async function load(){
@@ -555,7 +929,7 @@ async function load(){
     S=Object.assign(defaultState(),raw?JSON.parse(raw):{});
     localStorage.setItem(KEY+':probe','1');localStorage.removeItem(KEY+':probe');
   }catch(e){memMode=true;S=defaultState()}
-  // 예전 버전에서 풀다 만 세션은 새 화면과 형식이 달라서 정리 (기록·오답 노트는 그대로 유지)
+  // 예전 버전에서 풀다 만 세션만 정리 (기록·오답 노트·연속은 그대로)
   if(S.session&&S.session.v!==SESSION_V)S.session=null;
   if(S.day){if(S.day.morning&&S.day.morning.v!==SESSION_V)S.day.morning=null;if(S.day.evening&&S.day.evening.v!==SESSION_V)S.day.evening=null}
 }
@@ -566,17 +940,28 @@ async function save(){
 }
 function allQ(){const m={};BANK.forEach(q=>m[q.id]=q);WORDS.forEach(q=>m[q.id]=q);(S.packs||[]).forEach(p=>p.forEach(q=>m[q.id]=q));return m}
 function isWord(q){return !!q&&q.kind==='word'}
+function tipOf(q){return isWord(q)?TIP[q.en]:null}
 
 /* ---------- 출제 ---------- */
 function dueReviews(Q){const t=today();return Object.keys(S.review).filter(id=>Q[id]&&S.review[id].due<=t).sort((a,b)=>S.review[a].due.localeCompare(S.review[b].due))}
+function schedOf(r){return r&&r.slip?SCHED_SLIP:SCHED_UNKNOWN}
 function pickNewWords(n,Q,exclude){
   if(n<=0)return [];
-  const t=today();
-  const ids=Object.keys(Q).filter(id=>isWord(Q[id])&&!exclude.has(id)&&!S.review[id]&&!(S.history[id]&&S.history[id].lastSeen===t));
-  const fresh=ids.filter(id=>!S.history[id]),seen=ids.filter(id=>S.history[id]);
-  const out=[];
-  for(const lv of [1,2,3]){if(out.length>=n)break;out.push(...shuffle(fresh.filter(id=>Q[id].level===lv)).slice(0,n-out.length))}
-  if(out.length<n){seen.sort((a,b)=>String(S.history[a].lastSeen).localeCompare(String(S.history[b].lastSeen)));out.push(...seen.slice(0,n-out.length))}
+  const t=today(),min=S.minLevel||1;
+  const usable=id=>isWord(Q[id])&&!exclude.has(id)&&!S.review[id]&&!(S.history[id]&&S.history[id].lastSeen===t);
+  const take=levels=>{
+    const ids=Object.keys(Q).filter(id=>usable(id)&&levels.includes(Q[id].level));
+    const fresh=ids.filter(id=>!S.history[id]),seen=ids.filter(id=>S.history[id]);
+    // 허용된 난이도를 고르게 섞어 뽑는다 (Lv2+면 Lv2와 Lv3가 반반)
+    const quota=Math.ceil(n/levels.length),pools=levels.map(lv=>shuffle(fresh.filter(id=>Q[id].level===lv)));
+    const out=[];
+    pools.forEach(pool=>out.push(...pool.splice(0,quota)));
+    pools.forEach(pool=>{if(out.length<n)out.push(...pool.splice(0,n-out.length))});
+    if(out.length<n){seen.sort((a,b)=>String(S.history[a].lastSeen).localeCompare(String(S.history[b].lastSeen)));out.push(...seen.slice(0,n-out.length))}
+    return out.slice(0,n);
+  };
+  let out=take([1,2,3].filter(l=>l>=min));
+  if(out.length<n&&min>1){const have=new Set(out);out=out.concat(take([1,2,3]).filter(id=>!have.has(id)).slice(0,n-out.length))}
   return shuffle(out);
 }
 function pickNew(n,Q,exclude){ // 문장 은행 (문법·어휘)
@@ -615,7 +1000,8 @@ function buildPlan(qids,Q,typed){
   qids.forEach(id=>{
     const q=Q[id];if(!isWord(q))return;
     if(typed.has(id)){plan[id]={mode:'type'};return}
-    plan[id]=Object.assign({mode:'mc',dir:S.history[id]?'ko2en':'en2ko'},makeOpts(q,words));
+    // 영어→뜻과 뜻→영어를 매번 무작위로 섞음
+    plan[id]=Object.assign({mode:'mc',dir:Math.random()<0.5?'en2ko':'ko2en'},makeOpts(q,words));
   });
   return plan;
 }
@@ -630,11 +1016,11 @@ function buildSession(mode,set){
     due=dueReviews(Q).filter(inSet).slice(0,MAX_REVIEW);
   }else if(mode==='evening'){
     const m=S.day.morning;
-    retest=m?m.results.filter(r=>!r.ok).map(r=>r.id).filter(inSet):[];
+    retest=m?m.results.filter(r=>!r.ok&&r.slip!==true).map(r=>r.id).filter(inSet):[];
     n=retest.length+EVENING_NEW_MAX;
   }else if(mode==='redo'){
     const s=S.session;
-    retest=s?s.results.filter(r=>!r.ok).map(r=>r.id).filter(inSet):[];
+    retest=s?s.results.filter(r=>!r.ok&&r.slip!==true).map(r=>r.id).filter(inSet):[];
     n=retest.length;
   }else{ // extra
     n=EXTRA_N;
@@ -665,17 +1051,26 @@ function grade(q,input){
   const u=norm(input);if(!u)return false;
   return q.a.some(a=>norm(a)===u);
 }
-function record(id,ok,kind){ // kind: 'new' | 'review' | 'retest'
+// kind: 'new' | 'review' | 'retest',  slip: 실수로 틀림(true) / 몰라서 틀림(false)
+function record(id,ok,kind,slip){
   const t=today();
   const h=S.history[id]||{seen:0,correct:0,wrong:0,lastSeen:''};
   h.seen++;if(ok)h.correct++;else h.wrong++;h.lastSeen=t;S.history[id]=h;
-  if(kind==='retest'){
-    if(!ok)S.review[id]={due:addDays(t,1),stage:0};
-  }else{
-    if(!ok){S.review[id]={due:addDays(t,1),stage:0}}
-    else if(kind==='review'){const r=S.review[id];if(!r||r.stage>=2)delete S.review[id];else{r.stage++;r.due=addDays(t,r.stage===1?3:7)}}
-    if(kind==='new'){S.recent.push(ok?1:0);if(S.recent.length>40)S.recent.shift()}
+  const r=S.review[id];
+  if(!ok){
+    if(kind==='retest'){
+      if(r){r.slip=false} else S.review[id]={due:addDays(t,SCHED_UNKNOWN[0]),stage:0,slip:false};
+    }else if(r){
+      r.slip=!!slip;r.stage=Math.max(0,(r.stage||0)-1);r.due=addDays(t,schedOf(r)[r.stage]);
+    }else{
+      S.review[id]={due:addDays(t,(slip?SCHED_SLIP:SCHED_UNKNOWN)[0]),stage:0,slip:!!slip};
+    }
+  }else if(kind==='review'&&r){
+    r.stage=(r.stage||0)+1;
+    const sc=schedOf(r);
+    if(r.stage>=sc.length)delete S.review[id];else r.due=addDays(t,sc[r.stage]);
   }
+  if(kind==='new'){S.recent.push(ok?1:0);if(S.recent.length>40)S.recent.shift()}
   S.totals.answered++;if(ok)S.totals.correct++;
 }
 function finishSession(){
@@ -683,7 +1078,7 @@ function finishSession(){
   const c=s.results.filter(x=>x.ok).length,n=s.results.length;
   if(s.mode==='morning'){
     S.day.morning=s;
-    if(S.lastDone!==t){S.streak=(S.lastDone===addDays(t,-1))?S.streak+1:1;S.lastDone=t}
+    if(S.lastDone!==t){S.streak=(S.lastDone===prevStudyDay(t)||S.lastDone===addDays(t,-1))?S.streak+1:1;S.lastDone=t}
     S.log.push({date:t,c,n,ec:null,en:null,level:S.level});if(S.log.length>120)S.log.shift();
   }else if(s.mode==='evening'){
     S.day.evening=s;
@@ -700,6 +1095,11 @@ function typeLabel(q){return isWord(q)?'단어':q.type==='g'?'문법':'어휘'}
 function maskWord(en){return en.split('').map((c,i)=>i===0||c==='-'||c===' '?c:'_').join(' ')}
 function wordCount(Q){return Object.keys(Q).filter(id=>isWord(Q[id])).length}
 function learnedCount(Q){return Object.keys(S.history).filter(id=>isWord(Q[id])&&!S.review[id]&&S.history[id].correct>0).length}
+function tipHtml(q){
+  const t=tipOf(q);
+  if(!t)return q.exp?`<div class="exp">${esc(q.exp)}</div>`:'';
+  return `<div class="tip"><p class="tip-en">${esc(t[0])}</p><p class="tip-ko">${esc(t[1])}</p><p class="tip-pt"><b>시험에서는</b> ${esc(t[2])}</p></div>`;
+}
 
 function render(){
   const app=$('app');
@@ -721,7 +1121,7 @@ function statusBar(){
   const Q=allQ();const due=dueReviews(Q).length;
   return `<div class="status">
     <div><b>${S.streak}일</b><span>연속</span></div>
-    <div><b>${due}</b><span>오늘 복습</span></div>
+    <div><b>${restDay()?'휴식':due}</b><span>오늘 복습</span></div>
     <div><b>${learnedCount(Q)}</b><span>외운 단어</span></div>
   </div>`;
 }
@@ -730,12 +1130,16 @@ function homeView(){
   const t=today(),d=S.day,s=S.session,Q=allQ();
   const dateStr=new Date().toLocaleDateString('ko-KR',{month:'long',day:'numeric',weekday:'short'});
   const resuming=s&&s.date===t&&!s.done;
+  const rest=restDay();
   let morning='',evening='';
   if(resuming&&s.mode==='morning'){
     morning=`<div class="card"><p style="margin:0 0 4px">오늘의 단어</p><p class="sub" style="margin:0 0 14px">${s.idx}/${s.qids.length} 진행 중</p><button class="btn" data-act="resume">이어서 풀기</button></div>`;
   }else if(d.morning){
     const c=d.morning.results.filter(x=>x.ok).length,n=d.morning.results.length;
-    morning=`<div class="card"><p style="margin:0 0 4px">오늘의 단어 완료</p><p class="sub" style="margin:0">${n}개 중 ${c}개 정답 · 틀린 ${n-c}개는 저녁에 직접 입력으로</p></div>`;
+    const unknown=d.morning.results.filter(x=>!x.ok&&x.slip!==true).length;
+    morning=`<div class="card"><p style="margin:0 0 4px">오늘의 단어 완료</p><p class="sub" style="margin:0">${n}개 중 ${c}개 정답 · 몰랐던 ${unknown}개는 저녁에 한 번 더</p></div>`;
+  }else if(rest){
+    morning=`<div class="card"><p style="margin:0 0 4px">주말이에요 · 쉬는 날</p><p class="sub" style="margin:0 0 14px">복습은 월요일로 미뤄뒀어요. 연속 기록도 끊기지 않습니다.</p><button class="btn secondary" data-act="startMorning">그래도 단어 풀기</button></div>`;
   }else{
     const due=Math.min(dueReviews(Q).filter(id=>isWord(Q[id])).length,MAX_REVIEW),n=S.wordN||30;
     morning=`<div class="card"><p style="margin:0 0 4px">오늘의 단어 · 약 ${Math.round(n/3)}분</p><p class="sub" style="margin:0 0 14px">새 단어 ${Math.max(0,n-due)}개 객관식${due?` + 틀렸던 ${due}개 직접 입력`:''}</p><button class="btn" data-act="startMorning" ${resuming?'disabled':''}>시작</button></div>`;
@@ -746,14 +1150,14 @@ function homeView(){
     const c=d.evening.results.filter(x=>x.ok).length,n=d.evening.results.length;
     evening=`<div class="card"><p style="margin:0 0 4px">저녁 복습 완료</p><p class="sub" style="margin:0 0 14px">${n}개 중 ${c}개 정답</p><button class="btn secondary" data-act="extra">단어 ${EXTRA_N}개 더</button></div>`;
   }else if(d.morning){
-    const w=d.morning.results.filter(x=>!x.ok).length;
-    evening=`<div class="card"><p style="margin:0 0 4px">저녁 복습 · 약 5분</p><p class="sub" style="margin:0 0 14px">아침에 틀린 ${w}개 직접 입력 + 새 단어 ${EVENING_NEW_MAX}개</p><button class="btn" data-act="startEvening" ${resuming?'disabled':''}>시작</button></div>`;
-  }else{
+    const w=d.morning.results.filter(x=>!x.ok&&x.slip!==true).length;
+    evening=`<div class="card"><p style="margin:0 0 4px">저녁 복습 · 약 5분</p><p class="sub" style="margin:0 0 14px">몰랐던 ${w}개 직접 입력 + 새 단어 ${EVENING_NEW_MAX}개</p><button class="btn" data-act="startEvening" ${resuming?'disabled':''}>시작</button></div>`;
+  }else if(!rest){
     evening=`<div class="card" style="opacity:.55"><p style="margin:0 0 4px">저녁 복습</p><p class="sub" style="margin:0">오늘의 단어를 끝내면 열려요.</p></div>`;
   }
   const sent=`<div class="card"><p style="margin:0 0 4px">문장 연습</p><p class="sub" style="margin:0 0 14px">예전 문법·회화 문장 ${EXTRA_N}문제 (원할 때만)</p><button class="btn secondary" data-act="sent" ${resuming?'disabled':''}>문장으로 풀기</button></div>`;
   return `<h1>매일 영어 단어</h1><p class="sub">${dateStr}</p>${statusBar()}${morning}${evening}${sent}
-  <p class="note">새 단어는 객관식으로 빠르게, 틀린 단어만 직접 입력으로 다시 나옵니다. 틀리면 저녁 → 내일 → 3일 뒤 → 7일 뒤 순서로 확인하고 졸업해요.</p>`;
+  <p class="note">틀리면 <b>실수</b>인지 <b>몰랐는지</b> 고르게 됩니다. 몰랐던 단어만 예문·시험 포인트를 보여주고 ${SCHED_UNKNOWN.join('일 → ')}일 간격으로 확인해요. 실수는 ${SCHED_SLIP.join('일 → ')}일 뒤 한 번씩만 나옵니다.</p>`;
 }
 
 function wordBody(q,s,r){
@@ -763,7 +1167,7 @@ function wordBody(q,s,r){
     const ko=p.dir==='en2ko';
     const head=ko
       ? `<p class="word">${esc(q.en)}</p><p class="pos">${POS[q.pos]||''}</p>`
-      : `<p class="q ko" style="margin-bottom:16px">${esc(q.ko)}</p>`;
+      : `<p class="q ko" style="margin-bottom:16px">${esc(q.ko)}<span class="pos-inline">${POS[q.pos]||''}</span></p>`;
     const choices=p.opts.map((id,i)=>{
       const o=Q[id]||q;const label=ko?o.ko:o.en;
       let cls=ko?'ko':'';
@@ -800,24 +1204,26 @@ function quizView(){
   let res='';
   if(r){
     const last=s.idx+1>=s.qids.length;
-    if(word){
-      const head=r.ok?'정답':(isRetest||isRev?'오답 — 내일 한 번 더':'오답 — 저녁에 직접 입력으로 다시');
-      res=`<div class="result ${r.ok?'ok':'no'}">${head}
-        <span class="a">${esc(q.en)} — ${esc(q.ko)}</span>
-        ${q.ex?`<div class="ex">${esc(q.ex)}</div>`:''}</div>`;
+    const answer=word?`${esc(q.en)} — ${esc(q.ko)}`:esc(q.kind==='fill'?q.a[0]:q.choices[q.ans]);
+    if(r.ok){
+      res=`<div class="result ok">정답<span class="a">${answer}</span>${word&&q.ex?`<div class="ex">${esc(q.ex)}</div>`:''}</div>`
+        +`<button class="btn" style="margin-top:14px" data-act="next">${last?'결과 보기':'다음'}</button>`;
+    }else if(r.pending){
+      res=`<div class="result no">오답<span class="a">${answer}</span></div>
+        <p class="ask">왜 틀렸나요?</p>
+        <div class="row"><button class="btn secondary" data-mark="slip">실수예요</button><button class="btn" data-mark="unknown">몰랐어요</button></div>
+        <p class="note" style="margin:8px 0 0">실수는 ${SCHED_SLIP[0]}일 뒤에 한 번만, 몰랐던 건 예문과 함께 ${SCHED_UNKNOWN[0]}일 뒤부터 확인해요.</p>`;
     }else{
-      const ansText=q.kind==='fill'?q.a[0]:q.choices[q.ans];
-      res=`<div class="result ${r.ok?'ok':'no'}">${r.ok?'정답':'오답'}
-        ${r.ok?'':`<span class="a">${esc(ansText)}</span>`}
-        ${q.exp?`<div class="exp">${esc(q.exp)}</div>`:''}</div>`;
+      res=`<div class="result no">${r.slip?`실수로 체크 — ${SCHED_SLIP[0]}일 뒤에 한 번만 확인할게요`:'몰랐던 단어 — 저녁에 직접 입력으로 다시'}<span class="a">${answer}</span>
+        ${r.slip?'':tipHtml(q)}</div>
+        <button class="btn" style="margin-top:14px" data-act="next">${last?'결과 보기':'다음'}</button>`;
     }
-    res+=`<button class="btn" style="margin-top:14px" data-act="next">${last?'결과 보기':'다음'}</button>`;
   }
-  const modeName={morning:'오늘의 단어',evening:'저녁 복습',extra:'추가 연습',redo:'틀린 단어 다시'}[s.mode]||'연습';
+  const modeName={morning:'오늘의 단어',evening:'저녁 복습',extra:'추가 연습',redo:'몰랐던 단어 다시'}[s.mode]||'연습';
   return `<div class="progress"><span>${s.idx+1} / ${s.qids.length}</span><span>${modeName}</span></div>
     <div class="bar"><i style="width:${(s.idx/s.qids.length)*100}%"></i></div>
     <div class="card">
-      <div><span class="tag">${typeLabel(q)}</span><span class="tag">Lv ${q.level}</span>${isRev?'<span class="tag review">복습</span>':''}${isRetest?'<span class="tag review">틀렸던 것</span>':''}</div>
+      <div><span class="tag">${typeLabel(q)}</span><span class="tag">Lv ${q.level}</span>${isRev?'<span class="tag review">복습</span>':''}${isRetest?'<span class="tag review">몰랐던 것</span>':''}</div>
       ${body}${res}
     </div>`;
 }
@@ -826,19 +1232,21 @@ function summaryView(){
   const s=S.session,Q=allQ();
   const c=s.results.filter(x=>x.ok).length,n=s.results.length;
   const wrong=s.results.filter(x=>!x.ok);
+  const unknown=wrong.filter(x=>x.slip!==true);
   const title={morning:'오늘의 단어 완료',evening:'저녁 복습 완료',extra:'추가 연습 완료',redo:'다시 풀기 완료'}[s.mode]||'완료';
-  const next=s.mode==='morning'?`틀린 ${wrong.length}개는 저녁에 직접 입력으로 다시 나와요`:`틀린 ${wrong.length}개는 내일 다시 나와요`;
+  const next=unknown.length?(s.mode==='morning'?`몰랐던 ${unknown.length}개는 저녁에 직접 입력으로 다시 나와요`:`몰랐던 ${unknown.length}개는 ${SCHED_UNKNOWN[0]}일 뒤에 다시 나와요`):'몰라서 틀린 건 없었어요';
   const list=wrong.map(w=>{
     const q=Q[w.id];if(!q)return '';
-    if(isWord(q))return `<li><div class="meta">단어 · Lv ${q.level}</div><div class="qq"><b>${esc(q.en)}</b> — ${esc(q.ko)}</div>${q.ex?`<div class="meta">${esc(q.ex)}</div>`:''}</li>`;
+    const badge=w.slip?'<span class="tag">실수</span>':'<span class="tag review">몰랐음</span>';
+    if(isWord(q))return `<li><div class="meta">${badge} Lv ${q.level}</div><div class="qq"><b>${esc(q.en)}</b> — ${esc(q.ko)}</div>${q.ex?`<div class="meta">${esc(q.ex)}</div>`:''}</li>`;
     const a=q.kind==='fill'?q.a[0]:q.choices[q.ans];
-    return `<li><div class="meta">${typeLabel(q)}</div><div class="qq">${esc(q.q)}</div><div class="qq" style="color:var(--ok)">${esc(a)}</div></li>`;
+    return `<li><div class="meta">${badge} ${typeLabel(q)}</div><div class="qq">${esc(q.q)}</div><div class="qq" style="color:var(--ok)">${esc(a)}</div></li>`;
   }).join('');
   return `<div class="card summary"><p style="margin:0">${title}</p>
     <div class="big">${c} / ${n}</div>
     <p class="sub" style="margin:0">${wrong.length?next:'전부 맞혔어요'}</p>
-    ${wrong.length?`<ul class="list" style="margin-top:14px">${list}</ul>
-      <button class="btn" style="margin-top:6px" data-act="redo">틀린 ${wrong.length}개 바로 다시</button>
+    ${wrong.length?`<ul class="list" style="margin-top:14px">${list}</ul>`:''}
+    ${unknown.length?`<button class="btn" style="margin-top:6px" data-act="redo">몰랐던 ${unknown.length}개 바로 다시</button>
       <button class="btn secondary" data-act="home">홈으로</button>`
     :`<button class="btn" style="margin-top:16px" data-act="home">홈으로</button>`}
   </div>`;
@@ -847,13 +1255,14 @@ function summaryView(){
 function notesView(){
   const Q=allQ(),t=today();
   const ids=Object.keys(S.review).filter(id=>Q[id]).sort((a,b)=>S.review[a].due.localeCompare(S.review[b].due));
-  if(!ids.length)return `<h1>오답 노트</h1><p class="sub">틀린 것이 자동으로 쌓입니다</p><div class="empty">아직 비어 있어요.<br>틀린 단어가 생기면 여기서 다시 볼 수 있어요.</div>`;
-  const stageName=['1일 뒤','3일 뒤','7일 뒤'];
+  if(!ids.length)return `<h1>오답 노트</h1><p class="sub">틀린 것이 자동으로 쌓입니다</p><div class="empty">아직 비어 있어요.<br>몰라서 틀린 단어는 예문과 함께 여기에 남습니다.</div>`;
   return `<h1>오답 노트</h1><p class="sub">${ids.length}개 · 다음에 나올 때는 직접 입력이에요</p>
     <ul class="list">${ids.map(id=>{const q=Q[id],r=S.review[id],h=S.history[id]||{wrong:0};
+      const sc=schedOf(r);
       const dueTxt=r.due<=t?'오늘':r.due===addDays(t,1)?'내일':r.due;
-      const meta=`<div class="meta">${typeLabel(q)} · ${h.wrong}번 틀림 · 다음 확인 ${dueTxt} (${stageName[r.stage]||''} 단계)</div>`;
-      if(isWord(q))return `<li>${meta}<div class="qq"><b>${esc(q.en)}</b> — ${esc(q.ko)}</div>${q.ex?`<div class="meta">${esc(q.ex)}</div>`:''}</li>`;
+      const badge=r.slip?'<span class="tag">실수</span>':'<span class="tag review">몰랐음</span>';
+      const meta=`<div class="meta">${badge} ${h.wrong}번 틀림 · 다음 확인 ${dueTxt} (${r.stage+1}/${sc.length}단계)</div>`;
+      if(isWord(q))return `<li>${meta}<div class="qq"><b>${esc(q.en)}</b> — ${esc(q.ko)}</div>${r.slip?(q.ex?`<div class="meta">${esc(q.ex)}</div>`:''):tipHtml(q)}</li>`;
       const a=q.kind==='fill'?q.a[0]:q.choices[q.ans];
       return `<li>${meta}<div class="qq">${esc(q.q)}</div><div class="qq" style="color:var(--ok)">${esc(a)}</div>${q.exp?`<div class="meta">${esc(q.exp)}</div>`:''}</li>`}).join('')}</ul>`;
 }
@@ -867,6 +1276,7 @@ function statsView(){
   const Q=allQ();
   const total=wordCount(Q),learned=learnedCount(Q);
   const seenW=Object.keys(S.history).filter(id=>isWord(Q[id])).length;
+  const slips=Object.keys(S.review).filter(id=>S.review[id].slip).length;
   return `<h1>기록</h1><p class="sub">최근 7일 정답률</p>
     <div class="card"><div class="weekchart">${bars}</div><div class="weeklabels">${labels}</div></div>
     ${statusBar()}
@@ -875,24 +1285,33 @@ function statsView(){
       <div class="bar" style="margin-bottom:12px"><i style="width:${total?Math.round(learned/total*100):0}%"></i></div>
       <p style="margin:0 0 6px">본 적 있는 단어 <b>${seenW}</b>개</p>
       <p style="margin:0 0 6px">전체 정답률 <b>${acc}%</b> (${S.totals.correct}/${S.totals.answered})</p>
-      <p style="margin:0">오답 노트 <b>${Object.keys(S.review).length}</b>개</p>
+      <p style="margin:0">오답 노트 <b>${Object.keys(S.review).length}</b>개 (실수 ${slips} · 몰랐음 ${Object.keys(S.review).length-slips})</p>
     </div>
     <p class="note">한 번 맞히고 오답 노트에서 졸업한 단어를 "외운 단어"로 셉니다.</p>`;
 }
 
 function settingsView(){
-  return `<h1>설정</h1><p class="sub">문제 수와 기록 관리</p>
+  const ml=S.minLevel||1;
+  return `<h1>설정</h1><p class="sub">난이도·일정·기록 관리</p>
+    <div class="card"><p style="margin:0 0 8px">단어 난이도</p>
+      <div class="row">${[[1,'전부'],[2,'Lv2+'],[3,'Lv3만']].map(([l,t])=>`<button class="btn ${ml===l?'':'secondary'}" data-ml="${l}">${t}</button>`).join('')}</div>
+      <p class="note" style="margin:10px 0 0">Lv1 기초 · Lv2 학술 기본 · Lv3 토익 고난도와 논문 표현. 고른 단계 이상만 새 단어로 나옵니다.</p>
+    </div>
+    <div class="card"><p style="margin:0 0 8px">주말</p>
+      <div class="row"><button class="btn ${S.weekendOff!==false?'':'secondary'}" data-we="1">주말엔 쉬기</button><button class="btn ${S.weekendOff===false?'':'secondary'}" data-we="0">주말도 하기</button></div>
+      <p class="note" style="margin:10px 0 0">쉬기로 두면 토·일에는 복습이 나오지 않고, 연속 기록도 끊기지 않아요. 밀린 복습은 월요일에 이어집니다. (폰 알람은 앱이 아니라 시계·미리알림 앱에서 평일 반복으로 바꿔주세요.)</p>
+    </div>
     <div class="card"><p style="margin:0 0 8px">하루 단어 수</p>
       <div class="row">${[20,30,40].map(n=>`<button class="btn ${(S.wordN||30)===n?'':'secondary'}" data-wn="${n}">${n}개</button>`).join('')}</div>
-      <p class="note" style="margin:10px 0 0">30개가 대략 10분입니다. 저녁 복습은 틀린 단어 + 새 단어 ${EVENING_NEW_MAX}개로 자동 구성돼요.</p>
+      <p class="note" style="margin:10px 0 0">30개가 대략 10분입니다. 저녁 복습은 몰랐던 단어 + 새 단어 ${EVENING_NEW_MAX}개로 자동 구성돼요.</p>
     </div>
     <div class="card"><p style="margin:0 0 8px">문장 연습 난이도</p>
       <div class="row">${[1,2,3].map(l=>`<button class="btn ${S.level===l?'':'secondary'}" data-level="${l}">Lv ${l}</button>`).join('')}</div>
-      <p class="note" style="margin:10px 0 0">문장 연습에만 적용됩니다. Lv1 형태 채우기 · Lv2 시제와 오류 수정 · Lv3 문장 통째로 영작</p>
+      <p class="note" style="margin:10px 0 0">문장 연습에만 적용됩니다.</p>
     </div>
     <div class="card"><p style="margin:0 0 8px">문제 팩 추가</p>
       <p class="note" style="margin:0 0 10px">Claude가 만들어준 단어 팩(JSON)을 붙여넣으면 은행에 합쳐집니다. 같은 id는 덮어써요.</p>
-      <textarea id="packInput" placeholder='[{"id":"w301","type":"w","level":2,"kind":"word","pos":"v","en":"refine","ko":"다듬다","ex":"refine the estimate"}]'></textarea>
+      <textarea id="packInput" placeholder='[{"id":"w301","type":"w","level":3,"kind":"word","pos":"v","en":"refine","ko":"다듬다","ex":"refine the estimate"}]'></textarea>
       <button class="btn secondary" style="margin-top:10px" data-act="addPack">팩 추가</button>
       <p class="note" style="margin:10px 0 0">추가된 팩: ${(S.packs||[]).length}개 · ${(S.packs||[]).reduce((a,p)=>a+p.length,0)}개 문항</p>
     </div>
@@ -911,10 +1330,13 @@ function settingsView(){
 function bind(){
   document.querySelectorAll('[data-act]').forEach(b=>b.onclick=()=>act(b.dataset.act));
   document.querySelectorAll('[data-choice]').forEach(b=>b.onclick=()=>submit(b.dataset.choice));
+  document.querySelectorAll('[data-mark]').forEach(b=>b.onclick=()=>mark(b.dataset.mark==='slip'));
   document.querySelectorAll('[data-wn]').forEach(b=>b.onclick=async()=>{S.wordN=Number(b.dataset.wn);await save();render()});
+  document.querySelectorAll('[data-ml]').forEach(b=>b.onclick=async()=>{S.minLevel=Number(b.dataset.ml);await save();toast(`새 단어는 Lv${S.minLevel} 이상`);render()});
+  document.querySelectorAll('[data-we]').forEach(b=>b.onclick=async()=>{S.weekendOff=b.dataset.we==='1';await save();toast(S.weekendOff?'주말엔 쉬어요':'주말에도 나옵니다');render()});
   document.querySelectorAll('[data-level]').forEach(b=>b.onclick=async()=>{S.level=Number(b.dataset.level);await save();toast(`문장 연습 Lv ${S.level}`);render()});
   const inp=$('ansInput');
-  if(inp){if(!ui.result)setTimeout(()=>inp.focus(),50);inp.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();ui.result?act('next'):submit(inp.value)}}}
+  if(inp){if(!ui.result)setTimeout(()=>inp.focus(),50);inp.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();if(!ui.result)submit(inp.value);else if(!ui.result.pending)act('next')}}}
 }
 async function act(a){
   clearTimeout(ui.auto);
@@ -937,12 +1359,27 @@ async function submit(input){
   if(ui.result)return;
   const s=S.session,Q=allQ(),q=Q[s.qids[s.idx]];
   const ok=grade(q,input);
+  if(ok){
+    const kind=s.reviewSet.includes(q.id)?'review':(s.retestSet||[]).includes(q.id)?'retest':'new';
+    record(q.id,true,kind);
+    s.results.push({id:q.id,ok:true});
+    ui.result={ok:true,input};
+    await save();render();
+    clearTimeout(ui.auto);ui.auto=setTimeout(()=>act('next'),650); // 맞히면 알아서 다음으로
+  }else{
+    ui.result={ok:false,input,pending:true}; // 실수인지 몰랐는지 고른 뒤에 기록
+    render();
+  }
+}
+async function mark(slip){
+  const r=ui.result;if(!r||!r.pending)return;
+  const s=S.session,Q=allQ(),q=Q[s.qids[s.idx]];
   const kind=s.reviewSet.includes(q.id)?'review':(s.retestSet||[]).includes(q.id)?'retest':'new';
-  record(q.id,ok,kind);
-  s.results.push({id:q.id,ok});
-  ui.result={ok,input};
+  record(q.id,false,kind,slip);
+  s.results.push({id:q.id,ok:false,slip:!!slip});
+  r.pending=false;r.slip=!!slip;
   await save();render();
-  if(ok){clearTimeout(ui.auto);ui.auto=setTimeout(()=>act('next'),650)} // 맞히면 알아서 다음으로
+  if(slip){clearTimeout(ui.auto);ui.auto=setTimeout(()=>act('next'),450)} // 실수는 바로 넘어감
 }
 async function addPack(){
   const ta=$('packInput');let arr;
