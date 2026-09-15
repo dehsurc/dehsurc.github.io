@@ -292,7 +292,7 @@ function isWeekend(s){const w=dow(s);return w===0||w===6}
 function restDay(){return S.weekendOff!==false&&isWeekend(today())}
 function prevStudyDay(t){let d=addDays(t,-1);if(S.weekendOff!==false){let g=0;while(isWeekend(d)&&g<7){d=addDays(d,-1);g++}}return d}
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
-function defaultState(){return{level:2,minLevel:2,weekendOff:true,streak:0,lastDone:'',history:{},review:{},recent:[],day:null,session:null,packs:[],totals:{answered:0,correct:0},log:[],morningN:18,wordN:30}}
+function defaultState(){return{level:2,minLevel:2,scope:'toeic',weekendOff:true,streak:0,lastDone:'',history:{},review:{},recent:[],day:null,session:null,packs:[],totals:{answered:0,correct:0},log:[],morningN:18,wordN:30}}
 function ensureDay(){const t=today();if(!S.day||S.day.date!==t){S.day={date:t,morning:null,evening:null};S.session=null}}
 
 async function load(){
@@ -312,6 +312,8 @@ async function save(){
 }
 function allQ(){const m={};BANK.forEach(q=>m[q.id]=q);WORDS.forEach(q=>m[q.id]=q);(S.packs||[]).forEach(p=>p.forEach(q=>m[q.id]=q));return m}
 function isWord(q){return !!q&&q.kind==='word'}
+function isAcad(q){return isWord(q)&&typeof ACAD!=='undefined'&&ACAD.has(q.en)}
+function inScope(q){return isWord(q)&&(S.scope==='all'||!isAcad(q))} // 기본은 토익 단어만
 function tipOf(q){return isWord(q)?(q.tip||TIP[q.en]):null}
 
 /* ---------- 출제 ---------- */
@@ -320,7 +322,7 @@ function schedOf(r){return r&&r.slip?SCHED_SLIP:SCHED_UNKNOWN}
 function pickNewWords(n,Q,exclude){
   if(n<=0)return [];
   const t=today(),min=S.minLevel||1;
-  const usable=id=>isWord(Q[id])&&!exclude.has(id)&&!S.review[id]&&!(S.history[id]&&S.history[id].lastSeen===t);
+  const usable=id=>inScope(Q[id])&&!exclude.has(id)&&!S.review[id]&&!(S.history[id]&&S.history[id].lastSeen===t);
   const take=levels=>{
     const ids=Object.keys(Q).filter(id=>usable(id)&&levels.includes(Q[id].level));
     const fresh=ids.filter(id=>!S.history[id]),seen=ids.filter(id=>S.history[id]);
@@ -367,7 +369,7 @@ function makeOpts(w,words,n){
   return {opts:opts.map(o=>o.id),ans:opts.findIndex(o=>o.id===w.id)};
 }
 function buildPlan(qids,Q,typed){
-  const words=Object.keys(Q).map(id=>Q[id]).filter(isWord);
+  const words=Object.keys(Q).map(id=>Q[id]).filter(inScope); // 보기도 출제 범위 안에서만
   const plan={};
   qids.forEach(id=>{
     const q=Q[id];if(!isWord(q))return;
@@ -465,8 +467,8 @@ function qhtml(q){const ko=/[가-힣]/.test(q.q)&&q.level===3;return `<p class="
 function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(ui.tt);ui.tt=setTimeout(()=>t.classList.remove('show'),1800)}
 function typeLabel(q){return isWord(q)?'단어':q.type==='g'?'문법':'어휘'}
 function maskWord(en){return en.split('').map((c,i)=>i===0||c==='-'||c===' '?c:'_').join(' ')}
-function wordCount(Q){return Object.keys(Q).filter(id=>isWord(Q[id])).length}
-function learnedCount(Q){return Object.keys(S.history).filter(id=>isWord(Q[id])&&!S.review[id]&&S.history[id].correct>0).length}
+function wordCount(Q){return Object.keys(Q).filter(id=>inScope(Q[id])).length}
+function learnedCount(Q){return Object.keys(S.history).filter(id=>inScope(Q[id])&&!S.review[id]&&S.history[id].correct>0).length}
 function tipHtml(q){
   const t=tipOf(q);
   if(!t)return q.exp?`<div class="exp">${esc(q.exp)}</div>`:'';
@@ -655,7 +657,7 @@ function statsView(){
     <div class="card">
       <p style="margin:0 0 8px">단어 진행 <b>${learned}</b> / ${total}</p>
       <div class="bar" style="margin-bottom:12px"><i style="width:${total?Math.round(learned/total*100):0}%"></i></div>
-      <p style="margin:0 0 6px">본 적 있는 단어 <b>${seenW}</b>개</p>
+      <p style="margin:0 0 6px">본 적 있는 단어 <b>${seenW}</b>개${S.scope==="all"?"":" · 토익 단어만 출제 중"}</p>
       <p style="margin:0 0 6px">전체 정답률 <b>${acc}%</b> (${S.totals.correct}/${S.totals.answered})</p>
       <p style="margin:0">오답 노트 <b>${Object.keys(S.review).length}</b>개 (실수 ${slips} · 몰랐음 ${Object.keys(S.review).length-slips})</p>
     </div>
@@ -664,11 +666,16 @@ function statsView(){
 
 function settingsView(){
   const ml=S.minLevel||1,Q=allQ();
-  const nWords=l=>Object.keys(Q).filter(id=>isWord(Q[id])&&Q[id].level>=l).length;
+  const nWords=l=>Object.keys(Q).filter(id=>inScope(Q[id])&&Q[id].level>=l).length;
+  const nAcad=Object.keys(Q).filter(id=>isAcad(Q[id])).length;
   return `<h1>설정</h1><p class="sub">난이도·일정·기록 관리</p>
+    <div class="card"><p style="margin:0 0 8px">출제 범위</p>
+      <div class="row"><button class="btn ${S.scope!=='all'?'':'secondary'}" data-sc="toeic">토익 단어</button><button class="btn ${S.scope==='all'?'':'secondary'}" data-sc="all">연구·논문 포함</button></div>
+      <p class="note" style="margin:10px 0 0">기본은 토익·실무 단어만 나옵니다. 논문에서만 쓰는 단어 ${nAcad}개(stochastic, saliency, ablation 같은 것)는 여기를 켜야 나와요.</p>
+    </div>
     <div class="card"><p style="margin:0 0 8px">단어 난이도</p>
       <div class="row">${[[1,'전부'],[2,'Lv2+'],[3,'Lv3만']].map(([l,t])=>`<button class="btn ${ml===l?'':'secondary'}" data-ml="${l}">${t}<br><small style="font-weight:400;opacity:.7">${nWords(l)}개</small></button>`).join('')}</div>
-      <p class="note" style="margin:10px 0 0">Lv1 기초 · Lv2 학술 기본 · Lv3 토익 고난도와 논문 표현. 고른 단계 이상만 새 단어로 나옵니다.</p>
+      <p class="note" style="margin:10px 0 0">Lv1 기초 · Lv2 토익 빈출 · Lv3 토익 고난도. 고른 단계 이상만 새 단어로 나옵니다.</p>
     </div>
     <div class="card"><p style="margin:0 0 8px">주말</p>
       <div class="row"><button class="btn ${S.weekendOff!==false?'':'secondary'}" data-we="1">주말엔 쉬기</button><button class="btn ${S.weekendOff===false?'':'secondary'}" data-we="0">주말도 하기</button></div>
@@ -706,6 +713,7 @@ function bind(){
   document.querySelectorAll('[data-mark]').forEach(b=>b.onclick=()=>mark(b.dataset.mark==='slip'));
   document.querySelectorAll('[data-wn]').forEach(b=>b.onclick=async()=>{S.wordN=Number(b.dataset.wn);await save();render()});
   document.querySelectorAll('[data-ml]').forEach(b=>b.onclick=async()=>{S.minLevel=Number(b.dataset.ml);await save();toast(`새 단어는 Lv${S.minLevel} 이상`);render()});
+  document.querySelectorAll('[data-sc]').forEach(b=>b.onclick=async()=>{S.scope=b.dataset.sc;await save();toast(S.scope==='all'?'연구·논문 단어도 출제':'토익 단어만 출제');render()});
   document.querySelectorAll('[data-we]').forEach(b=>b.onclick=async()=>{S.weekendOff=b.dataset.we==='1';await save();toast(S.weekendOff?'주말엔 쉬어요':'주말에도 나옵니다');render()});
   document.querySelectorAll('[data-level]').forEach(b=>b.onclick=async()=>{S.level=Number(b.dataset.level);await save();toast(`문장 연습 Lv ${S.level}`);render()});
   const inp=$('ansInput');
