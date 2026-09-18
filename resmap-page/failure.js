@@ -3,9 +3,13 @@
  * A pinned stage that the scroll drives through four measured conditions:
  * clean, front camera dropped, three front cameras dropped, all six dropped.
  * The rig on the left is a schematic of the surround coverage around the ego,
- * with the satellite tile behind it. The bars on the right are the numbers
- * from Table 2, interpolated between the levels so the motion is continuous
- * while every stop on it is a real measurement.
+ * with the satellite tile behind it, and it interpolates: a camera fading out
+ * and the satellite prior coming up in its place claim nothing in between.
+ *
+ * The bars on the right are the numbers from Table 2 and they do not
+ * interpolate. Every value the chart shows is one of the four measurements,
+ * because a number on a results page claims to be a result, and a scroll
+ * stopped between two levels was drawing one that had never been measured.
  *
  * Nothing here plays itself. The Drive control on the rail scrolls the whole
  * page, and this stage rides that scroll like any other part of it.
@@ -126,6 +130,18 @@
     var fill = document.createElement('i');
     lane.appendChild(fill);
 
+    /* Where this method's four measurements sit. They are always on the lane,
+       so the four drop levels are visible as four points without reading the
+       caption, and a bar can be seen arriving at one rather than stopping
+       wherever the scroll happened to stop. */
+    m.v.forEach(function (v, i) {
+      var tick = document.createElement('span');
+      tick.className = 'bar-tick';
+      tick.style.left = clamp(v / SCALE, 0, 1) * 100 + '%';
+      tick.title = STAGES[i].step + ': ' + v.toFixed(1);
+      lane.appendChild(tick);
+    });
+
     var val = document.createElement('span');
     val.className = 'bar-val';
 
@@ -206,18 +222,27 @@
     // The satellite prior comes forward by exactly as much as the cameras lose.
     rig.style.setProperty('--sat', (0.22 + (offNow / CAMS.length) * 0.78).toFixed(3));
 
-    rows.forEach(function (r) {
-      var v = lerp(r.m.v[lo], r.m.v[hi], k);
-      r.fill.style.width = clamp(v / SCALE, 0, 1) * 100 + '%';
-      r.val.textContent = v.toFixed(1);
-    });
-
+    /* The chart only ever shows one of the four measured states.
+     *
+     * It used to interpolate between them, which made the motion continuous
+     * but put numbers on screen that were never measured: stop the scroll
+     * between Front-1 and Front-3 and ReSMap read 44.6, a value drawn by the
+     * page rather than by the model. The rig keeps interpolating, because a
+     * camera fading out and the satellite prior coming up claim nothing; a
+     * number claims to be a result. So the bars step, and the gliding between
+     * steps is a CSS transition rather than a reading of the scroll. */
     var shown = Math.round(f);
     if (shown !== lastNote) {
       lastNote = shown;
       stepEl.textContent = STAGES[shown].step;
       subEl.textContent = STAGES[shown].sub;
       noteEl.textContent = STAGES[shown].note;
+
+      rows.forEach(function (r) {
+        var v = r.m.v[shown];
+        r.fill.style.width = clamp(v / SCALE, 0, 1) * 100 + '%';
+        r.val.textContent = v.toFixed(1);
+      });
       stepBtns.forEach(function (b, i) {
         if (i === shown) b.setAttribute('aria-current', 'step');
         else b.removeAttribute('aria-current');

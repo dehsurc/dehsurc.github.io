@@ -37,14 +37,23 @@ stay readable.
 Section 4 is a pinned stage the scroll drives through four measured conditions:
 clean, front camera dropped, three front dropped, all six dropped. The rig is a
 schematic ,  surround coverage around the ego with the satellite tile behind it,
-built as SVG in `failure.js`, no assets ,  and the bars are Table 2, interpolated
-between levels so the motion is continuous while every stop on it is a real
-measurement. Editing the numbers means editing `METHODS` in `failure.js`; they
-must stay in step with Table 2 in `index.html`.
+built as SVG in `failure.js`, no assets. The rig interpolates: a camera fading
+out and the satellite prior coming up in its place claim nothing in between.
 
-Scrolling is the only control. Nothing here plays itself; the stage rides the
-page's scroll like any other part of it, whether that scroll comes from a wheel
-or from the pedals.
+The bars are Table 2, and they do not. Every value the chart shows is one of
+the four measurements, and the glide between them is a CSS transition rather
+than a reading of the scroll, because a number on a results page claims to be
+a result: interpolating them put figures on screen that were never measured,
+and a scroll stopped between Front-1 and Front-3 read ReSMap at 44.6. Each
+lane also carries a tick at each of that method's four levels, so the
+measured points are visible without reading the caption. Editing the numbers
+means editing `METHODS` in `failure.js`; they must stay in step with Table 2
+in `index.html`.
+
+Scrolling drives it, and the four buttons in the stage head select a level for
+anyone who would rather not scroll. They do not set the stage: they scroll to
+where that level lives, so a click and a wheel leave the page in the same
+state. `geometry()` is the one mapping both directions go through.
 
 Knobs: the `.track` height in `style.css` sets how much scroll the four stages
 take, and `SCALE` in `failure.js` is the mAP at full bar width. Below 62rem the

@@ -228,20 +228,44 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
   grid-template-columns: 10.5rem 1fr 3rem;
   align-items: center;
   gap: .75rem;
-  padding: .3rem 0;
+  padding: .34rem 0 .42rem;
 }
 .bar-name { font-size: 13.5px; white-space: nowrap; }
 .bar-name small { font-size: 11px; color: var(--ink-faint); }
 .bar-lane {
+  position: relative;
   height: 13px;
   background: var(--row-hover);
   border-radius: 2px;
-  overflow: hidden;
+  /* Visible, so the measured-level ticks can hang below the lane. The fill
+     carries its own radius, so there is nothing here that needed clipping. */
+  overflow: visible;
 }
 .bar-lane i {
   display: block; height: 100%; width: 0;
   background: var(--ink-faint);
   border-radius: 2px;
+  /* The chart steps between measured levels; this is what makes the step read
+     as motion instead of a jump. The scroll no longer sets the width, so the
+     easing is the only thing between one measurement and the next. */
+  transition: width .42s cubic-bezier(.4, 0, .2, 1);
+}
+
+/* This method's four measured drop levels, as ticks under its own lane.
+   Under, not on: a tick drawn on the lane has to be legible against the empty
+   track and against the bar filling over it, which are opposite ends of the
+   palette and swap over between the two themes, so any flat colour disappears
+   into one of the four and differencing a grey turns the tick orange over the
+   blue bar. Below the lane there is one background to contrast with, and the
+   bar is left clean to read a length off. */
+.bar-tick {
+  position: absolute;
+  top: 100%; margin-top: 1.5px;
+  width: 1px; height: 3px;
+  margin-left: -.5px;
+  background: var(--ink-faint);
+  opacity: .55;
+  pointer-events: none;
 }
 .bar.ours .bar-name { font-weight: 600; }
 .bar.ours .bar-lane i { background: var(--accent); }
