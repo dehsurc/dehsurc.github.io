@@ -877,7 +877,12 @@
        * it, and its speed is the chase's own rate, which is continuous by
        * construction. The lag is a hundred milliseconds and reads as the
        * weight of a car rather than as lag. */
-      var m = sy / PX_PER_M;
+      /* Clamped to the road that exists. Elastic overscroll runs scrollY past
+         both ends of the document and settles it back, and chasing that walks
+         the road on past the end and brings it back under a car that never
+         moved -- the same bounce, arriving from the platform instead of from
+         the follower. */
+      var m = clamp(sy / PX_PER_M, 0, maxM());
       // An anchor jump or a scrollbar thrown across the document is not
       // driving. Past a point, the car is simply somewhere else now.
       if (Math.abs(m - pos) > FOLLOW_SNAP) {
@@ -893,11 +898,31 @@
         var gap = Math.abs(m - pos);
         var want = (m - pos) * (FOLLOW_K + Math.max(0, gap - 8) * 1.4);
         observed += (want - observed) * Math.min(1, dt * FOLLOW_SMOOTH);
-        if (Math.abs(m - pos) < 0.03 && Math.abs(observed) < 0.15) {
+        if (gap < 0.03 && Math.abs(observed) < 0.15) {
           pos = m;
           observed = 0;
         } else {
+          /* The chase may lag. It may not reverse.
+           *
+           * A displacement force through a lag, integrated, is a
+           * mass-spring-damper, and this one is underdamped: the ratio is
+           * sqrt(FOLLOW_SMOOTH / FOLLOW_K) / 2, which is 0.55, and it falls
+           * further as the chase stiffens with the gap. So a flick sailed
+           * 12% past where you scrolled to at reading pace and 67% past it
+           * at speed, and then came back to meet you. Inertia carrying the
+           * car on is the point; a car that reverses into you is a spring.
+           *
+           * Arresting it on the target is what removes the return, and it
+           * costs nothing else: the gap is what drives the chase, so while
+           * there is one the dynamics here are untouched, and this only
+           * decides what happens at the instant the gap would go negative.
+           * Rise time and the lag you feel while actually scrolling come
+           * out identical either way. */
+          var was = m - pos;
           pos += observed * dt;
+          if (was > 0) pos = Math.min(pos, m);
+          else if (was < 0) pos = Math.max(pos, m);
+          else pos = m;
         }
       }
       speed = observed;
