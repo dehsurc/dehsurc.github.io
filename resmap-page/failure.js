@@ -141,30 +141,53 @@
   var stepEl = document.getElementById('fail-step');
   var subEl = document.getElementById('fail-sub');
   var noteEl = document.getElementById('fail-note');
+  var stepsBox = document.getElementById('fail-steps');
+  var stepBtns = [];
   var pending = false;
   var lastNote = -1;
+
+  /* Where the stage sits in its run, as one reversible mapping.
+   *
+   * The scroll is the only state this walkthrough has, so stepping to a level
+   * has to mean scrolling to it. Reading the position and computing the
+   * position for a level are the same geometry in both directions, kept here
+   * so a click and a wheel can never disagree about which level is which. */
+  function geometry() {
+    var stage = track.firstElementChild;
+    var travel = track.offsetHeight - stage.offsetHeight;
+    var topDoc = track.getBoundingClientRect().top + window.scrollY;
+
+    if (travel > 0) {
+      /* Pinned: the stage holds still and the track scrolls past behind it.
+         It sticks `top` below the viewport edge, so that offset belongs in
+         the mapping -- without it the run finishes a chrome's worth of scroll
+         after the stage has started sliding away, and a step lands late. */
+      var sticky = parseFloat(getComputedStyle(stage).top) || 0;
+      return { lead: sticky, span: travel, topDoc: topDoc };
+    }
+    /* A viewport too short to pin the stage stacks it instead, so the track is
+       exactly as tall as the stage and there is no travel to read. Run the
+       stages off the block's own passage through the viewport: without this
+       the walkthrough sat on Clean for ever on a phone. */
+    var h = stage.offsetHeight || 1;
+    var vh = window.innerHeight || 1;
+    return { lead: vh * 0.7, span: h + vh * 0.3, topDoc: topDoc };
+  }
+
+  function tNow() {
+    var g = geometry();
+    return clamp((window.scrollY + g.lead - g.topDoc) / g.span, 0, 1);
+  }
+
+  function scrollForT(t) {
+    var g = geometry();
+    return g.topDoc - g.lead + t * g.span;
+  }
 
   function update() {
     pending = false;
 
-    var stage = track.firstElementChild;
-    var box = track.getBoundingClientRect();
-    var travel = track.offsetHeight - stage.offsetHeight;
-    var t;
-
-    if (travel > 0) {
-      // Pinned: the stage holds still and the track scrolls past behind it.
-      t = clamp(-box.top / travel, 0, 1);
-    } else {
-      /* Narrow screens unpin the stage and stack it, so the track is exactly
-         as tall as the stage and there is no travel to read. Run the stages
-         off the block's own passage through the viewport instead: without
-         this the walkthrough sat on Clean for ever on a phone. */
-      var h = stage.offsetHeight || 1;
-      var vh = window.innerHeight || 1;
-      t = clamp((vh * 0.7 - box.top) / (h + vh * 0.3), 0, 1);
-    }
-
+    var t = tNow();
     var f = t * (STAGES.length - 1);
     var lo = Math.floor(f), hi = Math.min(STAGES.length - 1, lo + 1);
     var k = f - lo;
@@ -195,8 +218,56 @@
       stepEl.textContent = STAGES[shown].step;
       subEl.textContent = STAGES[shown].sub;
       noteEl.textContent = STAGES[shown].note;
+      stepBtns.forEach(function (b, i) {
+        if (i === shown) b.setAttribute('aria-current', 'step');
+        else b.removeAttribute('aria-current');
+        // Only the level you are on is a tab stop; the rest are arrow keys
+        // away, the way a stepper behaves.
+        b.tabIndex = i === shown ? 0 : -1;
+      });
     }
   }
+
+  /* ---- stepping through it without scrolling ----
+   *
+   * The buttons do not set the stage. They scroll to where that stage lives,
+   * so a click leaves the page in exactly the state a wheel would have left
+   * it in, the scrollbar agrees with what is on screen, and the levels stay
+   * reachable by scroll for anyone who would rather do it that way. */
+  function goTo(i) {
+    var t = STAGES.length > 1 ? i / (STAGES.length - 1) : 0;
+    var y = Math.round(scrollForT(t));
+    try {
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    } catch (err) {
+      window.scrollTo(0, y);
+    }
+  }
+
+  STAGES.forEach(function (s, i) {
+    if (!stepsBox) return;
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'step-pip';
+    b.textContent = s.step;
+    b.title = s.sub;
+    b.tabIndex = i === 0 ? 0 : -1;
+    if (i === 0) b.setAttribute('aria-current', 'step');
+    b.addEventListener('click', function () { goTo(i); });
+    b.addEventListener('keydown', function (e) {
+      var d = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1
+            : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1
+            : e.key === 'Home' ? -STAGES.length
+            : e.key === 'End' ? STAGES.length : 0;
+      if (!d) return;
+      e.preventDefault();
+      var n = clamp(i + d, 0, STAGES.length - 1);
+      stepBtns[n].focus();
+      goTo(n);
+    });
+    stepsBox.appendChild(b);
+    stepBtns.push(b);
+  });
 
   function request() {
     if (pending) return;

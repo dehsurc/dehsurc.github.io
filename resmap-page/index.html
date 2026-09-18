@@ -22,7 +22,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700&display=swap">
-<link rel="stylesheet" href="style.css?v=33">
+<link rel="stylesheet" href="style.css?v=34">
 
 <!-- Set the theme before first paint so there is no flash. -->
 <script>
@@ -183,6 +183,9 @@
         <div class="stage-head">
           <span class="stage-step" id="fail-step">Clean</span>
           <span class="stage-sub" id="fail-sub">all six cameras reporting</span>
+          <!-- Filled by failure.js from the same STAGES the scroll reads, so
+               the labels cannot drift from the levels they select. -->
+          <div class="stage-steps" id="fail-steps" role="group" aria-label="Camera failure level"></div>
         </div>
 
         <div class="stage-grid">
@@ -587,8 +590,8 @@
   </button>
 </div>
 
-<script src="failure.js?v=33"></script>
-<script src="drive.js?v=33"></script>
-<script src="main.js?v=33"></script>
+<script src="failure.js?v=34"></script>
+<script src="drive.js?v=34"></script>
+<script src="main.js?v=34"></script>
 </body>
 </html>

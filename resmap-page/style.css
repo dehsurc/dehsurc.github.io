@@ -154,6 +154,36 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
 .stage-step {
   font-size: 1.1rem; font-weight: 600; letter-spacing: -.015em;
 }
+
+/* The four levels, as somewhere to click rather than scroll to. They sit in
+   the head because that is where the level is already named. Not `.steps`:
+   that is the numbered list in section 3.2, and it is defined further down,
+   so sharing the name silently un-aligned these and turned that list into a
+   flex row. */
+.stage-steps {
+  margin-left: auto;
+  display: flex; gap: .3rem;
+  align-self: center;
+  flex: none;
+}
+.step-pip {
+  padding: .3rem .55rem;
+  border: 1px solid var(--rule-dark);
+  border-radius: 3px;
+  background: none;
+  color: var(--ink-faint);
+  font: inherit; font-size: 11px; font-weight: 600;
+  letter-spacing: .03em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color .15s ease, border-color .15s ease, background .15s ease;
+}
+.step-pip:hover { color: var(--ink); border-color: var(--ink); }
+.step-pip[aria-current="step"] {
+  color: var(--paper);
+  background: var(--ink);
+  border-color: var(--ink);
+}
 .stage-sub { font-size: 13.5px; color: var(--ink-faint); }
 
 .stage-grid {
@@ -231,8 +261,13 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
   .rig svg { max-width: 10.5rem; }
   .rig figcaption { display: none; }
   .track { height: 300vh; }
-  .stage-head { margin-bottom: .9rem; padding-bottom: .45rem; }
+  /* The sub-caption is the first thing to go: the level's name is on the
+     button that is lit, so it is said twice. */
+  .stage-head { margin-bottom: .9rem; padding-bottom: .45rem; flex-wrap: wrap; }
   .stage-step { font-size: 1rem; }
+  .stage-sub { display: none; }
+  .stage-steps { gap: .25rem; }
+  .step-pip { padding: .28rem .4rem; font-size: 10px; }
   .bar { grid-template-columns: 7.5rem 1fr 2.6rem; gap: .5rem; padding: .22rem 0; }
   .bar-name { font-size: 12px; }
   .bar-name small { display: none; }
