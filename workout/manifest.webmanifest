@@ -1,0 +1,16 @@
+{
+  "name": "매일 맨몸운동",
+  "short_name": "맨몸운동",
+  "description": "근육량·골반전방경사·프레임·유연성을 위한 하루 30~60분 홈트 루틴",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F3F1EC",
+  "theme_color": "#F3F1EC",
+  "lang": "ko",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
