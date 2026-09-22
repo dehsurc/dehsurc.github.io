@@ -31,7 +31,7 @@
 
   /* ---------- 상태 ---------- */
   const DEFAULT = () => ({
-    v: 1,
+    v: 1, t: 0,
     onboarded: false,
     settings: { duration: 45, eq: { chair: true, table: true, bottle: true, towel: true, bar: false, band: false }, started: today(), theme: 'auto' },
     levels: {}, prog: {}, logs: {}, tests: [], body: [], override: {},
@@ -46,12 +46,90 @@
     } catch (e) { memMode = true; }
     return DEFAULT();
   }
-  function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { memMode = true; } }
+  function localSave() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { memMode = true; } }
+  function save() { S.t = Date.now(); localSave(); scheduleCloud(); }
 
+  /* ---------- 기기 간 동기화 (Artifact db) ----------
+     정적 사이트나 로컬 파일로 열면 db가 없어 localStorage만 씁니다.
+     claude.ai 비공개 페이지로 열면 폰·노트북이 같은 기록을 봅니다. */
+  let DB = null, cloudState = 'off', cloudMsg = '', cloudSettled = false, cloudTimer = null;
+  const pushed = { state: null, months: {} };
+  const canon = (o) => { const out = {}; Object.keys(o).sort().forEach((k) => { out[k] = o[k]; }); return out; };
+  function stateBody() { return { t: S.t || 0, onboarded: !!S.onboarded, settings: S.settings, levels: S.levels, prog: S.prog, tests: S.tests, body: S.body, override: S.override }; }
+  function monthMap() {
+    const m = {};
+    for (const d of Object.keys(S.logs).sort()) { const ym = d.slice(0, 7); (m[ym] = m[ym] || { days: {} }).days[d] = S.logs[d]; }
+    return m;
+  }
+  function scheduleCloud() {
+    if (!DB) return;
+    clearTimeout(cloudTimer);
+    cloudTimer = setTimeout(flushCloud, 700);
+  }
+  async function flushCloud() {
+    if (!DB) return;
+    setCloud('syncing');
+    try {
+      const st = JSON.stringify(stateBody());
+      if (st !== pushed.state) { await DB.doc('app/state').set(JSON.parse(st)); pushed.state = st; }
+      const months = monthMap();
+      for (const ym of Object.keys(months)) {
+        const body = JSON.stringify(months[ym]);
+        if (body !== pushed.months[ym]) { await DB.doc('logs/' + ym).set(JSON.parse(body)); pushed.months[ym] = body; }
+      }
+      setCloud('ok');
+    } catch (e) { setCloud('err', (e && e.code) || 'error'); }
+  }
+  async function pullCloud() {
+    const snap = await DB.doc('app/state').get();
+    let adopted = false;
+    if (snap.exists) {
+      const r = snap.data() || {};
+      if ((r.t || 0) > (S.t || 0)) {
+        S.onboarded = !!r.onboarded;
+        S.settings = Object.assign(DEFAULT().settings, r.settings || {});
+        S.levels = r.levels || {}; S.prog = r.prog || {};
+        S.tests = r.tests || []; S.body = r.body || []; S.override = r.override || {};
+        S.t = r.t || 0; adopted = true;
+      }
+    }
+    pushed.state = adopted ? JSON.stringify(stateBody()) : null;
+    const q = await DB.collection('logs').get();
+    for (const d of q.docs) {
+      const days = ((d.data() || {}).days) || {};
+      for (const k of Object.keys(days)) {
+        const cur = S.logs[k];
+        if (!cur || (days[k].t || 0) > (cur.t || 0)) S.logs[k] = days[k];
+      }
+      pushed.months[d.id] = JSON.stringify({ days: canon(days) });
+    }
+    localSave();
+  }
+  function setCloud(state, msg) { cloudState = state; cloudMsg = msg || ''; const el = $('#syncline'); if (el) el.innerHTML = syncText(); }
+  function syncText() {
+    if (cloudState === 'off') return '이 브라우저에만 저장 (기기 간 동기화 없음)';
+    if (cloudState === 'syncing') return '동기화 중…';
+    if (cloudState === 'err') return `동기화 실패 (${esc(cloudMsg)}) · 기록은 이 브라우저에 남아 있습니다`;
+    return '✓ 계정에 동기화됨 · 다른 기기에서도 같은 기록';
+  }
+  async function initCloud() {
+    let db = null;
+    try { if (window.claude && window.claude.use) db = await window.claude.use('db'); } catch (e) { db = null; }
+    if (!db) { cloudSettled = true; if (!S.onboarded) render(); return; }
+    DB = db;
+    try { await pullCloud(); setCloud('ok'); } catch (e) { setCloud('err', (e && e.code) || 'error'); }
+    cloudSettled = true;
+    render();
+    flushCloud();
+  }
+
+  /* 뷰어가 테마를 지정해 두었으면 '자동'일 때 그 값을 되돌려 놓습니다. */
+  const HOST_THEME = document.documentElement.getAttribute('data-theme');
   function applyTheme() {
     const t = S.settings.theme || 'auto';
-    if (t === 'auto') document.documentElement.removeAttribute('data-theme');
-    else document.documentElement.dataset.theme = t;
+    if (t !== 'auto') { document.documentElement.dataset.theme = t; return; }
+    if (HOST_THEME) document.documentElement.setAttribute('data-theme', HOST_THEME);
+    else document.documentElement.removeAttribute('data-theme');
   }
 
   /* ---------- 진행 레벨 ---------- */
@@ -176,6 +254,10 @@
   function render() {
     applyTheme();
     $$('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === tab));
+    if (!S.onboarded && !cloudSettled && window.claude && window.claude.use) {
+      app.innerHTML = `<div class="top"><h1>매일 맨몸운동</h1></div><div class="card"><p class="muted">기록을 불러오는 중…</p></div>`;
+      return;
+    }
     if (!S.onboarded) { app.innerHTML = viewOnboard(); bindOnboard(); return; }
     if (tab === 'today') { app.innerHTML = viewToday(); bindToday(); }
     else if (tab === 'progress') { app.innerHTML = viewProgress(); bindProgress(); }
@@ -389,7 +471,7 @@
     clearInterval(R.timer); clearInterval(R.anim);
     const r = R.r; const mins = Math.max(1, Math.round((Date.now() - R.startedAt) / 60000));
     const d = today(); const prev = S.logs[d];
-    const log = { day: r.day, dur: r.duration, mins: (prev ? prev.mins : 0) + mins, done: !partial || (prev && prev.done), sets: prev ? prev.sets || {} : {}, holds: prev ? prev.holds || {} : {}, setCount: prev ? prev.setCount || 0 : 0, note: prev ? prev.note : '' };
+    const log = { day: r.day, dur: r.duration, t: Date.now(), mins: (prev ? prev.mins : 0) + mins, done: !partial || (prev && prev.done), sets: prev ? prev.sets || {} : {}, holds: prev ? prev.holds || {} : {}, setCount: prev ? prev.setCount || 0 : 0, note: prev ? prev.note : '' };
     const suggestions = [];
     r.items.forEach((it, k) => {
       const res = R.res[k]; const arr = it.target.kind === 'hold' ? res.holds : res.reps; if (!arr.length) return;
@@ -437,7 +519,7 @@
       else { S.prog[s.chain] = { clears: 0, fails: 0, lv: (S.prog[s.chain] || {}).lv }; save(); }
       $('#sug' + b.dataset.k).innerHTML = `<b>${b.dataset.act === 'apply' ? '✓ 적용됨' : '유지'}</b>`;
     });
-    $('#close', el).onclick = () => { S.logs[today()].note = $('#note').value.trim(); save(); el.remove(); document.body.style.overflow = ''; tab = 'today'; render(); };
+    $('#close', el).onclick = () => { const lg = S.logs[today()]; lg.note = $('#note').value.trim(); lg.t = Date.now(); save(); el.remove(); document.body.style.overflow = ''; tab = 'today'; render(); };
   }
 
   /* ---------- 진행 ---------- */
@@ -562,11 +644,12 @@
         <div class="opt" style="margin-top:8px"><div class="l"><b>시작일</b><span>주차 계산과 스트레칭 시간 증가의 기준</span></div><input type="date" id="started" value="${s.started}" style="width:auto"></div></div>
       <div class="card"><h2>홈 화면에 추가</h2><p class="small muted" style="margin-top:4px">iPhone: Safari 공유 버튼 → "홈 화면에 추가". Android: Chrome 메뉴 → "앱 설치" 또는 "홈 화면에 추가". 앱처럼 열리고 오프라인에서도 됩니다.</p></div>
       <div class="card"><details><summary style="font-weight:800;font-size:17px">이 프로그램의 원리 ▾</summary><div style="margin-top:10px">${P.PRINCIPLES.map((p) => `<div class="principle"><b>${esc(p.h)}</b><p>${esc(p.p)}</p></div>`).join('')}</div></details></div>
-      <div class="card"><h2>백업</h2><p class="small muted">기록은 이 브라우저에만 저장됩니다. 폰을 바꾸거나 브라우저 데이터를 지우면 사라지니 가끔 복사해 두세요.</p>
+      <div class="card"><h2>저장과 백업</h2><p class="small muted" id="syncline">${syncText()}</p>
+        <p class="small muted" style="margin-top:6px">어느 쪽이든 내보내기로 한 번씩 복사해 두면 안전합니다.</p>
         <div class="row" style="margin-top:10px"><button class="btn secondary sm" id="exp">내보내기</button><button class="btn secondary sm" id="imp">가져오기</button></div>
         <div id="iobox" style="display:none;margin-top:10px"><textarea class="io" id="io"></textarea><div class="row" style="margin-top:8px"><button class="btn sm secondary" id="copy">복사</button><button class="btn sm" id="apply" style="display:none">이 데이터로 덮어쓰기</button></div></div></div>
       <div class="card"><h2>초기화</h2><button class="btn danger" id="reset" style="margin-top:8px">모든 기록 삭제</button></div>
-      <p class="muted small" style="text-align:center;margin:10px 0">저장 위치: ${memMode ? '저장 불가 (시크릿 모드)' : '이 브라우저'} · 의학적 조언이 아닙니다. 통증이 있으면 멈추세요.</p>`;
+      <p class="muted small" style="text-align:center;margin:10px 0">${memMode ? '이 브라우저는 저장이 막혀 있습니다 · ' : ''}의학적 조언이 아닙니다. 통증이 있으면 멈추세요.</p>`;
   }
   function bindSettings() {
     $('#dur').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; S.settings.duration = +b.dataset.d; save(); render(); });
@@ -577,12 +660,24 @@
     $('#imp').onclick = () => { $('#iobox').style.display = ''; $('#apply').style.display = ''; $('#io').value = ''; $('#io').placeholder = '내보낸 데이터를 붙여넣기'; };
     $('#copy').onclick = async () => { try { await navigator.clipboard.writeText($('#io').value); toast('복사됨'); } catch (e) { $('#io').select(); toast('직접 복사하세요'); } };
     $('#apply').onclick = () => { try { const s = JSON.parse($('#io').value); if (!s || !s.settings) throw 0; if (!confirm('현재 기록을 이 데이터로 덮어쓸까요?')) return; S = Object.assign(DEFAULT(), s); save(); render(); toast('가져왔습니다'); } catch (e) { toast('형식이 올바르지 않습니다'); } };
-    $('#reset').onclick = () => { if (confirm('정말 모든 기록을 삭제할까요? 되돌릴 수 없습니다.')) { S = DEFAULT(); save(); render(); } };
+    $('#reset').onclick = async () => {
+      if (!confirm('정말 모든 기록을 삭제할까요? 되돌릴 수 없습니다.')) return;
+      S = DEFAULT(); localSave(); render();
+      if (!DB) return;
+      try {
+        const q = await DB.collection('logs').get();
+        for (const d of q.docs) { await DB.doc('logs/' + d.id).delete(); delete pushed.months[d.id]; }
+        await DB.doc('app/state').delete(); pushed.state = null;
+        setCloud('ok');
+      } catch (e) { setCloud('err', (e && e.code) || 'error'); }
+    };
   }
 
   /* ---------- 시작 ---------- */
   render();
-  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  initCloud();
+  /* 서비스 워커는 정적 사이트 빌드(manifest가 있는 index.html)에서만 등록합니다. */
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http') && document.querySelector('link[rel="manifest"]')) {
     window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
   }
 })();
