@@ -230,13 +230,39 @@
     const yt = ex.yt ? `<a class="yt" target="_blank" rel="noopener" href="https://www.youtube.com/results?search_query=${encodeURIComponent(ex.yt)}">유튜브에서 영상 찾기 ↗</a>` : '';
     return `<div class="cuebox">${withFig ? `<div class="big">${figSvg(exId)}</div>` : ''}<ol>${ex.cue.map((c) => `<li>${esc(c)}</li>`).join('')}</ol><p class="why"><b>왜 하나:</b> ${esc(ex.why)}</p>${yt}</div>`;
   }
-  function exCard(it, extra) {
+  function exCard(it, done) {
     const ex = it.ex; const lvl = it.chain != null ? `<span class="tag lvl">Lv ${it.level + 1}/${CH[it.chain].levels.length}</span>` : '';
-    return `<div class="ex ${extra || ''}"><div class="thumb">${figSvg(ex.id)}</div><div><div class="name">${esc(ex.name)}</div><div class="target">${targetText(it)}</div><div style="margin-top:4px">${lvl}${goalTags(ex)}</div></div>
+    const check = done == null ? '' : `<button class="check ${done ? 'on' : ''}" data-check="${ex.id}" aria-pressed="${!!done}" aria-label="${esc(ex.name)} ${done ? '완료 취소' : '완료로 표시'}"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="4,12.5 9.5,18 20,6.5"/></svg></button>`;
+    return `<div class="ex ${done == null ? '' : 'pick'} ${done ? 'done' : ''}"><div class="thumb">${figSvg(ex.id)}</div><div><div class="name">${esc(ex.name)}</div><div class="target">${targetText(it)}</div><div style="margin-top:4px">${lvl}${goalTags(ex)}</div></div>${check}
       <details class="cue"><summary>자세 설명 펼치기</summary>${cueBox(ex.id, true)}</details></div>`;
   }
 
   /* ---------- 기록/통계 ---------- */
+  /* 오늘 목록의 개별 체크. 러너로 기록한 것도 '한 것'으로 봅니다. */
+  function isDone(log, id) {
+    if (!log) return false;
+    if (log.checked && Object.prototype.hasOwnProperty.call(log.checked, id)) return !!log.checked[id];
+    return !!((log.sets && log.sets[id]) || (log.holds && log.holds[id]));
+  }
+  function routineIds(r) { const seen = {}; const out = []; for (const it of r.items) if (!seen[it.ex.id]) { seen[it.ex.id] = 1; out.push(it.ex.id); } return out; }
+  function ensureLog(d, dayKey) {
+    if (!S.logs[d]) S.logs[d] = { day: dayKey, dur: S.settings.duration, t: Date.now(), mins: 0, done: false, sets: {}, holds: {}, checked: {}, setCount: 0, note: '' };
+    if (!S.logs[d].checked) S.logs[d].checked = {};
+    return S.logs[d];
+  }
+  function toggleCheck(id) {
+    const d = today(); const key = todayDayKey();
+    const log = ensureLog(d, key);
+    log.checked[id] = !isDone(log, id);
+    log.t = Date.now();
+    const ids = routineIds(buildRoutine(key, S.settings.duration));
+    const n = ids.filter((x) => isDone(log, x)).length;
+    log.done = n >= ids.length;
+    if (n === 0 && !log.setCount && !(log.note || '').trim()) delete S.logs[d];
+    save();
+    return n;
+  }
+
   function streak() {
     let d = today(); let n = 0;
     if (!S.logs[d]) d = addDays(d, -1);
@@ -266,6 +292,13 @@
     window.scrollTo(0, 0);
   }
   $('#tabs').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; tab = b.dataset.tab; render(); });
+  /* 체크 버튼은 한 번만 위임해 둡니다 (render마다 붙이면 핸들러가 쌓입니다). */
+  app.addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-check]'); if (!b || tab !== 'today') return;
+    const n = toggleCheck(b.dataset.check);
+    const y = window.scrollY; render(); window.scrollTo(0, y);
+    if (n >= routineIds(buildRoutine(todayDayKey(), S.settings.duration)).length) toast('오늘 루틴 완료 🎉');
+  });
 
   let toastT;
   function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 1800); }
@@ -301,11 +334,13 @@
     if (memMode) html += `<div class="card" style="border-color:var(--no)"><b>저장이 안 되는 브라우저입니다.</b><p class="small muted">시크릿 모드이거나 저장이 막혀 있습니다. 기록이 남지 않아요.</p></div>`;
     html += `<div class="card hero" style="${dayColor}"><div class="kicker">${key === 'mobility' ? '일요일 · 회복' : WD[parse(d).getDay()] + '요일'} · ${P.DURATION[S.settings.duration].label}</div><h2>${day.name}<span class="muted" style="font-weight:600;font-size:16px;margin-left:8px">${day.sub}</span></h2><p class="intro">${day.intro}</p>
       <div class="stats"><div><b>${st}</b><span>연속 일수</span></div><div><b>${tt.sessions}</b><span>총 운동 횟수</span></div><div><b>${r.minutes}</b><span>예상 분</span></div></div>`;
-    if (log) {
-      html += `<div style="background:var(--okbg);color:var(--ok);border-radius:10px;padding:10px 12px;margin-top:8px;font-weight:700">오늘 ${log.done ? '완료' : '일부 완료'} ✓ &nbsp;<span class="num">${log.mins}분 · ${log.setCount}세트</span></div>
-        <button class="btn secondary" id="again" style="margin-top:10px">한 번 더 하기</button>`;
+    const ids = routineIds(r); const doneN = ids.filter((x) => isDone(log, x)).length;
+    html += `<div class="todaybar"><div class="pbar"><i style="width:${Math.round((doneN / ids.length) * 100)}%"></i></div><span class="num" id="progcount">${doneN}/${ids.length}</span></div>`;
+    if (doneN >= ids.length) {
+      html += `<div class="okbanner">오늘 다 했습니다 ✓${log && log.mins ? ` &nbsp;<span class="num">${log.mins}분 · ${log.setCount}세트</span>` : ''}</div>
+        <button class="btn secondary" id="start" style="margin-top:10px">한 번 더 하기</button>`;
     } else {
-      html += `<button class="btn primary" id="start" style="margin-top:12px">운동 시작</button>`;
+      html += `<button class="btn primary" id="start" style="margin-top:12px">${doneN > 0 ? '남은 것부터 이어하기' : '운동 시작'}</button>`;
     }
     html += `<div class="chips" id="daychips">${Object.keys(P.DAYS).map((k) => `<button class="chip day-${k} ${k === key ? 'on' : ''}" data-day="${k}">${P.DAYS[k].name}</button>`).join('')}
       <button class="chip ${S.settings.duration === 30 ? 'on' : ''}" id="quick30">${S.settings.duration === 30 ? '30분 모드' : '오늘은 30분만'}</button></div></div>`;
@@ -313,15 +348,15 @@
     const groups = [];
     for (const it of r.items) { const g = groups[groups.length - 1]; if (g && g.phase === it.phase) g.items.push(it); else groups.push({ phase: it.phase, items: [it] }); }
     for (const g of groups) {
-      html += `<div class="section-h"><h2>${PHASE[g.phase]}</h2><span>${g.items.length}개</span></div>`;
-      html += g.items.map((it) => exCard(it)).join('');
+      const gd = g.items.filter((it) => isDone(log, it.ex.id)).length;
+      html += `<div class="section-h"><h2>${PHASE[g.phase]}</h2><span class="num">${gd}/${g.items.length}</span></div>`;
+      html += g.items.map((it) => exCard(it, isDone(log, it.ex.id))).join('');
     }
-    html += `<p class="muted small" style="margin:14px 4px">그림은 옆에서 본 모습(일부는 위에서 본 모습). 짙은 선이 앞쪽(카메라 쪽) 팔다리입니다.</p>`;
+    html += `<p class="muted small" style="margin:14px 4px">동그라미를 누르면 그 운동은 했다고 표시되고 위 진행에 반영됩니다. 그림은 옆에서 본 모습(일부는 위에서 본 모습)이고, 짙은 선이 앞쪽 팔다리입니다.</p>`;
     return html;
   }
   function bindToday() {
     const s = $('#start'); if (s) s.addEventListener('click', () => startRunner(buildRoutine(todayDayKey(), S.settings.duration)));
-    const a = $('#again'); if (a) a.addEventListener('click', () => startRunner(buildRoutine(todayDayKey(), S.settings.duration)));
     $('#daychips').addEventListener('click', (e) => {
       const b = e.target.closest('button'); if (!b) return;
       if (b.id === 'quick30') { S.settings.duration = S.settings.duration === 30 ? 45 : 30; save(); render(); toast(S.settings.duration === 30 ? '30분 모드' : '45분 모드'); return; }
@@ -354,7 +389,12 @@
 
   function startRunner(routine) {
     try { beep.ctx = new (window.AudioContext || window.webkitAudioContext)(); if (beep.ctx.state === 'suspended') beep.ctx.resume(); } catch (e) { /* */ }
-    R = { r: routine, i: 0, set: 0, side: 0, mode: 'work', res: routine.items.map(() => ({ reps: [], holds: [] })), startedAt: Date.now(), timer: null, endAt: 0, remain: 0, frame: 0, anim: null, reps: null };
+    /* 이미 체크해 둔 운동은 건너뛰고 첫 남은 것부터 시작합니다. */
+    const dl = S.logs[today()];
+    let start = 0;
+    while (start < routine.items.length && isDone(dl, routine.items[start].ex.id)) start++;
+    if (start >= routine.items.length) start = 0;
+    R = { r: routine, i: start, set: 0, side: 0, mode: 'work', res: routine.items.map(() => ({ reps: [], holds: [] })), startedAt: Date.now(), timer: null, endAt: 0, remain: 0, frame: 0, anim: null, reps: null };
     lockScreen();
     const el = document.createElement('div'); el.className = 'runner'; el.id = 'runner';
     el.style.setProperty('--day', `var(--${routine.day})`);
@@ -471,12 +511,14 @@
     clearInterval(R.timer); clearInterval(R.anim);
     const r = R.r; const mins = Math.max(1, Math.round((Date.now() - R.startedAt) / 60000));
     const d = today(); const prev = S.logs[d];
-    const log = { day: r.day, dur: r.duration, t: Date.now(), mins: (prev ? prev.mins : 0) + mins, done: !partial || (prev && prev.done), sets: prev ? prev.sets || {} : {}, holds: prev ? prev.holds || {} : {}, setCount: prev ? prev.setCount || 0 : 0, note: prev ? prev.note : '' };
+    const log = { day: r.day, dur: r.duration, t: Date.now(), mins: (prev ? prev.mins : 0) + mins, done: false, sets: prev ? prev.sets || {} : {}, holds: prev ? prev.holds || {} : {}, checked: prev ? prev.checked || {} : {}, setCount: prev ? prev.setCount || 0 : 0, note: prev ? prev.note : '' };
     const suggestions = [];
     r.items.forEach((it, k) => {
       const res = R.res[k]; const arr = it.target.kind === 'hold' ? res.holds : res.reps; if (!arr.length) return;
       (it.target.kind === 'hold' ? log.holds : log.sets)[it.ex.id] = ((it.target.kind === 'hold' ? log.holds : log.sets)[it.ex.id] || []).concat(arr);
       log.setCount += arr.length;
+      delete log.checked[it.ex.id]; // 방금 실제로 했으므로 수동 해제 표시를 지웁니다
+
       if (!it.chain || (it.phase !== 'main' && it.phase !== 'core')) return;
       const full = arr.length >= it.sets;
       let clear = false, fail = false;
@@ -496,6 +538,7 @@
         if (nx >= 0) suggestions.push({ chain: it.chain, to: nx, up: false, from: it.ex.name, toName: EX[c.levels[nx]].name });
       }
     });
+    log.done = routineIds(r).every((x) => isDone(log, x));
     S.logs[d] = log; save();
     closeRunner();
     showSummary(log, mins, suggestions, partial);

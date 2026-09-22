@@ -96,7 +96,19 @@ summary::-webkit-details-marker { display: none; }
 .ex .target { font-size: 14px; color: var(--muted); margin-top: 2px; }
 .ex .target b { color: var(--ink); font-family: var(--num); }
 .ex details { grid-column: 1 / -1; }
-.ex.done { opacity: .55; }
+.ex.pick { grid-template-columns: 96px 1fr auto; }
+.ex.done .thumb, .ex.done .name, .ex.done .target { opacity: .45; }
+.ex.done .name { text-decoration: line-through; text-decoration-thickness: 1.5px; }
+.check { width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--line); background: var(--paper); align-self: center; display: grid; place-items: center; padding: 0; transition: transform .08s; }
+.check:active { transform: scale(.9); }
+.check svg { width: 22px; height: 22px; fill: none; stroke: var(--line); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.check.on { background: var(--ok); border-color: var(--ok); }
+.check.on svg { stroke: #fff; }
+.todaybar { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+.todaybar .pbar { flex: 1; height: 8px; background: var(--soft); border-radius: 4px; overflow: hidden; }
+.todaybar .pbar i { display: block; height: 100%; background: var(--day, var(--accent)); transition: width .3s; }
+.todaybar .num { font-size: 14px; font-weight: 800; }
+.okbanner { background: var(--okbg); color: var(--ok); border-radius: 10px; padding: 10px 12px; margin-top: 10px; font-weight: 700; }
 details.cue > summary { color: var(--accent); font-size: 14px; font-weight: 600; padding: 6px 0 2px; }
 details.cue > summary::before { content: "▸ "; }
 details.cue[open] > summary::before { content: "▾ "; }
