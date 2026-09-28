@@ -403,6 +403,28 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
   transition: opacity .15s ease;
 }
 .sign[hidden] { display: none; }
+
+/* The start/finish gantry board. It names the road rather than pointing
+   anywhere, so it takes neither the guide signs' green nor a number: a plain
+   board in the display face, the way a circuit carries its name across the
+   start straight. The chequer on the tarmac below is the line itself. */
+#start-plate {
+  position: absolute;
+  top: 2px;
+  transform: translateX(-50%);
+  padding: .26rem .6rem;
+  border: 1px solid var(--rule-dark);
+  border-radius: 3px;
+  background: var(--bar);
+  color: var(--ink);
+  font-family: var(--display);
+  font-size: 12px; font-weight: 700; line-height: 1.2;
+  letter-spacing: .085em;
+  white-space: nowrap;
+  opacity: .9;
+  pointer-events: none;
+}
+#start-plate[hidden] { display: none; }
 .sign b {
   flex: none;
   font-size: 10px; font-weight: 700;

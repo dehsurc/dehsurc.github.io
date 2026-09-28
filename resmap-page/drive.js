@@ -128,6 +128,7 @@
   var raf = 0, last = 0, idleFor = 0;
   var ownScroll = -1, wasBehaviour = '', driving = false;
   var stops = [];
+  var startPlate = null, plateW = 74, plateH = 22;
   var W = 0, H = 0, dpr = 1;
   var shownNext = '';
   var stopCol = '#b53228';
@@ -217,6 +218,17 @@
 
     signBox.textContent = '';
 
+    /* The start/finish gantry. A circuit carries its name on a board over the
+       line, not painted on the tarmac, which is where the last attempt at this
+       went wrong: lettering on the carriageway looked laboured and the map
+       layer drew straight over it. This is a plate like the guide signs, so it
+       sits above the road and nothing can cover it. */
+    startPlate = document.createElement('div');
+    startPlate.id = 'start-plate';
+    startPlate.setAttribute('aria-hidden', 'true');
+    startPlate.textContent = 'ReSMap';
+    signBox.appendChild(startPlate);
+
     stops.forEach(function (stop) {
       var b = document.createElement('button');
       b.type = 'button';
@@ -241,6 +253,8 @@
       stop.w = stop.el.offsetWidth || 90;
       stop.h = stop.el.offsetHeight || 22;
     });
+    plateW = startPlate.offsetWidth || 74;
+    plateH = startPlate.offsetHeight || 22;
   }
 
   /* A sign is navigation, not a drive control: coast to a stop and let the
@@ -529,6 +543,24 @@
        looked laboured, and this goes on after the map layer, which was the
        first thing to paint over the old marker. */
     var startX = sx(0);
+    if (startPlate) {
+      var showPlate = startX > -plateW && startX < W + plateW;
+      startPlate.hidden = !showPlate;
+      if (showPlate) {
+        startPlate.style.left = Math.round(startX) + 'px';
+        /* Legs down to the verge, the same way the guide signs stand. */
+        ctx.strokeStyle = 'rgba(' + ink + ', 0.34)';
+        ctx.lineCap = 'butt';
+        var pLeg = Math.max(8, Math.min(30, plateW * 0.3));
+        [-pLeg, pLeg].forEach(function (dx) {
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.moveTo(startX + dx, SIGN_TOP + plateH);
+          ctx.lineTo(startX + dx, rTop + 3);
+          ctx.stroke();
+        });
+      }
+    }
     if (startX > -40 && startX < W + 40) {
       var sTop = rTop + 3, sBot = rBot - 3;
       var cell = (sBot - sTop) / 4;
