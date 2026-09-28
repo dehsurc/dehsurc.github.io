@@ -709,19 +709,39 @@ section + section { border-top: 1px solid var(--rule); }
 
 .hero { padding: 3rem 0 1.6rem; }
 
-.venue {
-  font-size: 12px; font-weight: 500; line-height: 1;
-  letter-spacing: .12em; text-transform: uppercase;
-  color: var(--ink-faint);
-  margin: 0 0 1.15rem;
+/* The one piece of standing on the page, said once and said properly. It is
+   also the only saturated thing above the fold, which gives the eye somewhere
+   to land before it starts reading. */
+.venue { margin: 0 0 1.05rem; line-height: 1; }
+.badge {
+  display: inline-block;
+  padding: .3rem .62rem .28rem;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 11.5px; font-weight: 600; line-height: 1;
+  letter-spacing: .1em; text-transform: uppercase;
 }
+:root[data-theme="dark"] .badge { color: #08111b; }
 
-h1 {
+h1 { margin: 0 0 1.4rem; }
+.h1-name {
+  display: block;
   font-family: var(--display);
-  font-size: clamp(2.1rem, 3.6vw, 2.85rem); font-weight: 700;
-  line-height: 1.1;
-  letter-spacing: -.02em;
-  margin: 0 0 1.5rem;
+  font-size: clamp(2.8rem, 6.4vw, 4.1rem); font-weight: 700;
+  line-height: 1;
+  letter-spacing: -.035em;
+  color: var(--ink);
+}
+.h1-sub {
+  display: block;
+  margin-top: .5rem;
+  max-width: 34ch;
+  font-family: var(--display);
+  font-size: clamp(1.15rem, 1.8vw, 1.4rem); font-weight: 600;
+  line-height: 1.28;
+  letter-spacing: -.014em;
+  color: var(--ink-soft);
   text-wrap: balance;
 }
 
@@ -765,8 +785,8 @@ h2 {
 h2 .num {
   display: inline-block;
   min-width: 1.7rem;
-  color: var(--ink-faint);
-  font-weight: 400;
+  color: var(--accent);
+  font-weight: 600;
   font-variant-numeric: lining-nums;
 }
 
@@ -877,6 +897,7 @@ tbody tr:not(.group):hover th,
 tbody tr:not(.group):hover td { background-color: var(--row-hover); }
 
 tr.ours { background: var(--ours-bg); }
+tbody tr.ours th:first-child { box-shadow: inset 3px 0 0 var(--accent); }
 tr.ours th { font-weight: 600; }
 
 span.dn {
