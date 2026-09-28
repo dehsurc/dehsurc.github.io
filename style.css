@@ -102,6 +102,13 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* The water surface the page sits on; main.js draws it. */
+canvas.deco {
+  position: fixed; inset: 0; z-index: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+}
+
 /* A soft light under the content, tracking the pointer. Coarse pointers never
    see it, so it costs them nothing; main.js only writes the two positions. */
 .glow {
@@ -287,23 +294,7 @@ h1, h2, h3 { font-weight: 700; line-height: 1.25; margin: 0; }
   padding-top: .1rem;
 }
 .legend dd { margin: 0; color: var(--soft); }
-.legend dd /* A soft light under the content, tracking the pointer. Coarse pointers never
-   see it, so it costs them nothing; main.js only writes the two positions. */
-.glow {
-  position: fixed; inset: 0; z-index: 0;
-  pointer-events: none; opacity: 0;
-  transition: opacity .5s ease;
-}
-@media (hover: hover) and (pointer: fine) {
-  .glow {
-    background: radial-gradient(34rem circle at var(--mx, 50%) var(--my, 0%),
-                                var(--glow), transparent 68%);
-  }
-  body.lit .glow { opacity: 1; }
-}
-.topbar, .hero, main, footer { position: relative; z-index: 1; }
-
-a { color: var(--ink); }
+.legend dd a { color: var(--ink); }
 
 .portrait {
   margin: .4rem 0 0;

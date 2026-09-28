@@ -5,9 +5,6 @@
 
   var root = document.documentElement;
 
-  // ?art=bev|halftone|kinetic — temporary, for picking an art direction.
-  var art = new URLSearchParams(location.search).get('art');
-  if (art) root.dataset.art = art;
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
   /* ------------------------------------------------------------------ *
@@ -236,5 +233,95 @@
     window.addEventListener('pointerleave', function () {
       document.body.classList.remove('lit');
     });
+  }
+  function fitCanvas(cv) {
+    var ctx = cv.getContext('2d');
+    var state = { w: 0, h: 0 };
+    function resize() {
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      state.w = window.innerWidth; state.h = window.innerHeight;
+      cv.width = state.w * dpr; cv.height = state.h * dpr;
+      cv.style.width = state.w + 'px'; cv.style.height = state.h + 'px';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    window.addEventListener('resize', resize, { passive: true });
+    resize();
+    return { ctx: ctx, s: state };
+  }
+
+  function pointer() {
+    var p = { x: -9999, y: -9999 };
+    window.addEventListener('pointermove', function (e) {
+      p.x = e.clientX; p.y = e.clientY;
+    }, { passive: true });
+    return p;
+  }
+
+  /* ------------------------------------------------------------------ *
+   * 5. Water---------------------------------------------------
+   * Long strokes held close to the horizontal, so the page carries the
+   * surface of moving water: one slow swell crossing it, short chop
+   * riding on top, the pointer dragging the surface with it, and a ring
+   * that spreads from a click the way a dropped thing would. * ------------------------------------------------------------------ */
+
+  var canvas = document.querySelector('canvas.deco');
+
+  if (canvas && canvas.getContext) {
+    var Wt = fitCanvas(canvas), wp = pointer(), wt = 0, ripples = [];
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var ink = function () {
+      return root.dataset.theme === 'dark' ? '255, 255, 255' : '17, 17, 18';
+    };
+
+    window.addEventListener('pointerdown', function (e) {
+      ripples.push({ x: e.clientX, y: e.clientY, t: 0 });
+      if (ripples.length > 4) ripples.shift();
+    });
+
+    (function waterFrame() {
+      var ctx = Wt.ctx, W = Wt.s.w, H = Wt.s.h;
+      if (!reduce) wt += 0.012;
+      ctx.clearRect(0, 0, W, H);
+      ctx.lineWidth = 1;
+      ctx.lineCap = 'round';
+
+      var c = ink();
+      for (var y0 = -30; y0 < H + 30; y0 += 17) {
+        var depth = y0 / H;                                  // nearer = stronger
+        ctx.strokeStyle = 'rgba(' + c + ',' + (0.05 + depth * 0.09) + ')';
+        ctx.beginPath();
+
+        for (var x = -40; x <= W + 40; x += 9) {
+          var swell = Math.sin(x / 330 + wt + y0 / 260) * (7 + depth * 16);
+          var chop  = Math.sin(x / 74 - wt * 2.4 + y0 / 40) * (1.6 + depth * 3.4);
+          var y = y0 + swell + chop;
+
+          // the pointer drags the surface with it
+          if (wp.x > -9000) {
+            var dx = x - wp.x, dy = y0 - wp.y, d = Math.hypot(dx, dy);
+            if (d < 260) y -= Math.cos(d / 40 - wt * 3) * (1 - d / 260) * 13;
+          }
+          // and anything dropped on it spreads
+          for (var r = 0; r < ripples.length; r++) {
+            var rp2 = ripples[r];
+            var rd = Math.hypot(x - rp2.x, y0 - rp2.y);
+            var front = rp2.t * 5.2;
+            var band = Math.abs(rd - front);
+            if (band < 70) {
+              y += Math.cos(band / 22) * (1 - band / 70) * Math.max(0, 1 - rp2.t / 110) * 16;
+            }
+          }
+
+          if (x === -40) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+
+      for (var r2 = ripples.length - 1; r2 >= 0; r2--) {
+        ripples[r2].t += 1;
+        if (ripples[r2].t > 120) ripples.splice(r2, 1);
+      }
+      requestAnimationFrame(waterFrame);
+    })();
   }
 })();
