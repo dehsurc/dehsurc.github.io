@@ -67,7 +67,8 @@
   --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
   --col:  52rem;   /* prose measure */
-  --wide: 90rem;   /* figures and tables */
+  --fig:  64rem;   /* figures: wider than the prose, not by a mile */
+  --wide: 90rem;   /* tables, which are allowed to break out */
   --gutter: 3rem;
 
   --road-h: 100px; /* the road band across the top; drive.js reads nothing
@@ -574,6 +575,7 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
 
 .col { width: min(100% - var(--gutter), var(--col)); margin-inline: auto; }
 .col.wide { width: min(100% - var(--gutter), var(--wide)); }
+.col.fig { width: min(100% - var(--gutter), var(--fig)); }
 
 section { padding: 3rem 0; }
 section + section { border-top: 1px solid var(--rule); }
@@ -778,10 +780,11 @@ b, strong { font-weight: 600; }
   border-radius: 3px;
   background: var(--figure-bg);
 }
-figcaption {
+figcaption, .tcap {
   font-size: 14px; line-height: 1.6;
   color: var(--ink-soft);
   margin-top: .75rem;
+  margin-left: max(0px, calc((100% - var(--col)) / 2));
   max-width: var(--col);
 }
 

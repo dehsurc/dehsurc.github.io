@@ -32,7 +32,7 @@ theme. The two directions are not symmetric: going dark the new palette grows
 out of the button, going light the old one collapses back into it. Figures keep a light backing in dark mode so white-background diagrams
 stay readable.
 
-## The camera-failure walkthrough
+## The camera-failure walkthrough, which opens the page
 
 The walkthrough leads the page, above the abstract rather than in paper order: it is a pinned stage the scroll drives through four measured conditions,
 clean, front camera dropped, three front dropped, all six dropped. The rig is a
