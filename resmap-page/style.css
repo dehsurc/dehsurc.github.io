@@ -347,6 +347,15 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
 }
 .nextup:empty { display: none; }
 
+/* At the very top of the page the road is out of frame, so the first screen is
+   the paper and nothing else. It comes down as soon as you move, which is when
+   a road is any use to you. The band stays reserved either way, so nothing on
+   the page shifts when it arrives. */
+#road { transition: transform .3s cubic-bezier(.2, .7, .3, 1); }
+.at-top #road { transform: translateY(-101%); }
+.at-top #cockpit { transform: translateY(130%); opacity: 0; }
+.at-top #cockpit.shut { transform: translateY(130%); }
+
 #road {
   position: fixed;
   top: 0; left: 0; right: 0;
@@ -416,7 +425,7 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
   border-radius: 5px;
   background: var(--bar);
   box-shadow: 0 6px 22px rgba(0, 0, 0, .10);
-  transition: transform .2s cubic-bezier(.2, .7, .3, 1);
+  transition: transform .3s cubic-bezier(.2, .7, .3, 1), opacity .25s ease;
 }
 #cockpit[hidden] { display: none; }
 #cockpit.shut { transform: translateY(calc(100% - 1.9rem)); }

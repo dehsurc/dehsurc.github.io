@@ -276,6 +276,21 @@
 
   function syncFromScroll() {
     pos = window.scrollY / PX_PER_M;
+    atTop();
+  }
+
+  /* The road and the cockpit stay out of frame while the page is at the top,
+     so the first screen is the paper. Hysteresis, or they flutter on and off
+     for anyone resting exactly on the threshold. */
+  var hidden = true;
+  function atTop() {
+    var y = window.scrollY;
+    if (hidden ? y > 90 : y > 30) {
+      if (hidden) { hidden = false; root.classList.remove('at-top'); }
+    } else if (!hidden) {
+      hidden = true;
+      root.classList.add('at-top');
+    }
   }
 
   /* ---------------------------------------------------------------- *
@@ -1176,6 +1191,7 @@
      after you had scrolled away from it, with the car still off the edge. The
      loop idles itself out half a second after the page stops moving. */
   window.addEventListener('scroll', function () {
+    atTop();
     if (!raf) startLoop();
   }, { passive: true });
 

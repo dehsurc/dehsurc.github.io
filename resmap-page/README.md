@@ -94,8 +94,12 @@ it stays in the markup, and comes back below 900 px, because that is where the
 signs take their short names from. The next junction
 and its distance are called out in the cockpit, next to the trip meter.
 
-The road reserves its own band at the top the way a scrollbar reserves a
-gutter, so it never sits over the content; the top bar sticks below it and
+At the very top of the page the road and the cockpit are out of frame, so the
+first screen is the paper and nothing else; they arrive as soon as the page
+moves, which is when a road is any use to you. The band stays reserved either
+way, so nothing shifts when it comes down. The road reserves its own band at
+the top the way a scrollbar reserves a gutter, so it never sits over the
+content; the top bar sticks below it and
 anchors clear both. Below 900 px, and under `prefers-reduced-motion`, the road
 and the cockpit stand down and the link list comes back.
 
