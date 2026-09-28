@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><title>Water 간격</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap">
+<style>
+  body{margin:0;background:#e9e9ea;font-family:Inter,sans-serif;color:#111}
+  h1{font-size:14px;font-weight:600;margin:0;padding:18px 22px 4px}
+  p.note{margin:0;padding:0 22px 14px;font-size:13px;color:#555;line-height:1.6}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:0 14px 20px}
+  figure{margin:0;background:#fff;border:1px solid #d5d5d7;border-radius:8px;overflow:hidden}
+  figcaption{padding:10px 13px;font-size:13px;border-bottom:1px solid #eee}
+  figcaption b{display:block;font-weight:600;margin-bottom:3px}
+  figcaption span{color:#666;font-size:12px;line-height:1.5;display:block}
+  figcaption a{color:#111;font-size:12px;display:inline-block;margin-top:6px}
+  iframe{display:block;width:250%;height:1460px;border:0;transform:scale(.4);transform-origin:0 0;margin-bottom:-876px}
+</style></head><body>
+<h1>Water · 선 간격과 너울 크기</h1>
+<p class="note">간격(px)은 선 사이 거리, 너울은 위아래 진폭. 클릭하면 파문이 번지는 건 전부 동일합니다.</p>
+<div class="grid">
+  <figure><figcaption><b>지금 (17px)</b><span>비교용 기준.</span><a href="/?w=0" target="_blank">크게 ↗</a></figcaption><iframe src="/?w=0" loading="lazy"></iframe></figure>
+  <figure><figcaption><b>A · 26px</b><span>1.5배 넓게. 너울은 조금 크게.</span><a href="/?w=a" target="_blank">크게 ↗</a></figcaption><iframe src="/?w=a" loading="lazy"></iframe></figure>
+  <figure><figcaption><b>B · 36px</b><span>2배 넓게. 파장도 길어져 완만해집니다.</span><a href="/?w=b" target="_blank">크게 ↗</a></figcaption><iframe src="/?w=b" loading="lazy"></iframe></figure>
+  <figure><figcaption><b>C · 52px</b><span>선 몇 개만. 굵기·농도를 올려 큰 너울로 읽힙니다.</span><a href="/?w=c" target="_blank">크게 ↗</a></figcaption><iframe src="/?w=c" loading="lazy"></iframe></figure>
+  <figure><figcaption><b>D · 30px, 잔물결 제거</b><span>긴 너울만 남기고 잔물결을 거의 없앴습니다. 가장 잔잔합니다.</span><a href="/?w=d" target="_blank">크게 ↗</a></figcaption><iframe src="/?w=d" loading="lazy"></iframe></figure>
+  <figure><figcaption><b>E · 22px, 크게 출렁</b><span>간격은 좁지만 진폭을 키워 파도에 가깝게.</span><a href="/?w=e" target="_blank">크게 ↗</a></figcaption><iframe src="/?w=e" loading="lazy"></iframe></figure>
+</div>
+</body></html>

@@ -258,15 +258,29 @@
   }
 
   /* ------------------------------------------------------------------ *
-   * 5. Water---------------------------------------------------
+   * 5. Water
+   *
    * Long strokes held close to the horizontal, so the page carries the
    * surface of moving water: one slow swell crossing it, short chop
    * riding on top, the pointer dragging the surface with it, and a ring
-   * that spreads from a click the way a dropped thing would. * ------------------------------------------------------------------ */
+   * that spreads from a click the way a dropped thing would.
+   *
+   * ?w= picks a spacing/swell preset while we settle on one.
+   * ------------------------------------------------------------------ */
+
+  var WATER = {
+    '0': { gap: 17, amp: 1.00, wave: 1.00, chop: 1.00, lw: 1.0, a: 1.00 },
+    'a': { gap: 26, amp: 1.15, wave: 1.00, chop: 1.00, lw: 1.0, a: 1.05 },
+    'b': { gap: 36, amp: 1.30, wave: 1.15, chop: 0.90, lw: 1.0, a: 1.15 },
+    'c': { gap: 52, amp: 1.60, wave: 1.30, chop: 0.75, lw: 1.2, a: 1.30 },
+    'd': { gap: 30, amp: 1.35, wave: 1.90, chop: 0.45, lw: 1.0, a: 1.10 },
+    'e': { gap: 22, amp: 1.70, wave: 0.80, chop: 1.40, lw: 1.0, a: 1.00 }
+  };
 
   var canvas = document.querySelector('canvas.deco');
 
   if (canvas && canvas.getContext) {
+    var wcfg = WATER[new URLSearchParams(location.search).get('w')] || WATER['0'];
     var Wt = fitCanvas(canvas), wp = pointer(), wt = 0, ripples = [];
     var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var ink = function () {
@@ -282,18 +296,18 @@
       var ctx = Wt.ctx, W = Wt.s.w, H = Wt.s.h;
       if (!reduce) wt += 0.012;
       ctx.clearRect(0, 0, W, H);
-      ctx.lineWidth = 1;
+      ctx.lineWidth = wcfg.lw;
       ctx.lineCap = 'round';
 
       var c = ink();
-      for (var y0 = -30; y0 < H + 30; y0 += 17) {
+      for (var y0 = -30; y0 < H + 30; y0 += wcfg.gap) {
         var depth = y0 / H;                                  // nearer = stronger
-        ctx.strokeStyle = 'rgba(' + c + ',' + (0.05 + depth * 0.09) + ')';
+        ctx.strokeStyle = 'rgba(' + c + ',' + (0.05 + depth * 0.09) * wcfg.a + ')';
         ctx.beginPath();
 
         for (var x = -40; x <= W + 40; x += 9) {
-          var swell = Math.sin(x / 330 + wt + y0 / 260) * (7 + depth * 16);
-          var chop  = Math.sin(x / 74 - wt * 2.4 + y0 / 40) * (1.6 + depth * 3.4);
+          var swell = Math.sin(x / (330 * wcfg.wave) + wt + y0 / 260) * (7 + depth * 16) * wcfg.amp;
+          var chop  = Math.sin(x / 74 - wt * 2.4 + y0 / 40) * (1.6 + depth * 3.4) * wcfg.chop;
           var y = y0 + swell + chop;
 
           // the pointer drags the surface with it
