@@ -1,7 +1,14 @@
 /* =========================================================================
-   /cv/ — the long version. Shares tokens and type with the landing page;
-   everything here is about fitting a dense document on screen and on paper.
+   /cv/ — the long version, set as a document rather than as a page of the
+   site: one serif, a centred masthead, ruled section headings, dates on
+   the right of their entry, one narrow measure. It shares the site's
+   tokens and its theme switch, and nothing else.
    ========================================================================= */
+
+:root {
+  --sans: "Source Serif 4", "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --display: var(--sans);
+}
 
 body.cv { background-image: none; }          /* no wash behind a document */
 
@@ -9,115 +16,140 @@ body.cv { background-image: none; }          /* no wash behind a document */
 
 .print-btn {
   margin-left: auto;
-  font: inherit; font-size: .86rem; font-weight: 500;
+  font: inherit; font-size: .9rem;
   color: var(--soft); background: none;
   border: 1px solid var(--rule); border-radius: 999px;
-  padding: .3rem .85rem; cursor: pointer;
+  padding: .28rem .9rem; cursor: pointer;
   transition: color .2s ease, border-color .2s ease;
 }
 .print-btn:hover { color: var(--ink); border-color: var(--ink); }
 
-/* ---------- head -------------------------------------------------------- */
+/* ---------- masthead ---------------------------------------------------- */
 
 .cv-head, .cv-row, .foot {
-  max-width: 60rem;
+  max-width: 46rem;
   margin: 0 auto;
   padding-left: var(--gutter); padding-right: var(--gutter);
 }
 
 .cv-head {
-  padding-top: clamp(2.6rem, 7vw, 4rem);
-  padding-bottom: clamp(1.8rem, 4vw, 2.6rem);
+  text-align: center;
+  padding-top: clamp(2.2rem, 5vw, 3.4rem);
+  padding-bottom: 1.5rem;
 }
 .cv-head h1 {
-  font-family: var(--display); font-weight: 700;
-  font-size: clamp(2.2rem, 6vw, 3.2rem);
-  letter-spacing: -.032em; line-height: 1.02;
+  font-weight: 600; font-size: clamp(2rem, 4.6vw, 2.6rem);
+  letter-spacing: -.01em; line-height: 1.1;
+}
+.hangul {
+  display: inline; margin-left: .5em;
+  font-family: var(--kr); font-size: .42em; font-weight: 400;
+  letter-spacing: .06em; color: var(--faint);
+  vertical-align: .16em;
 }
 .cv-sub {
-  margin: 1rem 0 0; max-width: 40em;
-  font-size: 1rem; line-height: 1.55; color: var(--soft);
+  margin: .55rem 0 0;
+  font-size: 1.02rem; color: var(--soft);
 }
 .cv-sub a { color: var(--ink); }
+
+/* the contact line reads as one run, separated rather than stacked */
 .cv-meta {
-  margin: .9rem 0 0;
-  display: flex; flex-wrap: wrap; gap: .3rem 1.4rem;
-  font-size: .9rem; color: var(--faint);
+  margin: .5rem 0 0;
+  display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline;
+  gap: .2rem .55rem;
+  font-size: .95rem; color: var(--faint);
 }
 .cv-meta a { color: var(--soft); }
+.cv-meta > * + *::before {
+  content: "·";
+  margin-right: .55rem;
+  color: var(--rule);
+}
 
 /* ---------- sections ---------------------------------------------------- */
 
 .cv-row {
-  display: grid;
-  grid-template-columns: 6.5rem minmax(0, 1fr);
-  grid-template-rows: auto 1fr;          /* slack goes below the note, not above */
-  gap: .4rem clamp(1.5rem, 4vw, 2.6rem);
-  padding-top: clamp(1.8rem, 4vw, 2.4rem);
-  padding-bottom: clamp(1.8rem, 4vw, 2.4rem);
-  border-top: 1px solid var(--rule);
+  padding-top: 1.4rem;
+  padding-bottom: .3rem;
 }
 .cv-row h2 {
-  grid-column: 1;
-  font-size: .95rem; font-weight: 600; letter-spacing: -.01em;
-  color: var(--soft);
+  font-size: 1.05rem; font-weight: 700; color: var(--ink);
+  padding-bottom: .3rem; margin-bottom: .75rem;
+  border-bottom: 1px solid var(--ink);
 }
 .cv-note {
-  grid-column: 1; align-self: start;
-  margin: .5rem 0 0;
-  font-size: .74rem; line-height: 1.6; color: var(--faint);
+  margin: -.4rem 0 .8rem;
+  font-size: .85rem; line-height: 1.5; color: var(--faint);
 }
-.cv-body { grid-column: 2; grid-row: 1 / span 2; }
 
 /* ---------- dated entries ----------------------------------------------- */
 
 .entries { list-style: none; margin: 0; padding: 0; }
 .entries > li {
   display: grid;
-  grid-template-columns: 8.4rem minmax(0, 1fr);
-  gap: .2rem .9rem;
-  padding: .85rem 0;
-  border-bottom: 1px dotted var(--rule);
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: .1rem .9rem;
+  padding: .5rem 0;
 }
-.entries > li:first-child { padding-top: 0; }
-.entries > li:last-child { border-bottom: 0; padding-bottom: 0; }
-.when {
-  font-size: .8rem; color: var(--faint);
-  padding-top: .2rem;
+.entries > li > .entry { grid-column: 1; grid-row: 1; }
+.entries > li > .when {
+  grid-column: 2; grid-row: 1;
+  text-align: right; white-space: nowrap;
+  font-size: .9rem; color: var(--soft);
   font-variant-numeric: tabular-nums lining-nums;
 }
-.entry h3 { font-size: 1rem; font-weight: 600; letter-spacing: -.012em; }
-.entry .org { margin: .15rem 0 0; font-size: .86rem; color: var(--faint); }
-.entry p { margin: .3rem 0 0; font-size: .92rem; color: var(--soft); max-width: 46em; }
+.entry h3 { font-size: 1.02rem; font-weight: 700; }
+.entry .org { margin: .1rem 0 0; font-size: .92rem; color: var(--faint); }
+.entry p { margin: .2rem 0 0; font-size: .97rem; color: var(--soft); }
 .role {
-  font-size: .68rem; font-weight: 500;
+  font-size: .76rem; font-weight: 400;
   color: var(--faint); border: 1px solid var(--rule); border-radius: 2px;
-  padding: .08rem .38rem; margin-left: .4rem; vertical-align: 2px;
+  padding: .04rem .38rem; margin-left: .4rem; vertical-align: 2px;
   white-space: nowrap;
 }
 
+/* ---------- publications ------------------------------------------------ */
+/* the reference number hangs in the margin of its entry */
+
+.pubs { list-style: none; margin: 0; padding: 0; }
+.pubs > li {
+  display: grid;
+  grid-template-columns: 2.2rem minmax(0, 1fr);
+  gap: .1rem .4rem;
+  padding: .45rem 0;
+}
+.pid { font-size: .92rem; color: var(--faint); padding-top: .12rem; }
+.pub h3 { font-size: 1.02rem; font-weight: 700; }
+.pub .authors { margin: .1rem 0 0; font-size: .95rem; color: var(--soft); }
+.pub .authors b { font-weight: 700; color: var(--ink); }
+.pub .authors sup { font-size: .72em; }
+.pub .meta { margin: .12rem 0 0; }
+.venue { font-size: .93rem; color: var(--soft); }
+.pub .links { margin: .2rem 0 0; }
+.pub .links a { font-size: .93rem; color: var(--ink); }
+
 /* ---------- skills ------------------------------------------------------ */
 
-.kit { margin: 0; font-size: .92rem; }
+.kit { margin: 0; font-size: .97rem; }
 .kit > div {
-  display: grid; grid-template-columns: 8.4rem minmax(0, 1fr); gap: .9rem;
-  padding: .45rem 0; border-bottom: 1px dotted var(--rule);
+  display: grid; grid-template-columns: 8.5rem minmax(0, 1fr); gap: .9rem;
+  padding: .22rem 0;
 }
-.kit > div:first-child { padding-top: 0; }
-.kit > div:last-child { border-bottom: 0; padding-bottom: 0; }
-.kit dt { font-size: .8rem; color: var(--faint); padding-top: .12rem; }
+.kit dt { font-weight: 700; color: var(--ink); }
 .kit dd { margin: 0; color: var(--soft); }
 
 /* ---------- narrow ------------------------------------------------------ */
 
-@media (max-width: 46rem) {
-  .cv-row { grid-template-columns: minmax(0, 1fr); gap: .8rem; }
-  .cv-row h2, .cv-note, .cv-body { grid-column: 1; grid-row: auto; }
-  .cv-note { margin-top: 0; }
-  .entries > li, .kit > div, .pubs > li {
-    grid-template-columns: minmax(0, 1fr); gap: .2rem;
+@media (max-width: 40rem) {
+  .entries > li {
+    grid-template-columns: minmax(0, 1fr);
   }
-  .when, .pid, .kit dt { padding-top: 0; }
+  .entries > li > .when {
+    grid-column: 1; grid-row: 2;
+    text-align: left; margin-top: .15rem;
+  }
+  .kit > div { grid-template-columns: minmax(0, 1fr); gap: .1rem; }
 }
 
 /* ---------- paper -------------------------------------------------------
@@ -125,156 +157,39 @@ body.cv { background-image: none; }          /* no wash behind a document */
    text and live links. Everything that belongs to the screen is dropped. */
 
 @media print {
-  @page { margin: 16mm 14mm; }
+  @page { margin: 15mm 16mm; }
 
   /* Paper is always light. :root[data-theme="dark"] outranks a bare :root,
-     so the override has to carry the attribute too — otherwise a reader in
-     dark mode prints pale grey onto white. */
+     so the override has to carry the attribute too, or a reader in dark
+     mode prints pale grey onto white. */
   :root,
   :root[data-theme="light"],
   :root[data-theme="dark"] {
-    --ink: #000; --soft: #222; --faint: #555;
-    --rule: #bbb; --hair: #ddd; --paper: #fff; --sheet: #fff;
+    --ink: #000; --soft: #1c1c1c; --faint: #4a4a4a;
+    --rule: #999; --hair: #ccc; --paper: #fff; --sheet: #fff;
   }
   html, body.cv {
     background: #fff !important;
     color: #000;
-    font-size: 10.2pt;
+    font-size: 10.4pt;
   }
   .topbar, .glow, canvas.deco, footer { display: none !important; }
 
   .cv-head, .cv-row, main { max-width: none; padding-left: 0; padding-right: 0; }
-  .cv-head { padding-top: 0; padding-bottom: 10pt; }
-  .cv-head h1 { font-size: 22pt; }
-  .cv-sub { font-size: 10pt; margin-top: 6pt; }
-  .cv-meta { font-size: 9pt; margin-top: 5pt; gap: 2pt 14pt; }
-  .hangul { display: inline; margin-left: .6em; font-size: 10pt; }
+  .cv-head { padding-top: 0; padding-bottom: 9pt; }
+  .cv-head h1 { font-size: 21pt; }
+  .cv-sub { font-size: 10.4pt; margin-top: 4pt; }
+  .cv-meta { font-size: 9.6pt; margin-top: 3pt; }
 
-  /* Paper is narrower than 46rem — and a media query measures rem against
-     16px whatever the root is set to — so the phone rules match here and
-     have to be undone by hand. */
-  .cv-row {
-    padding-top: 10pt; padding-bottom: 10pt;
-    gap: 2pt 14pt;
-    grid-template-columns: 24mm minmax(0, 1fr);
-    grid-template-rows: auto 1fr;
-    break-inside: auto;
-  }
-  .cv-row h2 { grid-column: 1; grid-row: 1; }
-  .cv-note   { grid-column: 1; grid-row: 2; margin-top: 4pt; }
-  .cv-body   { grid-column: 2; grid-row: 1 / span 2; }
+  .cv-row { padding-top: 11pt; padding-bottom: 0; break-inside: auto; }
+  .cv-row h2 { font-size: 11pt; margin-bottom: 5pt; border-bottom-color: #000; }
+  .cv-note { font-size: 8.6pt; margin: -2pt 0 5pt; }
 
-  .entries > li { grid-template-columns: 30mm minmax(0, 1fr); gap: 1pt 7pt; }
-  .when { white-space: normal; }          /* a long span may take two lines */
-  .pubs > li    { grid-template-columns: 8mm minmax(0, 1fr); gap: 1pt 6pt; }
-  .kit > div    { grid-template-columns: 30mm minmax(0, 1fr); gap: 7pt; }
-  .when, .pid, .kit dt { padding-top: 1.5pt; }
-  .cv-row h2 { font-size: 10.5pt; color: #000; }
-  .cv-note { font-size: 7.6pt; line-height: 1.45; }
-
-  .entries > li, .pubs > li, .kit > div { break-inside: avoid; padding: 5pt 0; }
-  .entry h3, .pub h3 { font-size: 10.5pt; }
-  .entry p, .pub .authors { font-size: 9.4pt; }
-  .when, .pid, .kit dt { font-size: 9pt; }
-  .venue { font-size: 9pt; color: #000; }
+  .entries > li, .pubs > li, .kit > div { break-inside: avoid; padding: 3.5pt 0; }
+  .entry h3, .pub h3 { font-size: 10.6pt; }
+  .entry p, .pub .authors { font-size: 9.8pt; }
+  .when, .pid, .venue { font-size: 9.4pt; }
 
   a { color: #000; text-decoration: none; }
-  .pub .links { display: none; }          /* the link is in the paper's margin nowhere */
-}
-
-/* =========================================================================
-   ?style=classic — the conventional academic CV, for comparison with the
-   house treatment above. Same content, ordinary conventions: a centred
-   masthead, ruled section headings, dates on the right of their entry,
-   one narrow measure, tighter leading. ?style=classic-serif sets it in a
-   serif, which is the traditional version of the same thing.
-   ========================================================================= */
-
-:root[data-cv-style^="classic"] {
-  --display: var(--sans);
-}
-:root[data-cv-style="classic-serif"] {
-  --sans: "Source Serif 4", "Iowan Old Style", Georgia, "Times New Roman", serif;
-}
-
-:root[data-cv-style^="classic"] .cv-head,
-:root[data-cv-style^="classic"] .cv-row,
-:root[data-cv-style^="classic"] .foot { max-width: 46rem; }
-
-/* masthead */
-:root[data-cv-style^="classic"] .cv-head {
-  text-align: center;
-  padding-top: clamp(2.2rem, 5vw, 3.2rem);
-  padding-bottom: 1.4rem;
-}
-:root[data-cv-style^="classic"] .cv-head h1 {
-  font-weight: 600; font-size: clamp(1.9rem, 4.4vw, 2.4rem);
-  letter-spacing: -.01em;
-}
-:root[data-cv-style^="classic"] .hangul {
-  display: inline; margin-left: .55em; letter-spacing: .06em;
-}
-:root[data-cv-style^="classic"] .cv-sub {
-  margin: .5rem auto 0; max-width: none; font-size: .95rem;
-}
-:root[data-cv-style^="classic"] .cv-meta {
-  justify-content: center; gap: .2rem 1.1rem; margin-top: .55rem;
-}
-
-/* ruled section headings, content full width beneath */
-:root[data-cv-style^="classic"] .cv-row {
-  display: block;
-  border-top: 0;
-  padding-top: 1.3rem; padding-bottom: .2rem;
-}
-:root[data-cv-style^="classic"] .cv-row h2 {
-  font-size: 1rem; font-weight: 700; color: var(--ink);
-  padding-bottom: .3rem; margin-bottom: .7rem;
-  border-bottom: 1px solid var(--ink);
-}
-:root[data-cv-style^="classic"] .cv-note {
-  margin: -.4rem 0 .7rem; font-size: .8rem;
-}
-
-/* entries: title left, dates right, description under both */
-:root[data-cv-style^="classic"] .entries > li,
-:root[data-cv-style^="classic"] .kit > div {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: .1rem .9rem;
-  padding: .5rem 0;
-  border-bottom: 0;
-}
-:root[data-cv-style^="classic"] .entries > li > .when {
-  grid-column: 2; grid-row: 1;
-  text-align: right; font-size: .86rem; color: var(--soft);
-  white-space: nowrap;
-}
-:root[data-cv-style^="classic"] .entries > li > .entry {
-  grid-column: 1; grid-row: 1;
-}
-:root[data-cv-style^="classic"] .entry h3 { font-size: .98rem; font-weight: 700; }
-:root[data-cv-style^="classic"] .entry p { font-size: .92rem; max-width: none; }
-
-:root[data-cv-style^="classic"] .kit > div { padding: .22rem 0; }
-:root[data-cv-style^="classic"] .kit dt {
-  grid-column: 1; font-size: .92rem; color: var(--ink); font-weight: 600;
-}
-:root[data-cv-style^="classic"] .kit dd { grid-column: 1; }
-
-/* publications: hanging indent off the reference number */
-:root[data-cv-style^="classic"] .pubs > li {
-  grid-template-columns: 2.2rem minmax(0, 1fr);
-  gap: .1rem .4rem;
-  padding: .45rem 0;
-  border-bottom: 0;
-}
-:root[data-cv-style^="classic"] .pub h3 { font-size: .98rem; font-weight: 700; }
-:root[data-cv-style^="classic"] .pub .authors { font-size: .9rem; }
-:root[data-cv-style^="classic"] .pub .meta { margin-top: .12rem; }
-:root[data-cv-style^="classic"] .venue { font-size: .88rem; color: var(--soft); }
-:root[data-cv-style^="classic"] .pid { font-size: .88rem; }
-
-@media print {
-  :root[data-cv-style^="classic"] .cv-row h2 { border-bottom-color: #000; }
+  .pub .links { display: none; }
 }
