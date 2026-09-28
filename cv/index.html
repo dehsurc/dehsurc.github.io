@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kyungmin Kim &middot; CV</title>
+<meta name="description" content="Curriculum vitae — Kyungmin Kim, Ph.D. candidate at IRCV Lab, Hanyang University.">
+<link rel="canonical" href="https://dehsurc.github.io/cv/">
+<meta name="robots" content="index, follow">
+
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e0e0f" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23111112'/%3E%3Ctext x='16' y='23' text-anchor='middle' font-family='Helvetica,Arial,sans-serif' font-size='20' font-weight='700' fill='%23ffffff'%3EK%3C/text%3E%3C/svg%3E">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,500..700&display=swap">
+<link rel="stylesheet" href="../style.css">
+<link rel="stylesheet" href="style.css">
+
+<script>
+  (function () {
+    try {
+      var saved = localStorage.getItem('kk-theme');
+      var dark = saved ? saved === 'dark'
+                       : window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body class="cv">
+
+<nav class="topbar" aria-label="Site">
+  <div class="bar">
+    <a class="mark" href="../">Kyungmin Kim</a>
+    <button id="print" class="print-btn" type="button">Download PDF</button>
+    <button id="theme-toggle" type="button" aria-label="Switch to dark theme" aria-pressed="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <mask id="crescent">
+          <rect x="0" y="0" width="24" height="24" fill="#fff"></rect>
+          <circle cx="26" cy="6" r="8" fill="#000"></circle>
+        </mask>
+        <circle class="disc" cx="12" cy="12" r="5.5" mask="url(#crescent)"></circle>
+        <g class="rays">
+          <line x1="12" y1="1.8" x2="12" y2="3.8"></line>
+          <line x1="12" y1="20.2" x2="12" y2="22.2"></line>
+          <line x1="1.8" y1="12" x2="3.8" y2="12"></line>
+          <line x1="20.2" y1="12" x2="22.2" y2="12"></line>
+          <line x1="4.7" y1="4.7" x2="6.1" y2="6.1"></line>
+          <line x1="17.9" y1="17.9" x2="19.3" y2="19.3"></line>
+          <line x1="4.7" y1="19.3" x2="6.1" y2="17.9"></line>
+          <line x1="17.9" y1="6.1" x2="19.3" y2="4.7"></line>
+        </g>
+      </svg>
+    </button>
+  </div>
+</nav>
+
+<header class="cv-head">
+  <h1>Kyungmin Kim<span class="hangul">김경민</span></h1>
+  <p class="cv-sub">Ph.D. candidate, Department of Automotive Engineering, Hanyang University
+    &middot; <a href="https://ircv.hanyang.ac.kr/" target="_blank" rel="noopener">IRCV Lab</a>,
+    advised by Prof. Soonmin Hwang</p>
+  <p class="cv-meta">
+    <a href="mailto:tnrud17@hanyang.ac.kr">tnrud17@hanyang.ac.kr</a>
+    <span>Seoul, Republic of Korea</span>
+    <a href="https://github.com/dehsurc" target="_blank" rel="noopener">github.com/dehsurc</a>
+  </p>
+</header>
+
+<main>
+
+<section class="cv-row">
+  <h2>Education</h2>
+  <div class="cv-body">
+    <ul class="entries">
+      <li>
+        <span class="when">2023 &ndash; 2029 <span class="soft">(expected)</span></span>
+        <div class="entry">
+          <h3>Ph.D., Automotive Engineering &mdash; Hanyang University</h3>
+          <p>Integrated M.S./Ph.D. programme, advised by Prof. Soonmin Hwang.</p>
+        </div>
+      </li>
+      <li>
+        <span class="when">2017 &ndash; 2023</span>
+        <div class="entry">
+          <h3>B.S., Automotive Engineering &mdash; Hanyang University</h3>
+          <p>Summa cum laude, ranked 2nd of 41.
+             Thesis: <i>Autonomous Bus Parking Path Planning in Low-Speed Scenarios</i>.</p>
+        </div>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<section class="cv-row">
+  <h2>Publications</h2>
+  <p class="cv-note"><sup>*</sup> equal contribution<br><sup>&dagger;</sup> corresponding author</p>
+  <div class="cv-body">
+    <ol class="pubs">
+      <li>
+        <span class="pid">C1</span>
+        <div class="pub">
+          <h3>ReSMap: Recasting Satellite Priors for Robust and Accurate Online HD Map Construction</h3>
+          <p class="authors"><b>Kyungmin Kim</b><sup>*</sup>, Sumin Lee<sup>*</sup>, Sungoh Jeong, DoHyun Lim, Seonghyun Park, Soonmin Hwang<sup>&dagger;</sup></p>
+          <p class="meta"><span class="venue">NeurIPS 2026</span></p>
+          <p class="links"><a href="../resmap-page/">Project page &rarr;</a></p>
+        </div>
+      </li>
+      <li>
+        <span class="pid">C2</span>
+        <div class="pub">
+          <h3>Right Results, Wrong Reasons: Auditing Behavioral Reliance in Motion Forecasting</h3>
+          <p class="authors">Geonyeong Park, Byounghun Park, Nayoung Kim, <b>Kyungmin Kim</b>, Soonmin Hwang<sup>&dagger;</sup></p>
+          <p class="meta"><span class="venue">NeurIPS 2026</span></p>
+        </div>
+      </li>
+      <li>
+        <span class="pid">C3</span>
+        <div class="pub">
+          <h3>Asymmetric Modality Contributions: A Sparsity-Stratified Analysis of BEVFusion</h3>
+          <p class="authors"><b>Kyungmin Kim</b>, Soonmin Hwang<sup>&dagger;</sup></p>
+          <p class="meta"><span class="venue">KCC 2026</span></p>
+        </div>
+      </li>
+      <li>
+        <span class="pid">C4</span>
+        <div class="pub">
+          <h3>On the Applicability of General LiDAR Registration to V2X Data Alignment</h3>
+          <p class="authors"><b>Kyungmin Kim</b>, Soonmin Hwang<sup>&dagger;</sup></p>
+          <p class="meta"><span class="venue">ICTC 2025</span></p>
+        </div>
+      </li>
+      <li>
+        <span class="pid">C5</span>
+        <div class="pub">
+          <h3>Research Trends in V2X-based Cooperative Perception Technology</h3>
+          <p class="authors"><b>Kyungmin Kim</b>, Sungoh Jeong, Kyoungsu Cho, Donguk Kim, Jeongtae Kim, Nayoung Kim, Soonmin Hwang<sup>&dagger;</sup></p>
+          <p class="meta"><span class="venue">KICS 2025</span></p>
+        </div>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<section class="cv-row">
+  <h2>Experience</h2>
+  <div class="cv-body">
+    <ul class="entries">
+      <li>
+        <span class="when">2026.08 &ndash; present</span>
+        <div class="entry">
+          <h3>Assistant &mdash; Kakao Mobility</h3>
+        </div>
+      </li>
+      <li>
+        <span class="when">2022.07 &ndash; 2022.08</span>
+        <div class="entry">
+          <h3>Research intern &mdash; STARMATA</h3>
+          <p>Post-rainfall puddle mapping in LiDAR point clouds on unpaved roads: raw-data
+             collection and processing, and filtering of the noise artefacts standing water
+             leaves in a scan.</p>
+        </div>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<section class="cv-row">
+  <h2>Projects</h2>
+  <div class="cv-body">
+    <ul class="entries">
+      <li>
+        <span class="when">2026.01 &ndash; 2027.01</span>
+        <div class="entry">
+          <h3>End-to-end autonomous driving via module-wise knowledge distillation</h3>
+          <p class="org">RideFlux</p>
+          <p>Module-wise distillation for training efficiency in end-to-end driving models;
+             task-specific distillation and gradient-conflict mitigation for planning
+             performance in modular architectures.</p>
+        </div>
+      </li>
+      <li>
+        <span class="when">2025.07 &ndash; 2028.12</span>
+        <div class="entry">
+          <h3>Reference data and core technology for end-to-end autonomous driving</h3>
+          <p class="org">Ministry of Trade, Industry and Energy (MOTIE)</p>
+          <p>Topology reasoning for structured map representation and lane-centerline
+             detection; data framework and requirements for a Korea-specific autonomous
+             driving dataset.</p>
+        </div>
+      </li>
+      <li>
+        <span class="when">2025.01 &ndash; 2026.01</span>
+        <div class="entry">
+          <h3>LiDAR hazard detection for in-factory forklifts <span class="role">project lead</span></h3>
+          <p class="org">SL Corporation</p>
+          <p>Led development end to end &mdash; SLAM, calibration and system integration &mdash;
+             and validated the detection algorithm against 20+ industrial safety requirements.</p>
+        </div>
+      </li>
+      <li>
+        <span class="when">2024.09 &ndash; 2025.08</span>
+        <div class="entry">
+          <h3>Beyond-G Global Innovation Center</h3>
+          <p class="org">National Research Foundation of Korea (NRF)</p>
+          <p>V2X-based cooperative perception, and the applicability of LiDAR registration
+             to multi-agent sensor alignment.</p>
+        </div>
+      </li>
+      <li>
+        <span class="when">2023.02 &ndash; 2025.08</span>
+        <div class="entry">
+          <h3>Test procedure standards for V2I-based connected automated driving</h3>
+          <p class="org">MOTIE</p>
+          <p>20+ V2I evaluation scenarios with pass/fail criteria; 5+ simulation environments
+             under varied communication conditions, and the pipelines to evaluate them.</p>
+        </div>
+      </li>
+      <li>
+        <span class="when">2023.02 &ndash; 2025.02</span>
+        <div class="entry">
+          <h3>Perception, prediction and intelligent control for autonomous driving</h3>
+          <p class="org">MOTIE</p>
+          <p>Lane-change intention prediction for surrounding vehicles in highway scenarios,
+             and a probabilistic potential-field model for interaction-aware trajectory planning.</p>
+        </div>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<section class="cv-row">
+  <h2>Skills</h2>
+  <div class="cv-body">
+    <dl class="kit">
+      <div><dt>Languages</dt><dd>Python &middot; C/C++ &middot; LaTeX</dd></div>
+      <div><dt>Learning</dt><dd>PyTorch &middot; CUDA &middot; TensorRT &middot; Docker &middot; Linux</dd></div>
+      <div><dt>Vision &amp; robotics</dt><dd>OpenCV &middot; ROS 1/2</dd></div>
+      <div><dt>Simulation</dt><dd>MATLAB/Simulink &middot; CarSim &middot; CarMaker &middot; Unreal Engine</dd></div>
+      <div><dt>Engineering</dt><dd>CATIA &middot; COMSOL</dd></div>
+    </dl>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="foot">
+    <p>&copy; 2026 Kyungmin Kim</p>
+    <p class="soft">Last updated <time datetime="2026-09">September 2026</time></p>
+  </div>
+</footer>
+
+<script>
+  (function () {
+    var root = document.documentElement;
+    var btn = document.getElementById('theme-toggle');
+    function paint() {
+      var dark = root.dataset.theme === 'dark';
+      btn.setAttribute('aria-pressed', String(dark));
+      btn.setAttribute('aria-label', dark ? 'Switch to light theme' : 'Switch to dark theme');
+    }
+    paint();
+    btn.addEventListener('click', function () {
+      root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+      try { localStorage.setItem('kk-theme', root.dataset.theme); } catch (e) {}
+      paint();
+    });
+
+    // The print stylesheet lays this page out for paper; the browser's own
+    // "Save as PDF" then gives a PDF with selectable text, which is what a
+    // CV needs. No library involved.
+    document.getElementById('print').addEventListener('click', function () {
+      window.print();
+    });
+  })();
+</script>
+</body>
+</html>

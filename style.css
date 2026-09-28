@@ -162,19 +162,12 @@ h1, h2, h3 { font-weight: 700; line-height: 1.25; margin: 0; }
   text-decoration: none; white-space: nowrap;
   display: inline-flex; align-items: center; gap: .55rem;
 }
-.topbar ul {
-  display: flex; gap: 1.1rem; margin: 0 0 0 auto; padding: 0;
-  list-style: none; overflow-x: auto; scrollbar-width: none;
+.cv-link {
+  margin-left: auto;
+  font-size: .86rem; font-weight: 500;
+  text-decoration: none; color: var(--soft); white-space: nowrap;
 }
-.topbar ul::-webkit-scrollbar { display: none; }
-.topbar li a {
-  font-size: .86rem; font-weight: 500; letter-spacing: -.005em;
-  text-decoration: none;
-  color: var(--soft); white-space: nowrap;
-  padding-bottom: 2px; border-bottom: 1px solid transparent;
-}
-.topbar li a:hover { color: var(--ink); }
-.topbar li a.here { color: var(--ink); border-bottom-color: var(--accent); }
+.cv-link:hover { color: var(--ink); }
 
 /* Same switch as the ReSMap page: the mask circle slides in to carve a
    crescent out of a growing disc while the rays retract. */
@@ -277,24 +270,13 @@ h1, h2, h3 { font-weight: 700; line-height: 1.25; margin: 0; }
   letter-spacing: .22em; color: var(--faint);
 }
 
-.legend {
+.standfirst {
   margin: 0;
-  border-top: 1px solid var(--rule);
-  font-size: .88rem;
+  max-width: 34em;
+  font-size: clamp(1.05rem, 1.8vw, 1.2rem); line-height: 1.55;
+  color: var(--soft);
 }
-.legend > div {
-  display: grid;
-  grid-template-columns: 6.5rem minmax(0, 1fr);
-  gap: 1rem;
-  padding: .55rem 0;
-  border-bottom: 1px solid var(--hair);
-}
-.legend dt {
-  font-size: .88rem; color: var(--faint);
-  padding-top: .1rem;
-}
-.legend dd { margin: 0; color: var(--soft); }
-.legend dd a { color: var(--ink); }
+.standfirst a { color: var(--ink); }
 
 .portrait {
   margin: .4rem 0 0;
@@ -328,21 +310,9 @@ h1, h2, h3 { font-weight: 700; line-height: 1.25; margin: 0; }
 .body > p { margin: 0 0 1.1rem; max-width: 38em; }
 .body > p:last-child { margin-bottom: 0; }
 
-.focus { margin: 0; }
-.focus > div {
-  padding: .85rem 0;
-  border-bottom: 1px dotted var(--rule);
-}
-.focus > div:first-child { padding-top: 0; }
-.focus > div:last-child { border-bottom: 0; padding-bottom: 0; }
-.focus dt {
-  font-family: var(--display); font-weight: 600;
-  font-size: 1.2rem; line-height: 1.3; letter-spacing: -.018em;
-}
-.focus dd {
-  margin: .25rem 0 0; max-width: 40em;
-  font-size: .95rem; color: var(--soft);
-}
+.also { margin: 0 0 1.4rem; font-size: .92rem; }
+.also a { color: var(--ink); text-decoration-color: var(--rule); }
+.also a:hover { text-decoration-color: var(--ink); }
 
 /* ---------- publications ----------------------------------------------- */
 
@@ -462,7 +432,6 @@ footer { border-top: 1px solid var(--rule); }
     gap: .25rem;
   }
   .pid { padding-top: 0; }
-  .legend > div { grid-template-columns: minmax(0, 1fr); gap: .1rem; }
 }
 
 @media (max-width: 34rem) {

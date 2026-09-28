@@ -165,30 +165,7 @@
   }
 
   /* ------------------------------------------------------------------ *
-   * 2. Section nav
-   *
-   * Marks whichever section is sitting under the top bar.
-   * ------------------------------------------------------------------ */
-
-  var links = Array.prototype.slice.call(document.querySelectorAll('.topbar a[href^="#"]'));
-  var map = {};
-  links.forEach(function (a) { map[a.getAttribute('href').slice(1)] = a; });
-  var targets = Object.keys(map)
-    .map(function (id) { return document.getElementById(id); })
-    .filter(Boolean);
-
-  if ('IntersectionObserver' in window && targets.length) {
-    var seen = {};
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (e) { seen[e.target.id] = e.isIntersecting; });
-      var current = targets.filter(function (t) { return seen[t.id]; })[0];
-      links.forEach(function (a) { a.classList.remove('here'); });
-      if (current) map[current.id].classList.add('here');
-    }, { rootMargin: '-45% 0px -50% 0px' });
-    targets.forEach(function (t) { io.observe(t); });
-  }
-  /* ------------------------------------------------------------------ *
-   * 3. Seoul clock
+   * 2. Seoul clock
    *
    * Where the author is, in the reader's own second hand.
    * ------------------------------------------------------------------ */
@@ -205,7 +182,7 @@
     setInterval(tick, 1000);
   }
   /* ------------------------------------------------------------------ *
-   * 4. Pointer light
+   * 3. Pointer light
    *
    * Writes the pointer position into two custom properties; the gradient
    * that reads them lives in style.css and only exists for fine pointers.
@@ -258,7 +235,7 @@
   }
 
   /* ------------------------------------------------------------------ *
-   * 5. Water
+   * 4. Water
    *
    * Long strokes held close to the horizontal, so the page carries the
    * surface of moving water: one slow swell crossing it, short chop

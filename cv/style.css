@@ -1,0 +1,178 @@
+/* =========================================================================
+   /cv/ — the long version. Shares tokens and type with the landing page;
+   everything here is about fitting a dense document on screen and on paper.
+   ========================================================================= */
+
+body.cv { background-image: none; }          /* no wash behind a document */
+
+/* ---------- the bar ----------------------------------------------------- */
+
+.print-btn {
+  margin-left: auto;
+  font: inherit; font-size: .86rem; font-weight: 500;
+  color: var(--soft); background: none;
+  border: 1px solid var(--rule); border-radius: 999px;
+  padding: .3rem .85rem; cursor: pointer;
+  transition: color .2s ease, border-color .2s ease;
+}
+.print-btn:hover { color: var(--ink); border-color: var(--ink); }
+
+/* ---------- head -------------------------------------------------------- */
+
+.cv-head, .cv-row, .foot {
+  max-width: 54rem;
+  margin: 0 auto;
+  padding-left: var(--gutter); padding-right: var(--gutter);
+}
+
+.cv-head {
+  padding-top: clamp(2.6rem, 7vw, 4rem);
+  padding-bottom: clamp(1.8rem, 4vw, 2.6rem);
+}
+.cv-head h1 {
+  font-family: var(--display); font-weight: 700;
+  font-size: clamp(2.2rem, 6vw, 3.2rem);
+  letter-spacing: -.032em; line-height: 1.02;
+}
+.cv-sub {
+  margin: 1rem 0 0; max-width: 40em;
+  font-size: 1rem; line-height: 1.55; color: var(--soft);
+}
+.cv-sub a { color: var(--ink); }
+.cv-meta {
+  margin: .9rem 0 0;
+  display: flex; flex-wrap: wrap; gap: .3rem 1.4rem;
+  font-size: .9rem; color: var(--faint);
+}
+.cv-meta a { color: var(--soft); }
+
+/* ---------- sections ---------------------------------------------------- */
+
+.cv-row {
+  display: grid;
+  grid-template-columns: 9rem minmax(0, 1fr);
+  grid-template-rows: auto 1fr;          /* slack goes below the note, not above */
+  gap: .4rem clamp(1.5rem, 4vw, 2.6rem);
+  padding-top: clamp(1.8rem, 4vw, 2.4rem);
+  padding-bottom: clamp(1.8rem, 4vw, 2.4rem);
+  border-top: 1px solid var(--rule);
+}
+.cv-row h2 {
+  grid-column: 1;
+  font-size: .95rem; font-weight: 600; letter-spacing: -.01em;
+  color: var(--soft);
+}
+.cv-note {
+  grid-column: 1; align-self: start;
+  margin: .5rem 0 0;
+  font-size: .74rem; line-height: 1.6; color: var(--faint);
+}
+.cv-body { grid-column: 2; grid-row: 1 / span 2; }
+
+/* ---------- dated entries ----------------------------------------------- */
+
+.entries { list-style: none; margin: 0; padding: 0; }
+.entries > li {
+  display: grid;
+  grid-template-columns: 9.5rem minmax(0, 1fr);
+  gap: .2rem .9rem;
+  padding: .85rem 0;
+  border-bottom: 1px dotted var(--rule);
+}
+.entries > li:first-child { padding-top: 0; }
+.entries > li:last-child { border-bottom: 0; padding-bottom: 0; }
+.when {
+  font-size: .8rem; color: var(--faint);
+  padding-top: .2rem; white-space: nowrap;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.entry h3 { font-size: 1rem; font-weight: 600; letter-spacing: -.012em; }
+.entry .org { margin: .15rem 0 0; font-size: .86rem; color: var(--faint); }
+.entry p { margin: .3rem 0 0; font-size: .92rem; color: var(--soft); max-width: 42em; }
+.role {
+  font-size: .68rem; font-weight: 500;
+  color: var(--faint); border: 1px solid var(--rule); border-radius: 2px;
+  padding: .08rem .38rem; margin-left: .4rem; vertical-align: 2px;
+  white-space: nowrap;
+}
+
+/* ---------- skills ------------------------------------------------------ */
+
+.kit { margin: 0; font-size: .92rem; }
+.kit > div {
+  display: grid; grid-template-columns: 9.5rem minmax(0, 1fr); gap: .9rem;
+  padding: .45rem 0; border-bottom: 1px dotted var(--rule);
+}
+.kit > div:first-child { padding-top: 0; }
+.kit > div:last-child { border-bottom: 0; padding-bottom: 0; }
+.kit dt { font-size: .8rem; color: var(--faint); padding-top: .12rem; }
+.kit dd { margin: 0; color: var(--soft); }
+
+/* ---------- narrow ------------------------------------------------------ */
+
+@media (max-width: 46rem) {
+  .cv-row { grid-template-columns: minmax(0, 1fr); gap: .8rem; }
+  .cv-row h2, .cv-note, .cv-body { grid-column: 1; grid-row: auto; }
+  .cv-note { margin-top: 0; }
+  .entries > li, .kit > div, .pubs > li {
+    grid-template-columns: minmax(0, 1fr); gap: .2rem;
+  }
+  .when, .pid, .kit dt { padding-top: 0; }
+}
+
+/* ---------- paper -------------------------------------------------------
+   The browser's own Save-as-PDF renders this, so the PDF keeps selectable
+   text and live links. Everything that belongs to the screen is dropped. */
+
+@media print {
+  @page { margin: 16mm 14mm; }
+
+  :root {
+    --ink: #000; --soft: #222; --faint: #555;
+    --rule: #bbb; --hair: #ddd; --paper: #fff;
+  }
+  html, body.cv {
+    background: #fff !important;
+    color: #000;
+    font-size: 10.2pt;
+  }
+  .topbar, .glow, canvas.deco, footer { display: none !important; }
+
+  .cv-head, .cv-row, main { max-width: none; padding-left: 0; padding-right: 0; }
+  .cv-head { padding-top: 0; padding-bottom: 10pt; }
+  .cv-head h1 { font-size: 22pt; }
+  .cv-sub { font-size: 10pt; margin-top: 6pt; }
+  .cv-meta { font-size: 9pt; margin-top: 5pt; gap: 2pt 14pt; }
+  .hangul { display: inline; margin-left: .6em; font-size: 10pt; }
+
+  /* Paper is narrower than 46rem — and a media query measures rem against
+     16px whatever the root is set to — so the phone rules match here and
+     have to be undone by hand. */
+  .cv-row {
+    padding-top: 10pt; padding-bottom: 10pt;
+    gap: 2pt 14pt;
+    grid-template-columns: 24mm minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    break-inside: auto;
+  }
+  .cv-row h2 { grid-column: 1; grid-row: 1; }
+  .cv-note   { grid-column: 1; grid-row: 2; margin-top: 4pt; }
+  .cv-body   { grid-column: 2; grid-row: 1 / span 2; }
+
+  .entries > li { grid-template-columns: 30mm minmax(0, 1fr); gap: 1pt 7pt; }
+  .when { white-space: normal; }          /* a long span may take two lines */
+  .pubs > li    { grid-template-columns: 8mm minmax(0, 1fr); gap: 1pt 6pt; }
+  .kit > div    { grid-template-columns: 30mm minmax(0, 1fr); gap: 7pt; }
+  .when, .pid, .kit dt { padding-top: 1.5pt; }
+  .cv-row h2 { font-size: 10.5pt; color: #000; }
+  .cv-note { font-size: 7.6pt; line-height: 1.45; }
+
+  .entries > li, .pubs > li, .kit > div { break-inside: avoid; padding: 5pt 0; }
+  .entry h3, .pub h3 { font-size: 10.5pt; }
+  .entry p, .pub .authors { font-size: 9.4pt; }
+  .when, .pid, .kit dt { font-size: 9pt; }
+  .venue { font-size: 9pt; color: #000; }
+
+  a { color: #000; text-decoration: none; }
+  .pub .links { display: none; }          /* the link is in the paper's margin nowhere */
+}
