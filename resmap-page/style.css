@@ -408,62 +408,6 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
 }
 .sign[hidden] { display: none; }
 
-/* The start/finish gantry board. It names the road rather than pointing
-   anywhere, so it takes neither the guide signs' green nor a number: a plain
-   name set on the gantry beam, the way a circuit carries it across the start
-   straight. The legs and the beam are drawn on the canvas; the chequer on the
-   tarmac below is the line itself. No box: boxed, it read as a tooltip stuck
-   to the road rather than as part of the structure. */
-#start-plate {
-  position: absolute;
-  top: 1px;
-  transform: translateX(-50%);
-  padding: 0 .2rem .1rem;
-  color: var(--ink-soft);
-  font-family: var(--display);
-  font-size: 11px; font-weight: 700; line-height: 1.35;
-  letter-spacing: .13em;
-  white-space: nowrap;
-  pointer-events: none;
-}
-#start-plate[hidden] { display: none; }
-
-/* The finish. The car crosses the chequer and carries on off the strip; this
-   comes up in its place with the one thing the page is for. */
-/* The finish. It comes up beside the rail at the car's own place along it, so
-   it arrives where the reader is already looking. CAR_X is 0.26 of the strip
-   in drive.js and this is the one number that has to agree with it. */
-#finish {
-  position: absolute;
-  left: calc(100% + 11px);
-  top: 26%;
-  transform: translateY(-50%);
-  margin: 0;
-  /* An explicit width, not a max-width. Absolutely positioned past the right
-     edge of a 68px rail, the available width is zero, so shrink-to-fit falls
-     back to the longest word and "Cite this paper" came out one word per
-     line. */
-  width: 138px;
-  padding: .4rem .55rem;
-  border-left: 2px solid var(--accent);
-  background: var(--bar);
-}
-#finish[hidden] { display: none; }
-#finish b {
-  display: block;
-  margin-bottom: .18rem;
-  font-family: var(--display);
-  font-size: 11px; font-weight: 700; line-height: 1.35;
-  letter-spacing: .01em;
-  color: var(--ink);
-}
-#finish a {
-  font-size: 11px; font-weight: 600;
-  color: var(--accent);
-  text-decoration-thickness: 1px;
-  text-underline-offset: 3px;
-  pointer-events: auto;
-}
 .sign b {
   flex: none;
   font-size: 10px; font-weight: 700;

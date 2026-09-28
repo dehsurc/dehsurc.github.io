@@ -143,7 +143,6 @@
   /* How much of the camera rig is down, 0 to 1, eased toward what the
      walkthrough below publishes so the strip does not snap between levels. */
   var camsDown = 0;
-  var finishEl = document.getElementById('finish');
   var W = 0, H = 0, dpr = 1;
   var shownNext = '';
   var stopCol = '#b53228';
@@ -463,12 +462,11 @@
      * than asserted, in the one place a reader is already looking.
      */
     var see = 1 - camsDown;
-    /* The car keeps to its own side of the divider instead of straddling it.
-       Heading down the rail the driver's right hand points to the left of the
-       screen, so right-hand traffic puts the car in the left-hand lane. It is
-       a small thing that carries a lot: dead on the centre line it reads as a
-       token on a track, and in its lane it reads as a vehicle on a road you
-       can tell the direction of at a glance. */
+    /* The car sits in a lane rather than straddling the divider. It does not
+       say which way the road runs -- the divider is dashed, which is a lane
+       divider and not a centre line, so this is two lanes going the same way
+       and either of them would do. It is simply that a car parked on the line
+       between them reads as a token on a track rather than a vehicle. */
     var laneY = mid + (rBot - rTop) * 0.19;
     var nose = carX + 17;
     var reach = sx(pos + PERCEPTION_M);
@@ -643,14 +641,39 @@
 
     drawCar(offX, laneY);
 
-    /* End of the route: the car carries on past the finish, and the road
-       thanks the reader and then asks for something, which is the one thing
-       the tarmac paint never did. Real DOM rather than canvas text, so the
-       link is clickable, reachable by keyboard, and not a bitmap. */
-    if (finishEl) {
-      var lit = clamp((outro - 0.3) / 0.35, 0, 1);
-      finishEl.hidden = lit <= 0.01;
-      if (lit > 0.01) finishEl.style.opacity = lit.toFixed(3);
+    /* End of the route: the car carries on past the flag, and the road says
+       thank you.
+     *
+     * Painted on the tarmac, the way it was when the road ran across the top.
+     * A panel beside the rail was fussier and did less: it popped, it broke
+     * over lines, and the link it carried was pointing at the section the
+     * reader had just scrolled to anyway.
+     *
+     * The canvas transform is a rotation rather than a reflection, so text
+     * drawn here in strip coordinates comes out reading down the rail, which
+     * is the direction the rail is read in. */
+    if (outro > 0.02) {
+      var fade = clamp((outro - 0.35) / 0.4, 0, 1);
+      if (fade > 0) {
+        var label = 'THANK YOU FOR VISITING ReSMap';
+        ctx.save();
+        ctx.globalAlpha = fade;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.font = '700 13px ' + FACE;
+
+        /* Fresh tarmac behind the words. The divider runs straight through
+           them otherwise, and a broken line through a word is worse than no
+           line at all. */
+        var tw = ctx.measureText(label).width;
+        ctx.fillStyle = pavement;
+        box(ctx, W / 2 - tw / 2 - 14, mid - 11, tw + 28, 22, 4);
+        ctx.fill();
+
+        ctx.fillStyle = 'rgba(' + ink + ', 0.82)';
+        ctx.fillText(label, W / 2, mid);
+        ctx.restore();
+      }
     }
 
     /* Signs sit at their true position and slide in from the right, the way

@@ -210,14 +210,17 @@ t('the gauge prints a forward gear and no R', function () {
   ok(texts.some(function (x) { return /^D[1-5]$/.test(x); }), 'no D gear printed: ' + texts.join(','));
   ok(texts.indexOf('280') !== -1, 'dial does not run to 280: ' + texts.join(','));
 });
-t('the finish panel lights with the outro and not before', function () {
-  var f = S.get('finish');
-  eq(f.children.filter(function (c) { return c.tagName === 'B'; }).length, 0,
-     'thank-you is built in drive.js rather than the markup');
-  D.set('outro', 0); D.draw();
-  ok(f.hidden, 'shown before the finish');
-  D.set('outro', 1); D.draw();
-  ok(!f.hidden, 'not shown at the finish');
+t('the thank-you is painted on the road at the finish and nowhere else', function () {
+  function words(o) {
+    D.set('outro', o);
+    S.calls.length = 0; D.draw();
+    return S.calls.filter(function (c) { return c[0] === 'fillText'; }).map(function (c) { return c[1]; });
+  }
+  eq(words(0).length, 0, 'painted before the finish');
+  ok(words(1).indexOf('THANK YOU FOR VISITING ReSMap') !== -1, 'not painted at the finish');
+});
+t('nothing is left of the finish panel', function () {
+  ok(!/finishEl|getElementById\('finish'\)/.test(src), 'drive.js still reaches for #finish');
 });
 
 console.log('');
