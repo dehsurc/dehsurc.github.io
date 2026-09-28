@@ -174,8 +174,8 @@ there is nothing to configure. Renaming this folder changes the URL, so the
 
 Still placeholders in `index.html`:
 
-- the four links in the hero (`aria-disabled="true"`),
-- the PDF links in the citation section,
+- the two links in the hero (`aria-disabled="true"`): Paper wants the arXiv
+  abstract page once it is up, or `assets/paper/resmap.pdf` before that,
 - the page and volume numbers in the BibTeX entry, once the NeurIPS 2026
   proceedings appear.
 

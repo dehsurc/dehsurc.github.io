@@ -732,6 +732,7 @@ h1 {
 .authors sup { font-size: .68em; color: var(--ink-faint); }
 
 .affil { margin: 0 0 .55rem; color: var(--ink-soft); }
+.affil .notes { margin-left: .5rem; white-space: nowrap; }
 
 .notes, .small { font-size: 14px; line-height: 1.6; color: var(--ink-faint); margin: 0; }
 .small { margin-top: 1rem; }

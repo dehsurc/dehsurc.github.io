@@ -35,7 +35,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700&family=Inter+Tight:wght@600;700&display=swap">
-<link rel="stylesheet" href="style.css?v=46">
+<link rel="stylesheet" href="style.css?v=47">
 
 <!-- Set the theme before first paint so there is no flash. -->
 <script>
@@ -94,13 +94,13 @@
       <a href="mailto:dkdldb713@hanyang.ac.kr">Seonghyun Park</a>,
       <a href="mailto:soonminh@hanyang.ac.kr">Soonmin Hwang</a><sup>&dagger;</sup>
     </p>
-    <p class="affil">Hanyang University</p>
-    <p class="notes"><sup>*</sup>Equal contribution. &nbsp; <sup>&dagger;</sup>Corresponding author.</p>
+    <p class="affil">Hanyang University <span class="notes"><sup>*</sup>Equal contribution &nbsp;<sup>&dagger;</sup>Corresponding author</span></p>
 
     <!-- EDIT: replace the placeholder hrefs once arXiv / code are public. -->
     <p class="links">
+      <!-- EDIT: point Paper at the arXiv abstract page once it is up, or at
+           assets/paper/resmap.pdf before that. -->
       <a class="button" href="#" aria-disabled="true">Paper <span class="soon">(soon)</span></a>
-      <a class="button" href="#" aria-disabled="true">arXiv <span class="soon">(soon)</span></a>
       <a class="button" href="#" aria-disabled="true">Code <span class="soon">(soon)</span></a>
       <a class="button" href="#cite">BibTeX</a>
     </p>
@@ -127,7 +127,7 @@
 <section class="reveal teaser" id="failure">
   <div class="col">
     <h2 class="teaser-h">Watch the cameras fail</h2>
-    <p><b>ReSMap</b> builds the local HD map around a vehicle from its cameras and from a satellite tile fetched and cached before the drive, so that no onboard fault can take the tile away. Scroll on: the surround cameras drop out a group at a time, and the bars are what each method has left. Every number is measured, and they are the figures in <a href="#table2">Table 2</a>, read one drop level at a time.</p>
+    <p><b>ReSMap</b> builds the local HD map from a vehicle&rsquo;s cameras and from a satellite tile cached before the drive. Scroll to take the cameras away.</p>
   </div>
 
   <div class="track" id="fail-track">
@@ -164,7 +164,7 @@
   </div>
 
   <div class="col">
-    <p>The camera-only model is the clearest case: it has nothing else to read, so at the last step there is essentially no map left. The LiDAR- and SD-fused baselines degrade more gracefully but still lose a quarter to a half of their accuracy, because their auxiliary evidence is either bolted to the same sensor stack or too coarse to carry lane-level geometry. ReSMap ends the sequence above where every one of them started.</p>
+    <p>Every number in that is measured: they are the figures in <a href="#table2">Table 2</a>, read one drop level at a time. The camera-only model is the clearest case: it has nothing else to read, so at the last step there is essentially no map left. The LiDAR- and SD-fused baselines degrade more gracefully but still lose a quarter to a half of their accuracy, because their auxiliary evidence is either bolted to the same sensor stack or too coarse to carry lane-level geometry. ReSMap ends the sequence above where every one of them started.</p>
   </div>
 </section>
 
@@ -328,11 +328,6 @@
 <section class="reveal" id="cite">
   <div class="col">
     <h2><span class="num">5</span>Paper</h2>
-    <!-- EDIT: link the PDF once it is in assets/paper/. -->
-    <p class="links">
-      <a class="button" href="#" aria-disabled="true">PDF <span class="soon">(soon)</span></a>
-      <a class="button" href="#" aria-disabled="true">Supplementary <span class="soon">(soon)</span></a>
-    </p>
     <div class="bibtex">
       <button id="copy-bib" type="button">Copy</button>
       <pre id="bib">@inproceedings{kim2026resmap,
@@ -426,8 +421,8 @@
   </button>
 </div>
 
-<script src="failure.js?v=46"></script>
-<script src="drive.js?v=46"></script>
-<script src="main.js?v=46"></script>
+<script src="failure.js?v=47"></script>
+<script src="drive.js?v=47"></script>
+<script src="main.js?v=47"></script>
 </body>
 </html>
