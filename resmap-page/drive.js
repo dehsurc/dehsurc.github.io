@@ -206,8 +206,10 @@
         var link = document.querySelector('.topbar a[href="#' + s.id + '"]');
         var h2 = s.querySelector('h2');
         var top = s.getBoundingClientRect().top + window.scrollY;
+        var numbered = s.querySelector('h2 .num');
         return {
           id: s.id,
+          num: numbered ? numbered.textContent.trim() : '',
           m: top / PX_PER_M,
           name: link ? link.textContent
                      : (h2 ? h2.textContent.replace(/^\s*\d+\s*/, '') : s.id)
@@ -216,13 +218,18 @@
 
     signBox.textContent = '';
 
-    stops.forEach(function (stop, i) {
+    stops.forEach(function (stop) {
       var b = document.createElement('button');
       b.type = 'button';
       b.className = 'sign';
-      var num = document.createElement('b');
-      num.textContent = i + 1;
-      b.appendChild(num);
+      /* The number comes off the section's own heading, not off this loop.
+         The walkthrough leads the page without one, so counting the stops put
+         every sign a number ahead of the section it names. */
+      if (stop.num) {
+        var num = document.createElement('b');
+        num.textContent = stop.num;
+        b.appendChild(num);
+      }
       b.appendChild(document.createTextNode(stop.name));
       b.addEventListener('click', function () { jumpTo(stop); });
       signBox.appendChild(b);
