@@ -110,7 +110,12 @@ canvas.deco {
   pointer-events: none;
   display: none;
 }
-:root[data-art="bev"] canvas.deco { display: block; }
+:root[data-art="bev"] canvas.deco,
+:root[data-art="waves"] canvas.deco,
+:root[data-art="bands"] canvas.deco,
+:root[data-art="forms"] canvas.deco,
+:root[data-art="hatch"] canvas.deco,
+:root[data-art="flow"] canvas.deco { display: block; }
 
 /* halftone: the dot field replaces the photograph */
 .halftone { display: block; image-rendering: auto; }
@@ -363,7 +368,12 @@ canvas.deco {
   pointer-events: none;
   display: none;
 }
-:root[data-art="bev"] canvas.deco { display: block; }
+:root[data-art="bev"] canvas.deco,
+:root[data-art="waves"] canvas.deco,
+:root[data-art="bands"] canvas.deco,
+:root[data-art="forms"] canvas.deco,
+:root[data-art="hatch"] canvas.deco,
+:root[data-art="flow"] canvas.deco { display: block; }
 
 /* halftone: the dot field replaces the photograph */
 .halftone { display: block; image-rendering: auto; }
