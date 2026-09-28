@@ -47,6 +47,8 @@
   --accent:  #111112;
   --accent-soft: rgba(17, 17, 18, 0.08);
   --bar-bg:  rgba(255, 255, 255, 0.86);
+  --wash:    #f4f4f5;                    /* the page settles into this at the foot */
+  --glow:    rgba(17, 17, 18, 0.038);    /* what the pointer lifts out of it */
 
   --sans: "Inter", "Freesentation", "Nanum Gothic", -apple-system,
           BlinkMacSystemFont, system-ui, "Segoe UI", Arial, sans-serif;
@@ -72,6 +74,8 @@
   --accent:  #ededee;
   --accent-soft: rgba(237, 237, 238, 0.10);
   --bar-bg:  rgba(14, 14, 15, 0.86);
+  --wash:    #08080a;
+  --glow:    rgba(255, 255, 255, 0.07);
   color-scheme: dark;
 }
 
@@ -93,8 +97,26 @@ body {
   line-height: 1.65;
   color: var(--ink);
   background-color: var(--paper);
+  background-image: linear-gradient(180deg, var(--paper) 0%, var(--wash) 100%);
+  background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
 }
+
+/* A soft light under the content, tracking the pointer. Coarse pointers never
+   see it, so it costs them nothing; main.js only writes the two positions. */
+.glow {
+  position: fixed; inset: 0; z-index: 0;
+  pointer-events: none; opacity: 0;
+  transition: opacity .5s ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .glow {
+    background: radial-gradient(34rem circle at var(--mx, 50%) var(--my, 0%),
+                                var(--glow), transparent 68%);
+  }
+  body.lit .glow { opacity: 1; }
+}
+.topbar, .hero, main, footer { position: relative; z-index: 1; }
 
 a { color: var(--ink); text-decoration-color: var(--accent); text-underline-offset: 3px; }
 a:hover { color: var(--accent); }
@@ -230,10 +252,6 @@ h1, h2, h3 { font-weight: 700; line-height: 1.25; margin: 0; }
   display: inline-flex; align-items: center; gap: .45rem;
   font-size: .95rem; color: var(--faint);
 }
-.dot {
-  width: 7px; height: 7px; border-radius: 999px; flex: none;
-  background: var(--soft);
-}
 
 .eyebrow {
   margin: 0;
@@ -269,7 +287,23 @@ h1, h2, h3 { font-weight: 700; line-height: 1.25; margin: 0; }
   padding-top: .1rem;
 }
 .legend dd { margin: 0; color: var(--soft); }
-.legend dd a { color: var(--ink); }
+.legend dd /* A soft light under the content, tracking the pointer. Coarse pointers never
+   see it, so it costs them nothing; main.js only writes the two positions. */
+.glow {
+  position: fixed; inset: 0; z-index: 0;
+  pointer-events: none; opacity: 0;
+  transition: opacity .5s ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .glow {
+    background: radial-gradient(34rem circle at var(--mx, 50%) var(--my, 0%),
+                                var(--glow), transparent 68%);
+  }
+  body.lit .glow { opacity: 1; }
+}
+.topbar, .hero, main, footer { position: relative; z-index: 1; }
+
+a { color: var(--ink); }
 
 .portrait {
   margin: .4rem 0 0;

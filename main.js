@@ -203,4 +203,34 @@
     tick();
     setInterval(tick, 1000);
   }
+  /* ------------------------------------------------------------------ *
+   * 4. Pointer light
+   *
+   * Writes the pointer position into two custom properties; the gradient
+   * that reads them lives in style.css and only exists for fine pointers.
+   * Coalesced into one write per frame.
+   * ------------------------------------------------------------------ */
+
+  if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    var px = 0, py = 0, queued = false;
+
+    function place() {
+      queued = false;
+      root.style.setProperty('--mx', px + 'px');
+      root.style.setProperty('--my', py + 'px');
+    }
+
+    window.addEventListener('pointermove', function (e) {
+      px = e.clientX;
+      py = e.clientY;
+      if (!document.body.classList.contains('lit')) document.body.classList.add('lit');
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(place);
+    }, { passive: true });
+
+    window.addEventListener('pointerleave', function () {
+      document.body.classList.remove('lit');
+    });
+  }
 })();
