@@ -182,10 +182,7 @@ h1, h2, h3 { font-weight: 700; line-height: 1.25; margin: 0; }
 /* Browsers with the View Transitions API get the wipe driven from main.js;
    everything else just cross-fades the palette. */
 @supports not (view-transition-name: none) {
-  body, .topbar, .portrait img, .tags li {
-    transition: background-color .35s ease, color .35s ease, border-color .35s ease;
-  }
-}
+  body, .topbar, .portrait img, }
 
 ::view-transition-old(root),
 ::view-transition-new(root) {
@@ -254,12 +251,6 @@ h1, h2, h3 { font-weight: 700; line-height: 1.25; margin: 0; }
   font-family: var(--kr); font-size: .82rem; font-weight: 400;
   letter-spacing: .22em; color: var(--faint);
 }
-.lede {
-  margin: 0 0 1.9rem;
-  font-size: clamp(1.2rem, 2.3vw, 1.4rem); line-height: 1.5; letter-spacing: -.014em;
-  max-width: 22em;
-  color: var(--ink);
-}
 
 .legend {
   margin: 0;
@@ -326,17 +317,6 @@ h1, h2, h3 { font-weight: 700; line-height: 1.25; margin: 0; }
 .focus dd {
   margin: .25rem 0 0; max-width: 40em;
   font-size: .95rem; color: var(--soft);
-}
-
-.tags {
-  display: flex; flex-wrap: wrap; gap: .4rem;
-  list-style: none; margin: 1.6rem 0 0; padding: 0;
-}
-.tags li {
-  font-size: .84rem;
-  color: var(--soft);
-  border: 1px solid var(--rule); border-radius: 2px;
-  padding: .22rem .55rem;
 }
 
 /* ---------- publications ----------------------------------------------- */
