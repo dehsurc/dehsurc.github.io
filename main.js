@@ -308,13 +308,16 @@
     // disturbing the surface right now.
     function height(x, y) {
       var k = 1 / cfg.scale;
-      // Signs on st set which way each train travels; all but one run with
-      // the reading direction, so the sea drifts left to right.
-      var h = Math.sin((x * 0.0062 + y * 0.0018) * k - st)
-            + Math.sin((x * 0.0029 - y * 0.0051) * k - st * 0.78) * 0.80
-            + Math.sin((x * 0.0115 + y * 0.0088) * k - st * 1.70) * 0.34
-            + Math.sin((x * 0.0024 + y * 0.0196) * k + st * 1.15) * 0.30
-            + Math.sin((x * 0.0380 - y * 0.0245) * k - st * 2.40) * 0.09;
+      // Five trains, but all within about twenty degrees of straight down
+      // and all at the same phase speed (~60 px/s), so they hold formation
+      // instead of sliding past each other. The spread in wavelength is
+      // what makes the crests interlock; the spread in direction would
+      // only make it look like noise.
+      var h = Math.sin((x * 0.0010 + y * 0.0060) * k - st * 0.81)
+            + Math.sin((x * -0.0018 + y * 0.0048) * k - st * 0.68) * 0.72
+            + Math.sin((x * 0.0022 + y * 0.0101) * k - st * 1.38) * 0.36
+            + Math.sin((x * -0.0009 + y * 0.0186) * k - st * 2.48) * 0.20
+            + Math.sin((x * 0.0042 + y * 0.0330) * k - st * 4.43) * 0.07;
 
       if (sp.x > -9000) {
         var d = Math.hypot(x - sp.x, y - sp.y);
