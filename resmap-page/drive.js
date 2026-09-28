@@ -404,32 +404,6 @@
       ctx.stroke();
     }
 
-    /* The head of the route: a start line across the carriageway with the
-       name painted on the tarmac after it, the way a name is painted on a
-       road rather than hung beside one. Only drawn when it is in frame. */
-    var startX = sx(0);
-    if (startX > -220 && startX < W + 40) {
-      ctx.strokeStyle = paint;
-      ctx.lineWidth = 2.4;
-      ctx.beginPath();
-      ctx.moveTo(startX, rTop + 3);
-      ctx.lineTo(startX, rBot - 3);
-      ctx.stroke();
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(startX - 4, rTop + 3);
-      ctx.lineTo(startX - 4, rBot - 3);
-      ctx.stroke();
-
-      ctx.save();
-      ctx.fillStyle = paint;
-      ctx.textAlign = 'left';
-      ctx.textBaseline = 'middle';
-      ctx.font = '700 ' + Math.round((rBot - rTop) * 0.42) + 'px ' + FACE;
-      ctx.fillText('ReSMap', startX + 10, mid);
-      ctx.restore();
-    }
-
     /* Zebra stripes run with the traffic, so on a road drawn left to right
        they stack across the carriageway. */
     function crossing(x, style, width, alpha) {
@@ -551,9 +525,29 @@
       ctx.restore();
     }
 
+    /* The head of the route, as a chequer laid across the carriageway rather
+       than the name painted on it: a band reads at a glance where lettering
+       looked laboured, and this goes on after the map layer, which was the
+       first thing to paint over the old marker. */
+    var startX = sx(0);
+    if (startX > -40 && startX < W + 40) {
+      var sTop = rTop + 3, sBot = rBot - 3;
+      var cell = (sBot - sTop) / 4;
+      for (var r = 0; r < 4; r++) {
+        for (var c = 0; c < 3; c++) {
+          /* A chequer is black and white in both themes. The neutral ink
+             inverts with the theme, so the dark square is a fixed one. */
+          ctx.fillStyle = (r + c) % 2 ? paint : 'rgba(14, 16, 20, 0.72)';
+          ctx.fillRect(startX - 1.5 * cell + c * cell, sTop + r * cell,
+                       cell + 0.5, cell + 0.5);
+        }
+      }
+    }
+
+    drawCar(offX, mid);
+
     /* End of the route: the car carries on off the right-hand side and the
        road says thank you. Drive back up and it takes it back. */
-    drawCar(offX, mid);
 
     if (outro > 0.02) {
       var fade = clamp((outro - 0.35) / 0.4, 0, 1);
