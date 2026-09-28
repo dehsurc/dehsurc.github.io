@@ -270,28 +270,23 @@
 
   /* Sea seen from above.
    *
-   * The surface is a height field: a few wave trains running at different
-   * angles, which is what makes real swell interlock instead of lining up.
-   * What gets drawn is its contours — marching squares over a coarse grid,
-   * so the crests come out as closed, organic lines the way they read from
-   * a plane. The pointer lifts the water under it and a click sends a ring
-   * out through the field.
-   *
-   * ?w= picks a preset while we settle on one. */
+   * The surface is a height field — five wave trains, all running within
+   * twenty degrees of straight down the page at one shared phase speed,
+   * differing only in wavelength, which is what makes swell interlock
+   * instead of reading as noise. What gets drawn is its contours, by
+   * marching squares over a coarse grid, so the crests come out as closed
+   * organic lines the way the sea reads from a plane. The pointer lifts
+   * the water under it; a click sends a ring out through the field.
+   */
 
-  var SEA = {
-    '0': { cell: 16, levels: 5, span: 1.15, scale: 1.00, a: 0.115, lw: 1.0 },
-    'a': { cell: 16, levels: 5, span: 1.15, scale: 1.00, a: 0.115, lw: 1.0 },
-    'b': { cell: 15, levels: 8, span: 1.30, scale: 1.00, a: 0.095, lw: 1.0 },
-    'c': { cell: 20, levels: 3, span: 0.85, scale: 1.55, a: 0.150, lw: 1.2 },
-    'd': { cell: 13, levels: 11, span: 1.45, scale: 0.80, a: 0.080, lw: 1.0 },
-    'e': { cell: 18, levels: 5, span: 1.15, scale: 2.10, a: 0.135, lw: 1.1 }
-  };
+  var CELL = 16;        // marching-squares grid, px
+  var LEVELS = 5;       // contour lines through the height range
+  var SPAN = 1.15;      // how much of that range they cover
+  var INK = 0.115;      // ink at the crest
 
   var canvas = document.querySelector('canvas.deco');
 
   if (canvas && canvas.getContext) {
-    var cfg = SEA[new URLSearchParams(location.search).get('w')] || SEA['0'];
     var S = fitCanvas(canvas), sp = pointer(), st = 0, rings = [];
     var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -304,20 +299,18 @@
       if (rings.length > 4) rings.shift();
     });
 
-    // Five trains at unrelated angles and speeds, plus whatever is
-    // disturbing the surface right now.
+    // The field itself, plus whatever is disturbing the surface right now.
     function height(x, y) {
-      var k = 1 / cfg.scale;
-      // Five trains, but all within about twenty degrees of straight down
-      // and all at the same phase speed (~60 px/s), so they hold formation
+      // Five trains, all within about twenty degrees of straight down and
+      // all at the same phase speed (~60 px/s), so they hold formation
       // instead of sliding past each other. The spread in wavelength is
-      // what makes the crests interlock; the spread in direction would
-      // only make it look like noise.
-      var h = Math.sin((x * 0.0010 + y * 0.0060) * k - st * 0.81)
-            + Math.sin((x * -0.0018 + y * 0.0048) * k - st * 0.68) * 0.72
-            + Math.sin((x * 0.0022 + y * 0.0101) * k - st * 1.38) * 0.36
-            + Math.sin((x * -0.0009 + y * 0.0186) * k - st * 2.48) * 0.20
-            + Math.sin((x * 0.0042 + y * 0.0330) * k - st * 4.43) * 0.07;
+      // what makes the crests interlock; spread in direction only ever
+      // read as noise.
+      var h = Math.sin((x * 0.0010 + y * 0.0060) - st * 0.81)
+            + Math.sin((x * -0.0018 + y * 0.0048) - st * 0.68) * 0.72
+            + Math.sin((x * 0.0022 + y * 0.0101) - st * 1.38) * 0.36
+            + Math.sin((x * -0.0009 + y * 0.0186) - st * 2.48) * 0.20
+            + Math.sin((x * 0.0042 + y * 0.0330) - st * 4.43) * 0.07;
 
       if (sp.x > -9000) {
         var d = Math.hypot(x - sp.x, y - sp.y);
@@ -341,7 +334,7 @@
     var grid = null, gw = 0, gh = 0;
 
     function marching(ctx, level) {
-      var C = cfg.cell;
+      var C = CELL;
       for (var j = 0; j < gh - 1; j++) {
         for (var i = 0; i < gw - 1; i++) {
           var a = grid[j * gw + i],       b = grid[j * gw + i + 1];
@@ -373,7 +366,7 @@
     }
 
     (function seaFrame() {
-      var ctx = S.ctx, W = S.s.w, H = S.s.h, C = cfg.cell;
+      var ctx = S.ctx, W = S.s.w, H = S.s.h, C = CELL;
       if (!reduce) st += 0.0075;
 
       gw = Math.ceil(W / C) + 3;
@@ -387,14 +380,14 @@
       }
 
       ctx.clearRect(0, 0, W, H);
-      ctx.lineWidth = cfg.lw;
+      ctx.lineWidth = 1;
       ctx.lineJoin = 'round';
 
-      var c = ink(), n = cfg.levels;
+      var c = ink(), n = LEVELS;
       for (var l = 0; l < n; l++) {
-        var level = cfg.span * (-1 + 2 * (l + 0.5) / n);
-        var edge = Math.abs(level) / cfg.span;                  // troughs fade
-        ctx.strokeStyle = 'rgba(' + c + ',' + (cfg.a * (1 - edge * 0.45)) + ')';
+        var level = SPAN * (-1 + 2 * (l + 0.5) / n);
+        var edge = Math.abs(level) / SPAN;                  // troughs fade
+        ctx.strokeStyle = 'rgba(' + c + ',' + (INK * (1 - edge * 0.45)) + ')';
         ctx.beginPath();
         marching(ctx, level);
         ctx.stroke();
