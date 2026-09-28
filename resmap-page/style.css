@@ -134,7 +134,9 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
 
 /* ---------- pinned camera-failure walkthrough ---------- */
 
-.track { position: relative; height: 340vh; }
+/* The walkthrough leads the page, so it earns a shorter run: four stages over
+   two and a half screens, before the reader has committed to anything. */
+.track { position: relative; height: 260vh; }
 
 .stage {
   position: sticky;
@@ -143,6 +145,16 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
   min-height: 34rem;
   display: flex;
   align-items: center;
+}
+
+/* The teaser sits above the numbered document, so its heading carries no
+   number and no rule: it is the way in, not section one. */
+.teaser { padding-top: .5rem; }
+.teaser-h {
+  font-size: 1.32rem; font-weight: 600; letter-spacing: -.02em;
+  margin: 0 0 1.15rem;
+  padding: 0;
+  border: 0;
 }
 
 .stage-head {
@@ -284,7 +296,7 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
   .stage-grid { grid-template-columns: 1fr; gap: 1rem; }
   .rig svg { max-width: 10.5rem; }
   .rig figcaption { display: none; }
-  .track { height: 300vh; }
+  .track { height: 240vh; }
   /* The sub-caption is the first thing to go: the level's name is on the
      button that is lit, so it is said twice. */
   .stage-head { margin-bottom: .9rem; padding-bottom: .45rem; flex-wrap: wrap; }

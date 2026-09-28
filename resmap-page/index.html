@@ -34,7 +34,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700&display=swap">
-<link rel="stylesheet" href="style.css?v=37">
+<link rel="stylesheet" href="style.css?v=38">
 
 <!-- Set the theme before first paint so there is no flash. -->
 <script>
@@ -69,10 +69,10 @@
   <div class="topbar-inner">
     <div class="nav-scroll">
     <ul>
+      <li><a href="#failure">Failure</a></li>
       <li><a href="#abstract">Abstract</a></li>
       <li><a href="#idea">Idea</a></li>
       <li><a href="#method">Method</a></li>
-      <li><a href="#failure">Failure</a></li>
       <li><a href="#results">Results</a></li>
       <li><a href="#ablations">Ablations</a></li>
       <li><a href="#analysis">Analysis</a></li>
@@ -125,12 +125,57 @@
 
   <div class="col">
     <ul class="headline">
-      <li><b>53.0</b> <span>mAP on the nuScenes geographic split at 60&thinsp;&times;&thinsp;30&nbsp;m, +10.5 over the best prior method</span></li>
+      <li><b>53.0</b> <span>mAP with temporal modelling, on the nuScenes geographic split at 60&thinsp;&times;&thinsp;30&nbsp;m, +10.5 over the best prior method</span></li>
       <li><b>40.9</b> <span>mAP with all six cameras dropped, above every baseline&rsquo;s clean-input score</span></li>
       <li><b>16.1</b> <span>FPS on a single RTX&nbsp;4090, faster than the camera-only baseline</span></li>
     </ul>
   </div>
 </header>
+
+<section class="reveal teaser" id="failure">
+  <div class="col">
+    <h2 class="teaser-h">Watch the cameras fail</h2>
+    <p><b>ReSMap</b> builds the local HD map around a vehicle from its cameras and from a satellite tile fetched and cached before the drive, so that no onboard fault can take the tile away. Scroll on: the surround cameras drop out a group at a time, and the bars are what each method has left. Every number is measured, and they are the figures in <a href="#results">Table 2</a>, read one drop level at a time.</p>
+  </div>
+
+  <div class="track" id="fail-track">
+    <div class="stage">
+      <div class="col wide">
+        <div class="stage-head">
+          <span class="stage-step" id="fail-step">Clean</span>
+          <span class="stage-sub" id="fail-sub">all six cameras reporting</span>
+          <!-- Filled by failure.js from the same STAGES the scroll reads, so
+               the labels cannot drift from the levels they select. -->
+          <div class="stage-steps" id="fail-steps" role="group" aria-label="Camera failure level"></div>
+        </div>
+
+        <div class="stage-grid">
+          <figure class="rig">
+            <svg id="fail-rig" viewBox="0 0 340 340" role="img" aria-labelledby="fail-rig-title">
+              <title id="fail-rig-title">Surround camera coverage around the ego vehicle, with failed cameras darkened and the satellite prior taking over</title>
+              <g id="fail-sat"></g>
+              <g id="fail-cams"></g>
+              <g id="fail-ego"></g>
+            </svg>
+            <figcaption>The six surround cameras, and behind them the geo-aligned satellite tile. As cameras go dark the PTF gate moves its weight onto the satellite branch, which the fault does not touch.</figcaption>
+          </figure>
+
+          <div class="chart">
+            <ol class="bars" id="fail-bars"></ol>
+            <p class="tcap">mAP on the geographically non-overlapping split of nuScenes at 60&thinsp;&times;&thinsp;30&nbsp;m, for ReSMap without temporal modelling. Every value shown is measured: the chart steps between the four drop levels rather than interpolating, and the ticks on each lane mark that method&rsquo;s four measurements.</p>
+          </div>
+        </div>
+
+        <p class="stage-note" id="fail-note"></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col">
+    <p>The camera-only model is the clearest case: it has nothing else to read, so at the last step there is essentially no map left. The LiDAR- and SD-fused baselines degrade more gracefully but still lose a quarter to a half of their accuracy, because their auxiliary evidence is either bolted to the same sensor stack or too coarse to carry lane-level geometry. ReSMap ends the sequence above where every one of them started.</p>
+  </div>
+</section>
+
 
 <main>
 
@@ -190,53 +235,9 @@
   </div>
 </section>
 
-<section class="reveal" id="failure">
-  <div class="col">
-    <h2><span class="num">4</span>Failure walkthrough</h2>
-    <p>The claim, in one sentence: a satellite tile is fetched and cached before the drive, so no onboard fault can take it away. Scroll on, and the surround cameras drop out a group at a time. Every number below is measured. They are the figures reported in <a href="#results">Table 2</a>, read one drop level at a time.</p>
-  </div>
-
-  <div class="track" id="fail-track">
-    <div class="stage">
-      <div class="col wide">
-        <div class="stage-head">
-          <span class="stage-step" id="fail-step">Clean</span>
-          <span class="stage-sub" id="fail-sub">all six cameras reporting</span>
-          <!-- Filled by failure.js from the same STAGES the scroll reads, so
-               the labels cannot drift from the levels they select. -->
-          <div class="stage-steps" id="fail-steps" role="group" aria-label="Camera failure level"></div>
-        </div>
-
-        <div class="stage-grid">
-          <figure class="rig">
-            <svg id="fail-rig" viewBox="0 0 340 340" role="img" aria-labelledby="fail-rig-title">
-              <title id="fail-rig-title">Surround camera coverage around the ego vehicle, with failed cameras darkened and the satellite prior taking over</title>
-              <g id="fail-sat"></g>
-              <g id="fail-cams"></g>
-              <g id="fail-ego"></g>
-            </svg>
-            <figcaption>The six surround cameras, and behind them the geo-aligned satellite tile. As cameras go dark the PTF gate moves its weight onto the satellite branch, which the fault does not touch.</figcaption>
-          </figure>
-
-          <div class="chart">
-            <ol class="bars" id="fail-bars"></ol>
-            <p class="tcap">mAP on the geographically non-overlapping split of nuScenes at 60&thinsp;&times;&thinsp;30&nbsp;m, for ReSMap without temporal modelling. Every value shown is measured: the chart steps between the four drop levels rather than interpolating, and the ticks on each lane mark that method&rsquo;s four measurements.</p>
-          </div>
-        </div>
-
-        <p class="stage-note" id="fail-note"></p>
-      </div>
-    </div>
-  </div>
-
-  <div class="col">
-    <p>The camera-only model is the clearest case: it has nothing else to read, so at the last step there is essentially no map left. The LiDAR- and SD-fused baselines degrade more gracefully but still lose a quarter to a half of their accuracy, because their auxiliary evidence is either bolted to the same sensor stack or too coarse to carry lane-level geometry. ReSMap ends the sequence above where every one of them started.</p>
-  </div>
-</section>
-
 <section class="reveal" id="results">
   <div class="col">
-    <h2><span class="num">5</span>Results</h2>
+    <h2><span class="num">4</span>Results</h2>
     <p>Everything below is nuScenes. Models are trained and evaluated on the geographically non-overlapping split, using ego-aligned AID4AD satellite tiles cropped to the BEV region of interest. Except where marked, every baseline is retrained under the same evaluation conditions, following its own paper&rsquo;s schedule.</p>
 
     <h3>5.1 &nbsp;Clean conditions</h3>
@@ -317,7 +318,7 @@
 
   <div class="col">
     <p>The non-temporal ReSMap degrades by 4.0%, 7.7%, and 13.0%, the smallest drop at every level. The all-camera case isolates the redundancy claim most clearly: with no camera evidence at all, ReSMap still returns <b>40.9 mAP</b>, higher than the <em>clean-input</em> score of every baseline in the table, while MapTracker collapses by 99.8% and even the LiDAR-fused DAMap loses a quarter of its accuracy.</p>
-    <p>The temporal variant is the stronger model on clean input but the weaker one under severe failure. This is not a contradiction: temporal aggregation is applied to the camera BEV, so corrupted frames enter the memory queue and keep contaminating the fused stream for several frames. We diagnose this directly in <a href="#analysis">&sect;7</a>.</p>
+    <p>The temporal variant is the stronger model on clean input but the weaker one under severe failure. This is not a contradiction: temporal aggregation is applied to the camera BEV, so corrupted frames enter the memory queue and keep contaminating the fused stream for several frames. We diagnose this directly in <a href="#analysis">&sect;6</a>.</p>
 
     <h3>5.3 &nbsp;Corrupted satellite tiles</h3>
     <p>Satellite tiles can be stale or misaligned in practice, through GPS/INS drift or latency in the localisation stack. We inject two such corruptions at inference with probability <i>p</i>&thinsp;=&thinsp;0.2 per sample.</p>
@@ -344,7 +345,7 @@
 
 <section class="reveal" id="ablations">
   <div class="col">
-    <h2><span class="num">6</span>Ablations</h2>
+    <h2><span class="num">5</span>Ablations</h2>
     <p>Both ablations are run on the geographically non-overlapping split. In (a) the decoder is fixed to the full OCMQ; in (b) the fusion is fixed to PTF, so that <i>F</i><sub>cam</sub>, <i>F</i><sub>sat</sub>, and <i>F</i><sub>fuse</sub> are identical across rows.</p>
   </div>
 
@@ -399,7 +400,7 @@
 
 <section class="reveal" id="analysis">
   <div class="col">
-    <h2><span class="num">7</span>Analysis</h2>
+    <h2><span class="num">6</span>Analysis</h2>
     <h3>7.1 &nbsp;Where the evidence goes</h3>
   </div>
 
@@ -422,7 +423,7 @@
 
 <section class="reveal" id="qualitative">
   <div class="col">
-    <h2><span class="num">8</span>Qualitative results</h2>
+    <h2><span class="num">7</span>Qualitative results</h2>
     <p>Surround-view input, the satellite tile, and the predicted vector map for each method, first on clean input and then with the cameras dropped.</p>
   </div>
 
@@ -445,7 +446,7 @@
 
 <section class="reveal" id="supplementary">
   <div class="col">
-    <h2><span class="num">9</span>Original split</h2>
+    <h2><span class="num">8</span>Original split</h2>
     <p>The original nuScenes partition has geographically overlapping train and validation regions, so road structures seen in training can reappear at evaluation. We report it as a secondary benchmark, under the same protocol.</p>
   </div>
 
@@ -511,7 +512,7 @@
 
 <section class="reveal" id="cite">
   <div class="col">
-    <h2><span class="num">10</span>Paper</h2>
+    <h2><span class="num">9</span>Paper</h2>
     <!-- EDIT: link the PDF once it is in assets/paper/. -->
     <p class="links">
       <a class="button" href="#" aria-disabled="true">PDF <span class="soon">(soon)</span></a>
@@ -610,8 +611,8 @@
   </button>
 </div>
 
-<script src="failure.js?v=37"></script>
-<script src="drive.js?v=37"></script>
-<script src="main.js?v=37"></script>
+<script src="failure.js?v=38"></script>
+<script src="drive.js?v=38"></script>
+<script src="main.js?v=38"></script>
 </body>
 </html>

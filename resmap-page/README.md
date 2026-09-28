@@ -34,7 +34,7 @@ stay readable.
 
 ## The camera-failure walkthrough
 
-Section 4 is a pinned stage the scroll drives through four measured conditions:
+The walkthrough leads the page, above the abstract rather than in paper order: it is a pinned stage the scroll drives through four measured conditions,
 clean, front camera dropped, three front dropped, all six dropped. The rig is a
 schematic ,  surround coverage around the ego with the satellite tile behind it,
 built as SVG in `failure.js`, no assets. The rig interpolates: a camera fading
