@@ -257,6 +257,10 @@
     road.hidden = !on;
     cockpit.hidden = !on;
     root.classList.toggle('has-road', on);
+    // Start out of frame, and let atTop decide from the actual scroll
+    // position: a reload part way down the page should not hide the road.
+    if (on) { hidden = true; root.classList.add('at-top'); atTop(); }
+    else root.classList.remove('at-top');
     if (!on) { stopLoop(); return; }
 
     dpr = Math.min(window.devicePixelRatio || 1, 2);

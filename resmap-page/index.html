@@ -35,7 +35,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700&family=Inter+Tight:wght@600;700&display=swap">
-<link rel="stylesheet" href="style.css?v=45">
+<link rel="stylesheet" href="style.css?v=46">
 
 <!-- Set the theme before first paint so there is no flash. -->
 <script>
@@ -83,13 +83,6 @@
 
 <header id="top" class="hero">
   <div class="col">
-    <svg class="mark" viewBox="0 0 34 34" role="img" aria-label="ReSMap">
-      <rect x="1" y="1" width="32" height="32" rx="6" class="m-tile"/>
-      <path d="M11 3.5V30.5" class="m-bound"/>
-      <path d="M23 3.5V30.5" class="m-bound"/>
-      <path d="M17 5V29" class="m-div"/>
-      <path d="M11.8 24.5h10.4" class="m-cross"/>
-    </svg>
     <p class="venue">NeurIPS 2026</p>
     <h1>ReSMap: Recasting Satellite Priors for Robust and Accurate Online HD Map Construction</h1>
 
@@ -134,7 +127,7 @@
 <section class="reveal teaser" id="failure">
   <div class="col">
     <h2 class="teaser-h">Watch the cameras fail</h2>
-    <p><b>ReSMap</b> builds the local HD map around a vehicle from its cameras and from a satellite tile fetched and cached before the drive, so that no onboard fault can take the tile away. Scroll on: the surround cameras drop out a group at a time, and the bars are what each method has left. Every number is measured, and they are the figures in <a href="#results">Table 2</a>, read one drop level at a time.</p>
+    <p><b>ReSMap</b> builds the local HD map around a vehicle from its cameras and from a satellite tile fetched and cached before the drive, so that no onboard fault can take the tile away. Scroll on: the surround cameras drop out a group at a time, and the bars are what each method has left. Every number is measured, and they are the figures in <a href="#table2">Table 2</a>, read one drop level at a time.</p>
   </div>
 
   <div class="track" id="fail-track">
@@ -282,7 +275,7 @@
 
   <div class="col wide">
     <!-- ==== TABLE 2 · paper Tab. 2: update numbers here ==== -->
-    <figure class="table-block">
+    <figure class="table-block" id="table2">
       <div class="scroll">
       <table>
         <caption class="sr-only">Robustness under camera dropout on the geographically non-overlapping split of nuScenes.</caption>
@@ -433,8 +426,8 @@
   </button>
 </div>
 
-<script src="failure.js?v=45"></script>
-<script src="drive.js?v=45"></script>
-<script src="main.js?v=45"></script>
+<script src="failure.js?v=46"></script>
+<script src="drive.js?v=46"></script>
+<script src="main.js?v=46"></script>
 </body>
 </html>
