@@ -127,9 +127,14 @@ body.cv { background-image: none; }          /* no wash behind a document */
 @media print {
   @page { margin: 16mm 14mm; }
 
-  :root {
+  /* Paper is always light. :root[data-theme="dark"] outranks a bare :root,
+     so the override has to carry the attribute too — otherwise a reader in
+     dark mode prints pale grey onto white. */
+  :root,
+  :root[data-theme="light"],
+  :root[data-theme="dark"] {
     --ink: #000; --soft: #222; --faint: #555;
-    --rule: #bbb; --hair: #ddd; --paper: #fff;
+    --rule: #bbb; --hair: #ddd; --paper: #fff; --sheet: #fff;
   }
   html, body.cv {
     background: #fff !important;

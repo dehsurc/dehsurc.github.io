@@ -164,10 +164,21 @@ h1, h2, h3 { font-weight: 700; line-height: 1.25; margin: 0; }
 }
 .cv-link {
   margin-left: auto;
+  display: inline-flex; align-items: center; gap: .3rem;
   font-size: .86rem; font-weight: 500;
   text-decoration: none; color: var(--soft); white-space: nowrap;
 }
 .cv-link:hover { color: var(--ink); }
+
+/* The arrow is drawn rather than typed: the ↗ glyph is a hairline at this
+   size, and a stroked one can be weighted to sit with the text. */
+.arrow {
+  width: .82em; height: .82em; flex: none;
+  fill: none; stroke: currentColor; stroke-width: 2.4;
+  stroke-linecap: round; stroke-linejoin: round;
+  transition: transform .25s cubic-bezier(.4, 0, .2, 1);
+}
+a:hover > .arrow { transform: translate(.1em, -.1em); }
 
 /* Same switch as the ReSMap page: the mask circle slides in to carve a
    crescent out of a growing disc while the rays retract. */
@@ -310,9 +321,13 @@ h1, h2, h3 { font-weight: 700; line-height: 1.25; margin: 0; }
 .body > p { margin: 0 0 1.1rem; max-width: 38em; }
 .body > p:last-child { margin-bottom: 0; }
 
-.also { margin: 0 0 1.4rem; font-size: .92rem; }
-.also a { color: var(--ink); text-decoration-color: var(--rule); }
-.also a:hover { text-decoration-color: var(--ink); }
+.also { margin: 0 0 1.4rem; font-size: .95rem; }
+.also a {
+  display: inline-flex; align-items: center; gap: .32rem;
+  color: var(--ink); text-decoration: none;
+  border-bottom: 1px solid var(--rule); padding-bottom: 1px;
+}
+.also a:hover { border-bottom-color: var(--ink); }
 
 /* ---------- publications ----------------------------------------------- */
 
