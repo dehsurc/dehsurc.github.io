@@ -381,10 +381,12 @@
     if (road.hidden) return;
 
     var ink = neutral();
-    /* Across the rail: a verge on the sign side for the posts to stand in,
-       the carriageway, then a shoulder for the distance ticks. */
-    var rTop = Math.round(H * 0.3);
-    var rBot = H - 9;
+    /* Across the rail the carriageway sits centred, with the same margin on
+       both sides: the sign posts stand in one and the distance ticks in the
+       other. It used to be 20px against 9, and the rail looked lopsided. */
+    var verge = Math.round(H * 0.19);
+    var rTop = verge;
+    var rBot = H - verge;
     var mid = (rTop + rBot) / 2;
     var edgeT = rTop + 2.5, edgeB = rBot - 2.5;
     var carX = CAR_X * W;

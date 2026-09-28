@@ -743,9 +743,10 @@ h1 { margin: 0 0 1.4rem; }
 
 /* ---------- headings and prose ---------- */
 
-/* A section heading is a title in the display face with its number set small
-   above it, in the accent, like a chapter mark. Hierarchy comes from size and
-   the face, so it needs no rule under it to say where a section starts. */
+/* A section heading is a title in the display face with its number on the
+   same line, in the accent. Hierarchy comes from size and the face, so it
+   needs no rule under it to say where a section starts. (The number sat on a
+   line of its own for a while; a lone digit over a heading reads as a stray.) */
 h2 {
   font-family: var(--display);
   font-size: 1.72rem; font-weight: 700; line-height: 1.2;
@@ -753,11 +754,8 @@ h2 {
   margin: 0 0 1.3rem;
 }
 h2 .num {
-  display: block;
-  margin-bottom: .45rem;
-  font-family: var(--sans);
-  font-size: .78rem; font-weight: 600; line-height: 1;
-  letter-spacing: .06em;
+  margin-right: .5em;
+  font-weight: 600;
   color: var(--accent);
   font-variant-numeric: lining-nums tabular-nums;
 }
