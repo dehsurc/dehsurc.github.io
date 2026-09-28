@@ -439,7 +439,11 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
   top: 26%;
   transform: translateY(-50%);
   margin: 0;
-  max-width: 132px;
+  /* An explicit width, not a max-width. Absolutely positioned past the right
+     edge of a 68px rail, the available width is zero, so shrink-to-fit falls
+     back to the longest word and "Cite this paper" came out one word per
+     line. */
+  width: 138px;
   padding: .4rem .55rem;
   border-left: 2px solid var(--accent);
   background: var(--bar);
@@ -574,10 +578,14 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
   0%, 100% { color: var(--ink-soft); border-color: var(--rule-dark); }
   45%      { color: var(--go);       border-color: var(--go); }
 }
+/* Faint grey at 11px, it was missed by the person who asked for it. A callout
+   rule and the body ink: still small, but findable. */
 #drive-hint {
-  margin: 0 0 .25rem;
-  font-size: 11px; line-height: 1.3;
-  color: var(--ink-faint);
+  margin: 0 0 .4rem;
+  padding-left: .4rem;
+  border-left: 2px solid var(--go);
+  font-size: 11.5px; line-height: 1.35;
+  color: var(--ink-soft);
 }
 #drive-hint[hidden] { display: none; }
 

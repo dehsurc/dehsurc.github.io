@@ -77,9 +77,12 @@
    * The car
    *
    * 1500 kg on a five-speed automatic, geared and powered so that flooring it
-   * is worth doing: 438 Nm at the peak of the curve, 0-100 km/h in about 4.8 s,
-   * 250 km/h flat out. Every figure the cockpit prints is computed from the
-   * constants below, so retuning the car cannot leave a readout behind.
+   * is worth doing and lifting off is worth noticing: 438 Nm at the peak of
+   * the curve, 0-100 km/h in 5.0 s, 205 km/h flat out, and about 2.6 m/s^2 of
+   * retardation the moment you come off it. Every figure the cockpit prints is
+   * computed from the constants below, and tools/check-numbers.js re-runs the
+   * model against the three quoted here, so retuning the car cannot leave
+   * either a readout or this paragraph behind.
    * ---------------------------------------------------------------- */
 
   var MASS = 1500;                                  // kg
@@ -89,8 +92,8 @@
   var EFF = 0.85;                                   // driveline efficiency
   var GEARS = [3.55, 2.05, 1.35, 1.00, 0.78];       // five forward ratios
   var IDLE = 780, REDLINE = 6500;                   // rpm
-  var DRAG_K = 0.55;                                // ½·rho·Cd·A
-  var C_RR = 0.017;                                 // rolling resistance
+  var DRAG_K = 0.90;                                // ½·rho·Cd·A
+  var C_RR = 0.032;                                 // rolling resistance
   var GRAV = 9.81;
   var BRAKE_MAX = 9200;                             // N, about 6 m/s²
   var SHIFT_T = 0.16;                               // s of torque cut per shift
@@ -105,8 +108,10 @@
 
   // Off throttle, the engine drags the car back through the same gearing. It
   // is deliberately strong: lifting off has to be something you can see happen
-  // on the page, not a number quietly declining.
-  function engineBrake(r) { return 68 + r * 0.042; }
+  // on the page, not a number quietly declining. With drag and rolling
+  // resistance it puts about 2.6 m/s² into a lift at speed, where the earlier
+  // numbers gave 1.5 and the car just sailed on.
+  function engineBrake(r) { return 125 + r * 0.078; }
 
   function ratio() { return GEARS[g]; }
   function rpmAt(v) {
@@ -597,6 +602,21 @@
     /* And the same line at the far end, so the route has a finish you can see
        coming rather than a stop you discover by hitting it. */
     chequer(sx(maxM()));
+
+    /* Crossing the line lights the route up behind you: a band runs back up
+       the rail from the finish towards the start, over the map that has just
+       been finished, while the car carries on down and off the end. Arriving
+       used to be the car simply leaving, which was no arrival at all. */
+    if (outro > 0.01 && outro < 0.995) {
+      var finishX = sx(maxM());
+      var headX = finishX - outro * (finishX + 40);
+      var sweep = ctx.createLinearGradient(headX - 110, 0, headX + 26, 0);
+      sweep.addColorStop(0, rgba(accent, 0));
+      sweep.addColorStop(0.78, rgba(accent, 0.34 * (1 - outro * 0.45)));
+      sweep.addColorStop(1, rgba(accent, 0));
+      ctx.fillStyle = sweep;
+      ctx.fillRect(headX - 110, rTop, 136, rBot - rTop);
+    }
 
     drawCar(offX, mid);
 
@@ -1104,10 +1124,13 @@
    * a pedal moves, and never offered again on this browser. */
   var hintEl = document.getElementById('drive-hint');
   var hintTimer = 0, hintDone = false;
+  /* Versioned, because the control moved: anyone who was shown the hint when
+     the road was a band across the top has not been shown this one. */
+  var HINT_KEY = 'resmap-drove-rail';
 
   function hintOffered() {
     hintDone = true;
-    try { localStorage.setItem('resmap-drove', '1'); } catch (err) { /* private mode */ }
+    try { localStorage.setItem(HINT_KEY, '1'); } catch (err) { /* private mode */ }
   }
   function dropHint() {
     if (hintTimer) { clearTimeout(hintTimer); hintTimer = 0; }
@@ -1121,11 +1144,13 @@
     /* A blocked or empty store is the same as a first visit as far as this is
        concerned, so the read only ever decides whether to stay quiet. */
     var known = false;
-    try { known = !!localStorage.getItem('resmap-drove'); } catch (err) { known = false; }
+    try { known = !!localStorage.getItem(HINT_KEY); } catch (err) { known = false; }
     if (known) { hintDone = true; return; }
     hintEl.hidden = false;
     cockpit.classList.add('hinting');
-    hintTimer = setTimeout(dropHint, 9000);
+    /* Long enough to be read by someone who is reading the page rather than
+       watching the corner of it. It goes the instant a pedal moves. */
+    hintTimer = setTimeout(dropHint, 22000);
   }
 
   function pressGas() {
