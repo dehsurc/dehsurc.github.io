@@ -12,6 +12,16 @@
 
 body.cv { background-image: none; }          /* no wash behind a document */
 
+/* No rules under the links. The underline broke around descenders and skipped
+   the full stops in an address, which looked worse than no underline at all;
+   it comes back only under the pointer, and unbroken. */
+.cv a { text-decoration: none; }
+.cv a:hover {
+  text-decoration: underline;
+  text-decoration-skip-ink: none;
+  text-underline-offset: .16em;
+}
+
 /* ---------- the bar ----------------------------------------------------- */
 
 .print-btn {
@@ -92,20 +102,19 @@ body.cv { background-image: none; }          /* no wash behind a document */
 /* ---------- dated entries ----------------------------------------------- */
 
 .entries { list-style: none; margin: 0; padding: 0; }
-.entries > li {
-  position: relative;
-  padding: .5rem 0;
-}
+.entries > li { padding: .5rem 0; }
+.entries > li::after { content: ""; display: block; clear: both; }
+
+/* The date floats, so the title gives way to it on the line they share and
+   takes the full measure on every line after. Reserving a fixed right-hand
+   margin instead made the second line break as early as the first. */
 .entries > li > .when {
-  position: absolute; top: .55rem; right: 0;
+  float: right; margin-left: 1.2rem;
   white-space: nowrap;
   font-size: .9rem; color: var(--soft);
   font-variant-numeric: tabular-nums lining-nums;
 }
-.entry h3 {
-  font-size: 1.02rem; font-weight: 700;
-  padding-right: 9.5rem;          /* room for the date on the title's line */
-}
+.entry h3 { font-size: 1.02rem; font-weight: 700; }
 .entry .org { margin: .1rem 0 0; font-size: .92rem; color: var(--faint); }
 .entry p { margin: .2rem 0 0; font-size: .97rem; color: var(--soft); }
 .role {
@@ -148,8 +157,7 @@ body.cv { background-image: none; }          /* no wash behind a document */
 /* ---------- narrow ------------------------------------------------------ */
 
 @media (max-width: 40rem) {
-  .entries > li > .when { position: static; display: block; margin-bottom: .1rem; }
-  .entry h3 { padding-right: 0; }
+  .entries > li > .when { float: none; display: block; margin: 0 0 .1rem; }
   .cv-row .head { flex-wrap: wrap; gap: .1rem; }
   .cv-note { text-align: left; white-space: normal; }
   .kit > div { grid-template-columns: minmax(0, 1fr); gap: .1rem; }
