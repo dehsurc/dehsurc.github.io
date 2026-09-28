@@ -64,6 +64,9 @@
   --sans: "Inter", "Freesentation", -apple-system, BlinkMacSystemFont,
           system-ui, "Segoe UI", Roboto, "Apple SD Gothic Neo",
           "Malgun Gothic", sans-serif;
+  /* The display face the rest of dehsurc.github.io sets its names in, so the
+     two pages read as the same hand. */
+  --display: "Bricolage Grotesque", "Freesentation", "Inter", system-ui, sans-serif;
   --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
   --col:  52rem;   /* prose measure */
@@ -154,7 +157,8 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
    number and no rule: it is the way in, not section one. */
 .teaser { padding-top: .5rem; }
 .teaser-h {
-  font-size: 1.32rem; font-weight: 600; letter-spacing: -.02em;
+  font-family: var(--display);
+  font-size: 1.55rem; font-weight: 700; letter-spacing: -.025em;
   margin: 0 0 1.15rem;
   padding: 0;
   border: 0;
@@ -712,11 +716,30 @@ section + section { border-top: 1px solid var(--rule); }
 }
 
 h1 {
-  font-size: 2rem; font-weight: 600; line-height: 1.24;
-  letter-spacing: -.026em;
-  margin: 0 0 1.4rem;
+  font-family: var(--display);
+  font-size: clamp(2.1rem, 3.6vw, 2.85rem); font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -.028em;
+  margin: 0 0 1.5rem;
   text-wrap: balance;
 }
+
+/* A mark, not a logo: the satellite tile with the map drawn over it, in the
+   three element colours the page already uses everywhere else. */
+.mark {
+  display: block;
+  width: 2.1rem; height: 2.1rem;
+  margin-bottom: .85rem;
+  overflow: visible;
+}
+.m-tile { fill: var(--surface); stroke: var(--rule-dark); stroke-width: 1; }
+.m-bound, .m-div, .m-cross { fill: none; stroke-linecap: round; }
+.m-bound { stroke: #3f9c63; stroke-width: 2; }
+.m-div   { stroke: #c2831f; stroke-width: 1.6; stroke-dasharray: 3 3.6; }
+.m-cross { stroke: #3277bd; stroke-width: 2.6; }
+:root[data-theme="dark"] .m-bound { stroke: #63c98c; }
+:root[data-theme="dark"] .m-div   { stroke: #e0a94a; }
+:root[data-theme="dark"] .m-cross { stroke: #6aa6e8; }
 
 .authors { margin: 0 0 .35rem; line-height: 1.8; }
 .authors a { color: var(--ink); }
