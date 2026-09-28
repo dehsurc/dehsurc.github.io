@@ -746,6 +746,14 @@ h1 { margin: 0 0 1.4rem; }
 
 .affil { margin: 0 0 .55rem; color: var(--ink-soft); }
 .affil .notes { margin-left: .5rem; white-space: nowrap; }
+/* Quiet enough for the hero, underlined enough to be a link. */
+.affil a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--rule-dark);
+  text-underline-offset: 2px;
+}
+.affil a:hover { color: var(--ink); text-decoration-color: currentColor; }
 
 .notes, .small { font-size: 14px; line-height: 1.6; color: var(--ink-faint); margin: 0; }
 .small { margin-top: 1rem; }
