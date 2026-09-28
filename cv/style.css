@@ -181,3 +181,100 @@ body.cv { background-image: none; }          /* no wash behind a document */
   a { color: #000; text-decoration: none; }
   .pub .links { display: none; }          /* the link is in the paper's margin nowhere */
 }
+
+/* =========================================================================
+   ?style=classic — the conventional academic CV, for comparison with the
+   house treatment above. Same content, ordinary conventions: a centred
+   masthead, ruled section headings, dates on the right of their entry,
+   one narrow measure, tighter leading. ?style=classic-serif sets it in a
+   serif, which is the traditional version of the same thing.
+   ========================================================================= */
+
+:root[data-cv-style^="classic"] {
+  --display: var(--sans);
+}
+:root[data-cv-style="classic-serif"] {
+  --sans: "Source Serif 4", "Iowan Old Style", Georgia, "Times New Roman", serif;
+}
+
+:root[data-cv-style^="classic"] .cv-head,
+:root[data-cv-style^="classic"] .cv-row,
+:root[data-cv-style^="classic"] .foot { max-width: 46rem; }
+
+/* masthead */
+:root[data-cv-style^="classic"] .cv-head {
+  text-align: center;
+  padding-top: clamp(2.2rem, 5vw, 3.2rem);
+  padding-bottom: 1.4rem;
+}
+:root[data-cv-style^="classic"] .cv-head h1 {
+  font-weight: 600; font-size: clamp(1.9rem, 4.4vw, 2.4rem);
+  letter-spacing: -.01em;
+}
+:root[data-cv-style^="classic"] .hangul {
+  display: inline; margin-left: .55em; letter-spacing: .06em;
+}
+:root[data-cv-style^="classic"] .cv-sub {
+  margin: .5rem auto 0; max-width: none; font-size: .95rem;
+}
+:root[data-cv-style^="classic"] .cv-meta {
+  justify-content: center; gap: .2rem 1.1rem; margin-top: .55rem;
+}
+
+/* ruled section headings, content full width beneath */
+:root[data-cv-style^="classic"] .cv-row {
+  display: block;
+  border-top: 0;
+  padding-top: 1.3rem; padding-bottom: .2rem;
+}
+:root[data-cv-style^="classic"] .cv-row h2 {
+  font-size: 1rem; font-weight: 700; color: var(--ink);
+  padding-bottom: .3rem; margin-bottom: .7rem;
+  border-bottom: 1px solid var(--ink);
+}
+:root[data-cv-style^="classic"] .cv-note {
+  margin: -.4rem 0 .7rem; font-size: .8rem;
+}
+
+/* entries: title left, dates right, description under both */
+:root[data-cv-style^="classic"] .entries > li,
+:root[data-cv-style^="classic"] .kit > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: .1rem .9rem;
+  padding: .5rem 0;
+  border-bottom: 0;
+}
+:root[data-cv-style^="classic"] .entries > li > .when {
+  grid-column: 2; grid-row: 1;
+  text-align: right; font-size: .86rem; color: var(--soft);
+  white-space: nowrap;
+}
+:root[data-cv-style^="classic"] .entries > li > .entry {
+  grid-column: 1; grid-row: 1;
+}
+:root[data-cv-style^="classic"] .entry h3 { font-size: .98rem; font-weight: 700; }
+:root[data-cv-style^="classic"] .entry p { font-size: .92rem; max-width: none; }
+
+:root[data-cv-style^="classic"] .kit > div { padding: .22rem 0; }
+:root[data-cv-style^="classic"] .kit dt {
+  grid-column: 1; font-size: .92rem; color: var(--ink); font-weight: 600;
+}
+:root[data-cv-style^="classic"] .kit dd { grid-column: 1; }
+
+/* publications: hanging indent off the reference number */
+:root[data-cv-style^="classic"] .pubs > li {
+  grid-template-columns: 2.2rem minmax(0, 1fr);
+  gap: .1rem .4rem;
+  padding: .45rem 0;
+  border-bottom: 0;
+}
+:root[data-cv-style^="classic"] .pub h3 { font-size: .98rem; font-weight: 700; }
+:root[data-cv-style^="classic"] .pub .authors { font-size: .9rem; }
+:root[data-cv-style^="classic"] .pub .meta { margin-top: .12rem; }
+:root[data-cv-style^="classic"] .venue { font-size: .88rem; color: var(--soft); }
+:root[data-cv-style^="classic"] .pid { font-size: .88rem; }
+
+@media print {
+  :root[data-cv-style^="classic"] .cv-row h2 { border-bottom-color: #000; }
+}

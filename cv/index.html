@@ -27,6 +27,9 @@
                        : window.matchMedia('(prefers-color-scheme: dark)').matches;
       document.documentElement.dataset.theme = dark ? 'dark' : 'light';
     } catch (e) {}
+    // ?style=classic — the conventional CV treatment, for comparison.
+    var st = new URLSearchParams(location.search).get('style');
+    if (st) document.documentElement.dataset.cvStyle = st;
   })();
 </script>
 </head>
@@ -60,9 +63,9 @@
 
 <header class="cv-head">
   <h1>Kyungmin Kim<span class="hangul">김경민</span></h1>
-  <p class="cv-sub">Ph.D. candidate, Department of Automotive Engineering, Hanyang University
-    &middot; <a href="https://ircv.hanyang.ac.kr/" target="_blank" rel="noopener">IRCV Lab</a>,
-    advised by Prof. Soonmin Hwang</p>
+  <p class="cv-sub">Ph.D. candidate, Department of Automotive Engineering, Hanyang University<br>
+    <a href="https://ircv.hanyang.ac.kr/" target="_blank" rel="noopener">IRCV&nbsp;Lab</a>,
+    advised by Prof.&nbsp;Soonmin&nbsp;Hwang</p>
   <p class="cv-meta">
     <a href="mailto:tnrud17@hanyang.ac.kr">tnrud17@hanyang.ac.kr</a>
     <span>Seoul, Republic of Korea</span>
@@ -79,15 +82,15 @@
       <li>
         <span class="when">2023 &ndash; 2029 <span class="soft">(expected)</span></span>
         <div class="entry">
-          <h3>Ph.D., Automotive Engineering &mdash; Hanyang University</h3>
-          <p>Integrated M.S./Ph.D. programme, advised by Prof. Soonmin Hwang. GPA 4.29/4.5.</p>
+          <h3>Ph.D., Automotive&nbsp;Engineering, Hanyang&nbsp;University</h3>
+          <p>Integrated M.S./Ph.D. programme, advised by Prof.&nbsp;Soonmin&nbsp;Hwang. GPA&nbsp;4.29/4.5.</p>
         </div>
       </li>
       <li>
         <span class="when">2017 &ndash; 2023</span>
         <div class="entry">
-          <h3>B.S., Automotive Engineering &mdash; Hanyang University</h3>
-          <p>Summa cum laude, ranked 2nd of 41. GPA 4.10/4.5.
+          <h3>B.S., Automotive&nbsp;Engineering, Hanyang&nbsp;University</h3>
+          <p>Summa cum laude, ranked 2nd of&nbsp;41. GPA&nbsp;4.10/4.5.
              Thesis: <i>Autonomous Bus Parking Path Planning in Low-Speed Scenarios</i>.</p>
         </div>
       </li>
@@ -152,13 +155,13 @@
       <li>
         <span class="when">2026.08 &ndash; 2026.11</span>
         <div class="entry">
-          <h3>Assistant &mdash; Kakao Mobility</h3>
+          <h3>Assistant, Kakao&nbsp;Mobility</h3>
         </div>
       </li>
       <li>
         <span class="when">2022.07 &ndash; 2022.08</span>
         <div class="entry">
-          <h3>Research intern &mdash; STARMATA</h3>
+          <h3>Research intern, STARMATA</h3>
           <p>Post-rainfall puddle mapping in LiDAR point clouds on unpaved roads: raw-data
              collection and processing, and filtering of the noise artefacts standing water
              leaves in a scan.</p>
@@ -197,8 +200,8 @@
         <div class="entry">
           <h3>LiDAR hazard detection for in-factory forklifts <span class="role">project lead</span></h3>
           <p class="org">SL Corporation</p>
-          <p>Led development end to end &mdash; SLAM, calibration and system integration &mdash;
-             and validated the detection algorithm against 20+ industrial safety requirements.</p>
+          <p>Led development end to end (SLAM, calibration, system integration) and validated
+             the detection algorithm against 20+ industrial safety requirements.</p>
         </div>
       </li>
       <li>
