@@ -135,8 +135,13 @@ body.cv { background-image: none; }          /* no wash behind a document */
   padding: .45rem 0;
 }
 .pid { font-size: .92rem; color: var(--faint); padding-top: .12rem; }
-.pub h3 { font-size: 1.02rem; font-weight: 700; }
-.pub .authors { margin: .1rem 0 0; font-size: .95rem; color: var(--soft); }
+/* A paper title and an author list cannot be rewritten to fit, so the two
+   lines they take are evened out instead of leaving a stub at the end. */
+.pub h3 { font-size: 1.02rem; font-weight: 700; text-wrap: balance; }
+.pub .authors {
+  margin: .1rem 0 0; font-size: .95rem; color: var(--soft);
+  text-wrap: balance;
+}
 .pub .authors b { font-weight: 700; color: var(--ink); }
 .pub .authors sup { font-size: .72em; }
 .pub .meta { margin: .12rem 0 0; }
