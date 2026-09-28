@@ -790,14 +790,17 @@ p:last-child { margin-bottom: 0; }
 
 b, strong { font-weight: 600; }
 
+/* Real MathML, so the browser sets it in its own maths face: no library, no
+   webfont, and subscripts that sit where a typesetter would put them. */
 .eq {
-  text-align: center;
-  padding: .95rem 0;
-  margin: .4rem 0 1.2rem;
+  padding: 1.05rem 0;
+  margin: .5rem 0 1.3rem;
   border-top: 1px solid var(--rule);
   border-bottom: 1px solid var(--rule);
-  font-variant-numeric: lining-nums;
 }
+math { font-size: 1.04em; }
+math[display="block"] { font-size: 1.22em; }
+.eq math { color: var(--ink); }
 
 .steps { margin: 0 0 1.05rem; padding-left: 1.4rem; }
 .steps li { margin-bottom: .6rem; }

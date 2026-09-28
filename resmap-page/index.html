@@ -35,7 +35,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700&family=Inter+Tight:wght@600;700&display=swap">
-<link rel="stylesheet" href="style.css?v=49">
+<link rel="stylesheet" href="style.css?v=50">
 
 <!-- Set the theme before first paint so there is no flash. -->
 <script>
@@ -193,15 +193,15 @@
 
   <div class="col">
     <h3>2.1 &nbsp;Predict-then-Fuse</h3>
-    <p>Per-branch BEV segmentation decoders produce modality-specific logits from <i>F</i><sub>cam</sub> and <i>F</i><sub>sat</sub>. The maximum class-wise sigmoid confidence of each branch becomes a scalar per-pixel reliability map <i>r</i><sub>m</sub>, shared across channels and detached from the gradient, so the fusion never learns a modality-comparison weight of its own:</p>
-    <p class="eq"><i>F</i><sub>fuse</sub>(<i>x</i>) = [ <i>r</i><sub>cam</sub>(<i>x</i>)&thinsp;<i>F</i><sub>cam</sub>(<i>x</i>) + <i>r</i><sub>sat</sub>(<i>x</i>)&thinsp;<i>F</i><sub>sat</sub>(<i>x</i>) ] / [ <i>r</i><sub>cam</sub>(<i>x</i>) + <i>r</i><sub>sat</sub>(<i>x</i>) + &epsilon; ]</p>
-    <p>We call this the <b>Self-Confidence Gate</b>. The fallback is a closed-form property rather than a learned behaviour: as <i>r</i><sub>cam</sub> &rarr; 0, the fused feature converges to the satellite feature. Because the gating signal is a prediction confidence and not a raw-image statistic, it also holds up under failures never seen in training, such as cameras zeroed at inference.</p>
+    <p>Each branch segments the BEV on its own, and how confident it is at a pixel becomes that branch&rsquo;s weight at that pixel. The weight is detached from the gradient, so the fusion never learns a preference between the two:</p>
+    <div class="eq"><math display="block"><msub><mi>F</mi><mtext>fuse</mtext></msub><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo><mo>=</mo><mfrac><mrow><msub><mi>r</mi><mtext>cam</mtext></msub><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo><mo>&#x2062;</mo><msub><mi>F</mi><mtext>cam</mtext></msub><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo><mo>+</mo><msub><mi>r</mi><mtext>sat</mtext></msub><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo><mo>&#x2062;</mo><msub><mi>F</mi><mtext>sat</mtext></msub><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></mrow><mrow><msub><mi>r</mi><mtext>cam</mtext></msub><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo><mo>+</mo><msub><mi>r</mi><mtext>sat</mtext></msub><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo><mo>+</mo><mi>&#x3B5;</mi></mrow></mfrac></math></div>
+    <p>We call this the <b>Self-Confidence Gate</b>. The fallback is a closed-form property rather than a learned behaviour: as <math><msub><mi>r</mi><mtext>cam</mtext></msub></math> &rarr; 0, the fused feature converges to the satellite feature. Because the gating signal is a prediction confidence and not a raw-image statistic, it also holds up under failures never seen in training, such as cameras zeroed at inference.</p>
   </div>
 
   <div class="col wide">
     <figure class="figure">
       <img src="assets/figures/gate.webp" alt="Per-pixel and per-query gate response under camera dropout.">
-      <figcaption><b>Gate response under camera dropout.</b> Left: over active BEV cells, removing all cameras collapses <i>r</i><sub>cam</sub> while <i>r</i><sub>sat</sub> rises to cover the same regions. Right: the same routing appears at the query level: the per-token gate shifts negatively for 98% of queries, with the largest drops on those that were most camera-reliant in the clean run.</figcaption>
+      <figcaption><b>Gate response under camera dropout.</b> Left: over active BEV cells, removing all cameras collapses <math><msub><mi>r</mi><mtext>cam</mtext></msub></math> while <math><msub><mi>r</mi><mtext>sat</mtext></msub></math> rises to cover the same regions. Right: the same routing appears at the query level: the per-token gate shifts negatively for 98% of queries, with the largest drops on those that were most camera-reliant in the clean run.</figcaption>
     </figure>
   </div>
 
@@ -421,8 +421,8 @@
   </button>
 </div>
 
-<script src="failure.js?v=49"></script>
-<script src="drive.js?v=49"></script>
-<script src="main.js?v=49"></script>
+<script src="failure.js?v=50"></script>
+<script src="drive.js?v=50"></script>
+<script src="main.js?v=50"></script>
 </body>
 </html>
