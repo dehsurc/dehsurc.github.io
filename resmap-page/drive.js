@@ -20,6 +20,15 @@
  * the document is long, and a road drawn at the document's own scale would
  * show one lane marking at a time.
  *
+ * The strip is a rail down the left-hand edge. Everything here is still drawn
+ * in strip coordinates -- x along the route, y across the carriageway -- and
+ * the canvas transform turns that on its side once, at the top of resize().
+ * So the road runs the way the page does, it costs a gutter rather than the
+ * top of every screen, and the guide signs have room to sit beside it and be
+ * read. A band across the top had to be hidden at the top of the page to keep
+ * the first screen clear; a rail never covers anything, so it is simply
+ * always there.
+ *
  * There is no reverse. It existed so the map could be un-drawn, which nobody
  * did, and it cost a lever, a reverse ratio, a governor, a signed engine
  * braking term and three of the bugs this file has had. Going back up is what
@@ -62,7 +71,7 @@
   var PERCEPTION_M = 30;
   var ROAD_PX_PER_M = 6;    // strip pixels to the metre
   var CAR_X = 0.26;         // the car's fixed position across the strip
-  var MIN_VIEWPORT = 900;   // below this the road hides and the links return
+  var MIN_VIEWPORT = 1000;  // below this the rail hides and the links return
 
   /* ---------------------------------------------------------------- *
    * The car
@@ -125,7 +134,6 @@
   var raf = 0, last = 0, idleFor = 0;
   var ownScroll = -1, wasBehaviour = '', driving = false;
   var stops = [];
-  var startPlate = null, plateW = 74, plateH = 22;
   /* How much of the camera rig is down, 0 to 1, eased toward what the
      walkthrough below publishes so the strip does not snap between levels. */
   var camsDown = 0;
@@ -219,17 +227,6 @@
 
     signBox.textContent = '';
 
-    /* The start/finish gantry. A circuit carries its name on a board over the
-       line, not painted on the tarmac, which is where the last attempt at this
-       went wrong: lettering on the carriageway looked laboured and the map
-       layer drew straight over it. This is a plate like the guide signs, so it
-       sits above the road and nothing can cover it. */
-    startPlate = document.createElement('div');
-    startPlate.id = 'start-plate';
-    startPlate.setAttribute('aria-hidden', 'true');
-    startPlate.textContent = 'ReSMap';
-    signBox.appendChild(startPlate);
-
     stops.forEach(function (stop) {
       var b = document.createElement('button');
       b.type = 'button';
@@ -254,8 +251,6 @@
       stop.w = stop.el.offsetWidth || 90;
       stop.h = stop.el.offsetHeight || 22;
     });
-    plateW = startPlate.offsetWidth || 74;
-    plateH = startPlate.offsetHeight || 22;
   }
 
   /* A sign is navigation, not a drive control: coast to a stop and let the
@@ -278,20 +273,32 @@
     road.hidden = !on;
     cockpit.hidden = !on;
     root.classList.toggle('has-road', on);
-    // Start out of frame, and let atTop decide from the actual scroll
-    // position: a reload part way down the page should not hide the road.
-    if (on) { hidden = true; root.classList.add('at-top'); atTop(); }
-    else root.classList.remove('at-top');
     if (!on) { stopLoop(); return; }
 
     dpr = Math.min(window.devicePixelRatio || 1, 2);
-    W = road.clientWidth;
-    H = canvas.parentNode.clientHeight || 78;
-    canvas.width = Math.ceil(W * dpr);
-    canvas.height = Math.ceil(H * dpr);
-    canvas.style.width = W + 'px';
-    canvas.style.height = H + 'px';
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    /* The canvas is tall and narrow; the drawing is long and shallow. W and H
+       stay the strip's own dimensions -- W along the route, H across the
+       carriageway -- and the transform below does the turning.
+
+         screen x = railW - strip y      the verge ends up on the right, next
+         screen y = strip x              to the signs, and the route runs down
+
+       It is a transpose rather than a rotation, which mirrors the across-axis.
+       Nothing on the strip is handed: the road is symmetric about its centre
+       line and the car's asymmetries are all along the route. There is no text
+       on this canvas at all, which is what made turning it cheap. */
+    var railW = road.clientWidth;
+    var railH = canvas.parentNode.clientHeight || window.innerHeight || 600;
+    W = railH;
+    H = railW;
+    canvas.width = Math.ceil(railW * dpr);
+    canvas.height = Math.ceil(railH * dpr);
+    canvas.style.width = railW + 'px';
+    canvas.style.height = railH + 'px';
+    ctx.setTransform(0, dpr, -dpr, 0, railW * dpr, 0);
+
+    offerHint();
 
     readPalette();
     measure();
@@ -301,32 +308,13 @@
 
   function syncFromScroll() {
     pos = window.scrollY / PX_PER_M;
-    atTop();
-  }
-
-  /* The road and the cockpit stay out of frame while the page is at the top,
-     so the first screen is the paper. Hysteresis, or they flutter on and off
-     for anyone resting exactly on the threshold. */
-  var hidden = true;
-  function atTop() {
-    var y = window.scrollY;
-    if (hidden ? y > 90 : y > 30) {
-      if (hidden) {
-        hidden = false;
-        root.classList.remove('at-top');
-        offerHint();
-      }
-    } else if (!hidden) {
-      hidden = true;
-      root.classList.add('at-top');
-    }
   }
 
   /* ---------------------------------------------------------------- *
    * Drawing
    * ---------------------------------------------------------------- */
 
-  var SIGN_TOP = 2;          // matches .sign { top } in style.css
+  var SIGN_TOP = 0;          // the edge of the rail the signs stand against
 
   function sx(m) { return CAR_X * W + (m - pos) * ROAD_PX_PER_M; }
 
@@ -390,9 +378,9 @@
     if (road.hidden) return;
 
     var ink = neutral();
-    // The band leaves room for the sign gantry above and the distance posts
-    // along the shoulder below.
-    var rTop = Math.round(H * 0.45);
+    /* Across the rail: a verge on the sign side for the posts to stand in,
+       the carriageway, then a shoulder for the distance ticks. */
+    var rTop = Math.round(H * 0.3);
     var rBot = H - 9;
     var mid = (rTop + rBot) / 2;
     var edgeT = rTop + 2.5, edgeB = rBot - 2.5;
@@ -585,38 +573,13 @@
       ctx.restore();
     }
 
-    /* The head of the route, as a chequer laid across the carriageway rather
-       than the name painted on it: a band reads at a glance where lettering
-       looked laboured, and this goes on after the map layer, which was the
-       first thing to paint over the old marker. */
-    var startX = sx(0);
-    if (startPlate) {
-      var showPlate = startX > -plateW && startX < W + plateW;
-      startPlate.hidden = !showPlate;
-      if (showPlate) {
-        startPlate.style.left = Math.round(startX) + 'px';
-        /* Two legs and a beam. The name sits on the beam with nothing behind
-           it: boxed, it read as a tooltip stuck to the road rather than as
-           part of the structure. */
-        var pLeg = Math.round(plateW / 2) + 7;
-        var beamY = SIGN_TOP + plateH + 1.5;
-        ctx.strokeStyle = 'rgba(' + ink + ', 0.4)';
-        ctx.lineCap = 'butt';
-        ctx.lineWidth = 1.6;
-        [-pLeg, pLeg].forEach(function (dx) {
-          ctx.beginPath();
-          ctx.moveTo(startX + dx, beamY);
-          ctx.lineTo(startX + dx, rTop + 3);
-          ctx.stroke();
-        });
-        ctx.lineWidth = 2.2;
-        ctx.beginPath();
-        ctx.moveTo(startX - pLeg, beamY);
-        ctx.lineTo(startX + pLeg, beamY);
-        ctx.stroke();
-      }
-    }
-    /* A chequer is black and white in both themes. The neutral ink inverts
+    /* Both ends of the route, as a chequer laid across the carriageway. The
+       name used to be painted on the tarmac here and then hung on a gantry
+       over it; neither was any good on a road seen from above, so the route
+       is marked and left to be a road. It goes on after the map layer, which
+       was the first thing to cover the old marker up.
+
+       A chequer is black and white in both themes. The neutral ink inverts
        with the theme, so the dark square is a fixed one. */
     function chequer(x) {
       if (x < -40 || x > W + 40) return;
@@ -630,18 +593,17 @@
         }
       }
     }
-    chequer(startX);
+    chequer(sx(0));
     /* And the same line at the far end, so the route has a finish you can see
        coming rather than a stop you discover by hitting it. */
     chequer(sx(maxM()));
 
     drawCar(offX, mid);
 
-    /* End of the route: the car carries on off the right-hand side, and the
-       finish hands the reader the one thing the page is for. It used to paint
-       a thank-you on the tarmac, which was a dead end — this is the place a
-       visitor has definitely engaged, so it asks for something. Real anchors
-       rather than canvas text, so it is clickable and reachable by keyboard. */
+    /* End of the route: the car carries on past the finish, and the road
+       thanks the reader and then asks for something, which is the one thing
+       the tarmac paint never did. Real DOM rather than canvas text, so the
+       link is clickable, reachable by keyboard, and not a bitmap. */
     if (finishEl) {
       var lit = clamp((outro - 0.3) / 0.35, 0, 1);
       finishEl.hidden = lit <= 0.01;
@@ -655,17 +617,20 @@
       var x = sx(s.m);
       if (x < -170 || x > W + 170) { s.el.hidden = true; return; }
       s.el.hidden = false;
-      s.el.style.left = Math.round(x) + 'px';
+      s.el.style.top = Math.round(x) + 'px';
       s.el.classList.toggle('passed', s.m <= pos);
       var isHere = s === current();
       s.el.classList.toggle('here', isHere);
 
-      /* Two posts from the plate down into the verge, with a footing where
-         they meet the ground. A sign hanging in the air is a label; a sign on
-         legs is a sign. */
+      /* Two posts from the verge out to the plate, with a footing where they
+         meet the ground. A sign hanging in the air is a label; a sign on legs
+         is a sign. The plate sits outside the rail now, so the posts run the
+         whole width of the verge. */
       var footY = rTop + 3;
-      var plateY = SIGN_TOP + (s.h || 22);
-      var leg = Math.max(7, Math.min(34, (s.w || 90) * 0.28));
+      var plateY = SIGN_TOP;
+      /* Spaced off the plate's height, because the posts now stand apart
+         along the route and the plate's long side runs across it. */
+      var leg = Math.max(6, Math.min(16, (s.h || 22) * 0.36));
       ctx.strokeStyle = isHere ? sign : 'rgba(' + ink + ', 0.34)';
       ctx.lineCap = 'butt';
       [-leg, leg].forEach(function (dx) {
@@ -1151,7 +1116,8 @@
     if (!hintDone) hintOffered();
   }
   function offerHint() {
-    if (hintDone || !hintEl) return;
+    // resize() offers it, and resize() runs again on every window change.
+    if (hintDone || !hintEl || hintEl.hidden === false) return;
     /* A blocked or empty store is the same as a first visit as far as this is
        concerned, so the read only ever decides whether to stay quiet. */
     var known = false;
@@ -1251,7 +1217,6 @@
      after you had scrolled away from it, with the car still off the edge. The
      loop idles itself out half a second after the page stops moving. */
   window.addEventListener('scroll', function () {
-    atTop();
     if (!raf) startLoop();
   }, { passive: true });
 

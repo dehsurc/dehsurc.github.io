@@ -77,8 +77,13 @@
                       spent spreading the numbers apart. */
   --gutter: 3rem;
 
-  --road-h: 100px; /* the road band across the top; drive.js reads nothing
-                      from this, but the topbar offset and body padding do */
+  /* The road is a rail down the left-hand edge. --rail-w is the strip itself
+     and --rail-gutter is what the body gives up for it: the strip, plus room
+     for the guide signs to stand beside it and be read. Reserved rather than
+     floated over the margin, so a sign can never land on a figure however
+     narrow the window is. */
+  --rail-w: 68px;
+  --rail-gutter: 200px;
   --chrome: 2.6rem;  /* sticky chrome a pinned section has to clear */
 
   color-scheme: light;
@@ -333,13 +338,15 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
 
 /* ---------- the road ---------- */
 
-/* The road reserves its own band at the top, the way a scrollbar reserves a
-   gutter, so it never sits over the content. The top bar sticks below it, and
-   anchors have to clear both. */
-.has-road body { padding-top: var(--road-h); }
+/* The rail reserves its own gutter, the way a scrollbar does, so it never
+   sits over the content. It replaces the top bar, and with nothing sticky
+   left at the top of the window a pinned section gets the screen back: the
+   walkthrough used to start a road's height down from the top of every
+   viewport for no reason of its own. */
+.has-road body { padding-left: var(--rail-gutter); }
 .has-road .topbar { display: none; }
-.has-road { scroll-padding-top: calc(var(--road-h) + 1rem); }
-.has-road { --chrome: calc(var(--road-h) + 1rem); }
+.has-road { scroll-padding-top: 1rem; }
+.has-road { --chrome: 1rem; }
 
 .nextup {
   grid-column: 1 / -1;
@@ -352,23 +359,17 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
 }
 .nextup:empty { display: none; }
 
-/* At the very top of the page the road is out of frame, so the first screen is
-   the paper and nothing else. It comes down as soon as you move, which is when
-   a road is any use to you. The band stays reserved either way, so nothing on
-   the page shifts when it arrives. */
-#road { transition: transform .3s cubic-bezier(.2, .7, .3, 1); }
-.at-top #road { transform: translateY(-101%); }
-.at-top #cockpit { transform: translateY(130%); opacity: 0; }
-.at-top #cockpit.shut { transform: translateY(130%); }
-
+/* A band across the top had to get out of the way at the top of the page or
+   the first screen was all chrome. A rail covers nothing, so it is simply
+   always there. */
 #road {
   position: fixed;
-  top: 0; left: 0; right: 0;
-  height: var(--road-h);
+  top: 0; bottom: 0; left: 0;
+  width: var(--rail-w);
   z-index: 55;
   display: flex;
   flex-direction: column;
-  border-bottom: 1px solid var(--rule);
+  border-right: 1px solid var(--rule);
   background: var(--bar);
 }
 #road[hidden] { display: none; }
@@ -376,6 +377,9 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
 .road-view { position: relative; flex: 1 1 auto; min-height: 0; }
 #road-map { display: block; }
 
+/* The signs stand beside the rail rather than on it, which is the whole
+   reason the road is down here: on a band across the top they were capped at
+   160px and truncated, and out here they have the gutter to themselves. */
 #road-signs { position: absolute; inset: 0; pointer-events: none; }
 
 /* Guide signs: green plate, white legend, white inner border, section number
@@ -383,10 +387,10 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
    position on the road and slide in from the right. */
 .sign {
   position: absolute;
-  top: 2px;
-  transform: translateX(-50%);
+  left: calc(100% + 11px);
+  transform: translateY(-50%);
   display: flex; align-items: baseline; gap: .3rem;
-  max-width: 160px;
+  max-width: 118px;
   padding: .26rem .5rem;
   border: 1px solid var(--sign);
   border-radius: 3px;
@@ -426,29 +430,32 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
 
 /* The finish. The car crosses the chequer and carries on off the strip; this
    comes up in its place with the one thing the page is for. */
+/* The finish. It comes up beside the rail at the car's own place along it, so
+   it arrives where the reader is already looking. CAR_X is 0.26 of the strip
+   in drive.js and this is the one number that has to agree with it. */
 #finish {
   position: absolute;
-  /* Centred on the carriageway, which sits in the lower part of the strip:
-     the band runs from 45% of the canvas to 9px off its bottom. */
-  left: 50%; top: 72%;
-  transform: translate(-50%, -52%);
+  left: calc(100% + 11px);
+  top: 26%;
+  transform: translateY(-50%);
   margin: 0;
-  display: flex; align-items: baseline; gap: .55rem;
-  padding: .28rem .7rem;
-  border-radius: 3px;
-  background: var(--road-surface);
-  white-space: nowrap;
+  max-width: 132px;
+  padding: .4rem .55rem;
+  border-left: 2px solid var(--accent);
+  background: var(--bar);
 }
 #finish[hidden] { display: none; }
-#finish span {
+#finish b {
+  display: block;
+  margin-bottom: .18rem;
   font-family: var(--display);
-  font-size: 10px; font-weight: 700;
-  letter-spacing: .13em; text-transform: uppercase;
-  color: var(--ink-faint);
+  font-size: 11px; font-weight: 700; line-height: 1.35;
+  letter-spacing: .01em;
+  color: var(--ink);
 }
 #finish a {
-  font-size: 13px; font-weight: 600;
-  color: var(--ink);
+  font-size: 11px; font-weight: 600;
+  color: var(--accent);
   text-decoration-thickness: 1px;
   text-underline-offset: 3px;
   pointer-events: auto;
@@ -636,6 +643,9 @@ section + section { border-top: 1px solid var(--rule); }
   z-index: 46;
   display: flex; gap: .4rem;
 }
+/* The rail owns the bottom-left corner, so these step out past it, into the
+   same gutter the guide signs stand in. */
+.has-road .corner { left: calc(var(--rail-w) + 1.1rem); }
 #to-top, #theme-toggle {
   width: 2.25rem; height: 2.25rem;
   display: grid; place-items: center;
@@ -701,7 +711,7 @@ section + section { border-top: 1px solid var(--rule); }
   /* A driving model is motion by definition. drive.js declines to start under
      this preference; this is the belt to that pair of braces. */
   #road, #cockpit { display: none !important; }
-  .has-road body { padding-top: 0; }
+  .has-road body { padding-left: 0; }
   .has-road .topbar { display: block; top: 0; }
   .has-road .nav-scroll { display: block; }
 }
@@ -970,8 +980,8 @@ footer .small { margin-top: .4rem; }
 
 @media print {
   .topbar, .scene-picker, .bibtex button, #road, #cockpit, .corner { display: none; }
-  /* The road reserves a band on screen; on paper there is nothing to reserve. */
-  .has-road body { padding-top: 0; }
+  /* The rail reserves a gutter on screen; on paper there is nothing to reserve. */
+  .has-road body { padding-left: 0; }
   body { font-size: 10.5pt; }
   .col, .col.wide { width: 100%; }
 }

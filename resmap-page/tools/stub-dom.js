@@ -3,8 +3,9 @@
 var calls = [];
 function ctx2d() {
   var c = {
-    canvas: null, _t: 1,
-    setTransform: function () {}, save: function () {}, restore: function () {},
+    canvas: null, _t: 1, _xform: null,
+    setTransform: function () { c._xform = Array.prototype.slice.call(arguments); },
+    save: function () {}, restore: function () {},
     clearRect: function () {}, beginPath: function () {}, closePath: function () {},
     moveTo: rec('moveTo'), lineTo: rec('lineTo'), arc: rec('arc'),
     rect: rec('rect'), fillRect: rec('fillRect'), stroke: rec('stroke'),
@@ -63,7 +64,7 @@ function El(tag, id) {
     querySelectorAll: function () { return []; },
     scrollIntoView: function () {},
     offsetWidth: 74, offsetHeight: 22, offsetTop: 0,
-    clientWidth: 1440, clientHeight: 78,
+    clientWidth: 68, clientHeight: 900,
     parentNode: null,
     firstElementChild: null
   };
@@ -126,9 +127,9 @@ global.document = {
   getElementById: function (id) {
     if (id === 'road-map') {
       var c = get(id);
-      c.width = 1440; c.height = 100;
+      c.width = 68; c.height = 900;
       c.parentNode = c.parentNode || El('div');
-      c.parentNode.clientHeight = 78;
+      c.parentNode.clientHeight = 900;
       return c;
     }
     for (var i = 0; i < sectionEls.length; i++) if (sectionEls[i].id === id) return sectionEls[i];

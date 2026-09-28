@@ -15,7 +15,7 @@ var fs = require('fs');
 var src = fs.readFileSync(require('path').join(__dirname, '..', 'drive.js'), 'utf8');
 
 /* Expose the internals we want to drive, by appending to the IIFE body. */
-src = src.replace(/\}\)\(\);\s*$/, '  global.__drive = { draw: draw, step: step, hud: hud, measure: measure, resize: resize, atTop: atTop, syncFromScroll: syncFromScroll, offerHint: offerHint, pressGas: pressGas, release: release, state: function(){ return { pos: pos, speed: speed, g: g, rpm: rpm, camsDown: camsDown, outro: outro }; }, set: function(k,v){ if(k==="pos")pos=v; if(k==="speed")speed=v; if(k==="outro")outro=v; if(k==="holdGas")holdGas=v; } };\n})();\n');
+src = src.replace(/\}\)\(\);\s*$/, '  global.__drive = { draw: draw, step: step, hud: hud, measure: measure, resize: resize, syncFromScroll: syncFromScroll, offerHint: offerHint, pressGas: pressGas, release: release, state: function(){ return { pos: pos, speed: speed, g: g, rpm: rpm, camsDown: camsDown, outro: outro }; }, set: function(k,v){ if(k==="pos")pos=v; if(k==="speed")speed=v; if(k==="outro")outro=v; if(k==="holdGas")holdGas=v; } };\n})();\n');
 
 var fail = 0;
 function t(name, fn) {
@@ -32,6 +32,40 @@ t('drive.js runs with no reference error', function () {
 });
 var D = global.__drive;
 
+console.log('\nthe rail');
+t('the canvas is turned on its side, once, in resize', function () {
+  D.resize();
+  var x = S.get('road-map')._ctx._xform;
+  ok(x, 'no transform set');
+  /* screen x = railW - strip y, screen y = strip x, at device pixels. */
+  eq(x[0], 0, 'a'); eq(x[1], 1, 'b'); eq(x[2], -1, 'c'); eq(x[3], 0, 'd');
+  eq(x[4], 68, 'e'); eq(x[5], 0, 'f');
+});
+t('the strip is as long as the rail is tall', function () {
+  ok(/W = railH;/.test(src) && /H = railW;/.test(src), 'W/H not swapped for the rail');
+});
+t('nothing hides at the top of the page any more', function () {
+  ok(!/at-top/.test(src), 'at-top still in drive.js');
+  ok(!/function atTop/.test(src), 'atTop() still in drive.js');
+  global.window.scrollY = 0;
+  D.resize();
+  ok(!S.get('road').hidden, 'rail hidden at the top of the page');
+  ok(!S.get('cockpit').hidden, 'cockpit hidden at the top of the page');
+});
+t('the rail stands down below its viewport floor', function () {
+  global.window.innerWidth = 900;
+  D.resize();
+  ok(S.get('road').hidden, 'rail still on at 900px');
+  ok(!S.root.classList.contains('has-road'), 'gutter still reserved at 900px');
+  global.window.innerWidth = 1440;
+  D.resize();
+  ok(!S.get('road').hidden, 'rail off at 1440px');
+  ok(S.root.classList.contains('has-road'), 'gutter not reserved at 1440px');
+});
+t('the ReSMap gantry is gone', function () {
+  ok(!/start-plate|startPlate/.test(src), 'start plate still in drive.js');
+});
+
 console.log('\nreverse is gone');
 t('no gear/lever/knob identifiers remain', function () {
   ok(!/\bgear\s*[=!]==?\s*['"]R['"]/.test(src), "gear === 'R' still present");
@@ -42,10 +76,9 @@ t('ratio() is the forward gearbox only', function () {
 });
 
 console.log('\nthe model still drives');
-t('resize turns the road on at 1440px', function () {
+t('resize turns the rail on at 1440px', function () {
   D.resize();
-  ok(!S.get('road').hidden, 'road hidden at 1440px');
-  ok(S.root.classList.contains('at-top'), 'should start at the top');
+  ok(!S.get('road').hidden, 'rail hidden at 1440px');
 });
 t('measure finds six stops and numbers them from the headings', function () {
   D.measure();
@@ -56,6 +89,14 @@ t('measure finds six stops and numbers them from the headings', function () {
     var b = sign.children.filter(function (c) { return c.tagName === 'B'; });
     return b.length ? b[0]._text : null;
   }
+  /* Only the stretch of road on the rail is drawn, so the far sections are
+     hidden and carry no position at all. The ones on it run down it. */
+  var placed = signs.filter(function (b) { return !b.hidden; });
+  ok(placed.length > 0, 'no signs on the rail at the top of the route');
+  ok(placed.every(function (b) { return /^-?\d+px$/.test(b.style.top || ''); }),
+     'a sign is not placed down the rail by top');
+  ok(signs.every(function (b) { return b.style.left === undefined; }),
+     'a sign is still placed across by left');
   eq(badge(signs[0]), null, 'walkthrough sign carries a number');
   eq(badge(signs[1]), '1', 'abstract sign number');
   eq(badge(signs[5]), '5', 'cite sign number');
@@ -152,6 +193,8 @@ t('the gauge prints a forward gear and no R', function () {
 });
 t('the finish panel lights with the outro and not before', function () {
   var f = S.get('finish');
+  eq(f.children.filter(function (c) { return c.tagName === 'B'; }).length, 0,
+     'thank-you is built in drive.js rather than the markup');
   D.set('outro', 0); D.draw();
   ok(f.hidden, 'shown before the finish');
   D.set('outro', 1); D.draw();
