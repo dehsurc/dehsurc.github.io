@@ -67,8 +67,10 @@
   --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
   --col:  52rem;   /* prose measure */
-  --fig:  64rem;   /* figures: wider than the prose, not by a mile */
-  --wide: 90rem;   /* tables, which are allowed to break out */
+  --wide: 64rem;   /* the content box: figures, tables, the bar, the stage.
+                      Tables were at 90rem and none of them needs it: the ten
+                      column one is about 620px of content, so the width was
+                      spent spreading the numbers apart. */
   --gutter: 3rem;
 
   --road-h: 100px; /* the road band across the top; drive.js reads nothing
@@ -575,7 +577,6 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
 
 .col { width: min(100% - var(--gutter), var(--col)); margin-inline: auto; }
 .col.wide { width: min(100% - var(--gutter), var(--wide)); }
-.col.fig { width: min(100% - var(--gutter), var(--fig)); }
 
 section { padding: 3rem 0; }
 section + section { border-top: 1px solid var(--rule); }
@@ -820,8 +821,6 @@ figcaption, .tcap {
 /* ---------- tables ---------- */
 
 .table-block { margin: 1.9rem 0; }
-/* Tables with few columns sprawl at full width; cap them at the prose measure. */
-.table-block.narrow { max-width: var(--col); }
 .scroll { overflow-x: auto; }
 
 table {

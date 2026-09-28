@@ -34,7 +34,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700&display=swap">
-<link rel="stylesheet" href="style.css?v=40">
+<link rel="stylesheet" href="style.css?v=41">
 
 <!-- Set the theme before first paint so there is no flash. -->
 <script>
@@ -108,7 +108,7 @@
 
   <!-- Hero figure slot. Left out rather than shown as a missing-image box.
        To put one back, restore this and drop the file in:
-  <div class="col fig">
+  <div class="col wide">
     <figure class="figure">
       <img src="assets/figures/teaser.webp" alt="...">
       <figcaption>...</figcaption>
@@ -192,7 +192,7 @@
     <h2><span class="num">3</span>Method</h2>
   </div>
 
-  <div class="col fig">
+  <div class="col wide">
     <figure class="figure">
       <img src="assets/figures/overview.webp" alt="ReSMap architecture: camera and satellite encoders produce separate BEV features, the PTF gate fuses them by per-pixel confidence, and the OCMQ decoder merges per-modality query updates.">
       <figcaption><b>Overview.</b> Camera and satellite encoders produce separate BEV features. The PTF gate fuses them by per-pixel segmentation confidence; the OCMQ decoder keeps one shared object-query pool but computes camera-, satellite-, and fused-conditioned updates inside each layer.</figcaption>
@@ -206,7 +206,7 @@
     <p>We call this the <b>Self-Confidence Gate</b>. The fallback is a closed-form property rather than a learned behaviour: as <i>r</i><sub>cam</sub> &rarr; 0, the fused feature converges to the satellite feature. Because the gating signal is a prediction confidence and not a raw-image statistic, it also holds up under failures never seen in training, such as cameras zeroed at inference.</p>
   </div>
 
-  <div class="col fig">
+  <div class="col wide">
     <figure class="figure">
       <img src="assets/figures/gate.webp" alt="Per-pixel and per-query gate response under camera dropout.">
       <figcaption><b>Gate response under camera dropout.</b> Left: over active BEV cells, removing all cameras collapses <i>r</i><sub>cam</sub> while <i>r</i><sub>sat</sub> rises to cover the same regions. Right: the same routing appears at the query level: the per-token gate shifts negatively for 98% of queries, with the largest drops on those that were most camera-reliant in the clean run.</figcaption>
@@ -226,7 +226,7 @@
     <p>Every class therefore receives gradients from all three modalities, while inference-time contamination is still controlled per token.</p>
   </div>
 
-  <div class="col fig">
+  <div class="col wide">
     <figure class="figure">
       <img src="assets/figures/ocmq.webp" alt="Comparison of a naive per-branch query design against the OCMQ design under Hungarian matching.">
       <figcaption><b>Why one query pool.</b> With independent per-modality pools (left), bipartite matching routes each ground-truth element to the strongest modality only. OCMQ (right) merges per-modality updates through a per-token gate, so every class absorbs camera, satellite, and fused gradients.</figcaption>
@@ -441,8 +441,8 @@
   </button>
 </div>
 
-<script src="failure.js?v=40"></script>
-<script src="drive.js?v=40"></script>
-<script src="main.js?v=40"></script>
+<script src="failure.js?v=41"></script>
+<script src="drive.js?v=41"></script>
+<script src="main.js?v=41"></script>
 </body>
 </html>
