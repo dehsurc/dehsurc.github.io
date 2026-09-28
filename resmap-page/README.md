@@ -183,7 +183,7 @@ then open <http://localhost:8000>.
 
 ## Before publishing
 
-- [ ] Drop the figures and videos listed in `assets/README.md`
+- [ ] Drop the remaining figures and videos listed in `assets/README.md`
 - [ ] Re-check every table against the final version of the paper
 - [ ] Fill in the arXiv, code, and PDF links
 - [ ] Add `assets/figures/social.jpg` (1200 × 630) for link previews
