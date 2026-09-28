@@ -143,6 +143,7 @@
   /* How much of the camera rig is down, 0 to 1, eased toward what the
      walkthrough below publishes so the strip does not snap between levels. */
   var camsDown = 0;
+  var sparks = [];                     // the fireworks over the finish
   var W = 0, H = 0, dpr = 1;
   var shownNext = '';
   var stopCol = '#b53228';
@@ -401,17 +402,20 @@
     ctx.fillStyle = pavement;
     ctx.fillRect(0, rTop, W, rBot - rTop);
 
-    // Distance posts every 50 m, so the scale is legible without a readout.
-    ctx.strokeStyle = 'rgba(' + ink + ', 0.22)';
-    ctx.lineWidth = 1;
-    var first = Math.floor((pos - CAR_X * W / ROAD_PX_PER_M) / 50) * 50;
-    for (var d = first; sx(d) < W + 20; d += 50) {
-      var px = sx(d);
-      if (px < -20) continue;
-      ctx.beginPath();
-      ctx.moveTo(px, rBot + 2);
-      ctx.lineTo(px, rBot + 6);
-      ctx.stroke();
+    /* Kerbs: red and white blocks down both edges of the carriageway, the one
+       piece of roadside furniture that says circuit rather than street. They
+       are locked to the route in metres, so they stream past at the car's
+       speed and the eye reads the speed off them -- which is what the 50 m
+       distance posts they replace were for, and did far less visibly. */
+    var KERB_M = 2;
+    var kPx = KERB_M * ROAD_PX_PER_M;
+    var kerbRed = rgba(stopCol, 0.8);
+    for (var k = Math.floor((pos - carX / ROAD_PX_PER_M) / KERB_M) - 1;
+         sx(k * KERB_M) < W + kPx; k++) {
+      var kx = sx(k * KERB_M);
+      ctx.fillStyle = (k & 1) ? kerbRed : paint;
+      ctx.fillRect(kx, rTop - 4, kPx, 4);
+      ctx.fillRect(kx, rBot, kPx, 4);
     }
 
     /* Zebra stripes run with the traffic, so on a road drawn left to right
@@ -641,6 +645,26 @@
 
     drawCar(offX, laneY);
 
+    /* Fireworks. Short streaks along each spark's own heading, so they read
+       as a burst going off rather than as confetti sitting on the road. */
+    if (sparks.length) {
+      ctx.save();
+      ctx.lineCap = 'round';
+      sparks.forEach(function (p) {
+        if (p.wait > 0) return;
+        var k = p.life / p.max;
+        var x = sx(p.m) + p.dx, y = mid + p.dy;
+        ctx.globalAlpha = (1 - k) * (1 - k);
+        ctx.strokeStyle = p.c;
+        ctx.lineWidth = p.w;
+        ctx.beginPath();
+        ctx.moveTo(x - p.vx * 0.045, y - p.vy * 0.045);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+      });
+      ctx.restore();
+    }
+
     /* End of the route: the car carries on past the flag, and the road says
        thank you.
      *
@@ -732,6 +756,55 @@
    * The model
    * ---------------------------------------------------------------- */
 
+  /* Everything that moves on the strip without being the car.
+   *
+   * These used to be advanced in step(), which only runs while the pedals own
+   * the page. So a reader scrolling with the wheel -- which is nearly every
+   * reader -- went through the walkthrough without the coverage on the strip
+   * reacting at all, and arrived at the finish to a flag that did not wave.
+   * The loop calls this on every frame whoever is driving. */
+  function ambient(dt) {
+    tick += dt;
+
+    var want = parseFloat(root.dataset.camsDown);
+    if (!isFinite(want)) want = 0;
+    camsDown += (want - camsDown) * Math.min(1, dt * 6);
+
+    for (var i = sparks.length - 1; i >= 0; i--) {
+      var p = sparks[i];
+      if (p.wait > 0) { p.wait -= dt; continue; }
+      p.life += dt;
+      if (p.life >= p.max) { sparks.splice(i, 1); continue; }
+      var drag = Math.max(0, 1 - 1.7 * dt);
+      p.vx *= drag;
+      p.vy *= drag;
+      p.dx += p.vx * dt;
+      p.dy += p.vy * dt;
+    }
+  }
+
+  /* Three shells over the finish, a beat apart and a few metres either side
+     of the line. Positions are kept in route metres plus an offset, so the
+     burst stays where it went off on the road rather than on the screen. */
+  function burst() {
+    var hues = [accent, stopCol, colour('boundary'), colour('divider'), paint];
+    [0, 0.3, 0.6].forEach(function (delay, k) {
+      var at = maxM() + (k - 1) * 8;
+      for (var i = 0; i < 26; i++) {
+        var a = Math.random() * Math.PI * 2;
+        var v = 50 + Math.random() * 80;
+        sparks.push({
+          m: at, dx: 0, dy: 0,
+          vx: Math.cos(a) * v,
+          vy: Math.sin(a) * v * 0.6,
+          life: 0, max: 1.0 + Math.random() * 0.9, wait: delay,
+          c: hues[(i + k) % hues.length],
+          w: 1.3 + Math.random() * 1.1
+        });
+      }
+    });
+  }
+
   function step(dt) {
     // Pedal travel. Taking up over about half a second rather than snapping
     // to the floor is what makes a dab different from holding it down, which
@@ -782,11 +855,6 @@
     if (v !== 0 && Math.sign(speed) !== Math.sign(v) && throttle < 0.02) speed = 0;
     if (Math.abs(speed) < STOP_V && throttle < 0.02) speed = 0;
 
-    var want = parseFloat(root.dataset.camsDown);
-    if (!isFinite(want)) want = 0;
-    camsDown += (want - camsDown) * Math.min(1, dt * 6);
-
-    tick += dt;
     pos += speed * dt;
 
     // The ends of the document are the ends of the road.
@@ -1098,16 +1166,23 @@
     /* Arrival latches. Browsers report a fractional scrollY at the bottom of
        a page, so an exact test flickers, and letting go of the accelerator
        must not put the flourish away. */
+    var wasArrived = arrived;
     if (pos >= maxM() - 1.5) arrived = true;
     else if (pos < maxM() - 6) arrived = false;
     var atEnd = arrived;
+    if (atEnd && !wasArrived) burst();
     outro = clamp(outro + (atEnd ? dt / 1.2 : -dt / 0.25), 0, 1);
 
+    ambient(dt);
     draw();
     hud(dt);
 
-    var busy = Math.abs(needleV) > 0.008 ||
-      (atEnd ? outro < 1 : outro > 0) || (owned
+    /* Awake while anything on the strip is still moving: the coverage easing
+       toward the walkthrough's level, a spark in the air, and the flag, which
+       waves for as long as you sit at the finish. */
+    var settling = Math.abs((parseFloat(root.dataset.camsDown) || 0) - camsDown) > 0.004;
+    var busy = Math.abs(needleV) > 0.008 || settling || sparks.length > 0 ||
+      outro > 0 || (owned
       ? (Math.abs(speed) > 0.02 || holdGas || holdBrake || throttle > 0.02 || brake > 0.02)
       : Math.abs(observed) > 0.05);
     idleFor = busy ? 0 : idleFor + dt;
@@ -1158,6 +1233,7 @@
       speed = 0;
       arrived = false;
       outro = 0;
+      sparks.length = 0;
       stopLoop();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
@@ -1171,19 +1247,22 @@
    * a pedal moves, and never offered again on this browser. */
   var hintEl = document.getElementById('drive-hint');
   var hintTimer = 0, hintDone = false;
-  /* Versioned, because the control moved: anyone who was shown the hint when
-     the road was a band across the top has not been shown this one. */
-  var HINT_KEY = 'resmap-drove-rail';
+  /* Remembered only once a pedal has actually been pressed. It used to be
+     remembered when its timer ran out as well, which meant twenty-two seconds
+     of not looking at the corner of the screen retired it for good, and a
+     hard reload does not clear local storage. The key moved on when that was
+     fixed, so nobody is left holding the old verdict. */
+  var HINT_KEY = 'resmap-drove-2';
 
   function hintOffered() {
     hintDone = true;
     try { localStorage.setItem(HINT_KEY, '1'); } catch (err) { /* private mode */ }
   }
-  function dropHint() {
+  function dropHint(learned) {
     if (hintTimer) { clearTimeout(hintTimer); hintTimer = 0; }
     if (hintEl) hintEl.hidden = true;
     cockpit.classList.remove('hinting');
-    if (!hintDone) hintOffered();
+    if (learned && !hintDone) hintOffered();
   }
   function offerHint() {
     // resize() offers it, and resize() runs again on every window change.
@@ -1197,15 +1276,15 @@
     cockpit.classList.add('hinting');
     /* Long enough to be read by someone who is reading the page rather than
        watching the corner of it. It goes the instant a pedal moves. */
-    hintTimer = setTimeout(dropHint, 22000);
+    hintTimer = setTimeout(function () { dropHint(false); }, 22000);
   }
 
   function pressGas() {
-    dropHint();
+    dropHint(true);
     takeWheel();
     holdGas = true;
   }
-  function pressBrake() { dropHint(); takeWheel(); holdBrake = true; }
+  function pressBrake() { dropHint(true); takeWheel(); holdBrake = true; }
   function release() { holdGas = holdBrake = false; }
 
   function pedal(btn, press) {

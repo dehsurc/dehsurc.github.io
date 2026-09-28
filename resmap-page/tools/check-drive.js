@@ -15,7 +15,7 @@ var fs = require('fs');
 var src = fs.readFileSync(require('path').join(__dirname, '..', 'drive.js'), 'utf8');
 
 /* Expose the internals we want to drive, by appending to the IIFE body. */
-src = src.replace(/\}\)\(\);\s*$/, '  global.__drive = { draw: draw, step: step, hud: hud, measure: measure, resize: resize, syncFromScroll: syncFromScroll, offerHint: offerHint, pressGas: pressGas, release: release, state: function(){ return { pos: pos, speed: speed, g: g, rpm: rpm, camsDown: camsDown, outro: outro }; }, set: function(k,v){ if(k==="pos")pos=v; if(k==="speed")speed=v; if(k==="outro")outro=v; if(k==="holdGas")holdGas=v; } };\n})();\n');
+src = src.replace(/\}\)\(\);\s*$/, '  global.__drive = { draw: draw, step: step, hud: hud, measure: measure, resize: resize, syncFromScroll: syncFromScroll, offerHint: offerHint, loop: loop, ambient: ambient, burst: burst, sparks: function(){ return sparks; }, pressGas: pressGas, release: release, state: function(){ return { pos: pos, speed: speed, g: g, rpm: rpm, camsDown: camsDown, outro: outro }; }, set: function(k,v){ if(k==="pos")pos=v; if(k==="speed")speed=v; if(k==="outro")outro=v; if(k==="holdGas")holdGas=v; } };\n})();\n');
 
 var fail = 0;
 function t(name, fn) {
@@ -140,18 +140,27 @@ t('the chequer is drawn at both ends of the route', function () {
   function bandsAt(y) {
     global.window.scrollY = y; D.syncFromScroll();
     S.calls.length = 0; D.draw();
-    return S.calls.filter(function (c) { return c[0] === 'fillRect'; }).length;
+    // Chequer cells are square; the kerb blocks are 12 x 4.
+    return S.calls.filter(function (c) {
+      return c[0] === 'fillRect' && Math.abs(c[3] - c[4]) < 0.01;
+    }).length;
   }
   var atStart = bandsAt(0), middle = bandsAt(9000), atEnd = bandsAt(23000);
   ok(atStart >= 12, 'start chequer missing (' + atStart + ' fillRects)');
   ok(atEnd >= 12, 'finish chequer missing (' + atEnd + ' fillRects)');
   ok(middle < atStart, 'chequer drawn mid-route too (' + middle + ')');
 });
+t('the coverage easing does not live in step(), which only runs while driving', function () {
+  var body = /function step\(dt\) \{([\s\S]*?)\n  \}\n/.exec(src)[1];
+  ok(!/camsDown/.test(body), 'camsDown is still advanced in step()');
+  ok(!/tick \+=/.test(body), 'the clock is still advanced in step()');
+});
 t('coverage wedge shrinks as the walkthrough drops cameras', function () {
   global.window.scrollY = 5000; D.syncFromScroll();
   function fillsWith(down) {
     S.root.dataset.camsDown = String(down);
-    for (var i = 0; i < 200; i++) D.step(1 / 60);   // let the easing settle
+    // ambient(), not step(): this has to work for a reader using the wheel.
+    for (var i = 0; i < 200; i++) D.ambient(1 / 60);
     S.calls.length = 0; D.draw();
     return { cams: D.state().camsDown,
              dash: S.calls.filter(function (c) { return c[0] === 'rect'; }).length };
@@ -175,22 +184,72 @@ t('the chequered flag flies only at the finish, and keeps waving there', functio
   /* The ripple runs on the model's own clock, so two frames a moment apart
      must not draw the flag in the same place. */
   var a = cells(1).map(function (c) { return c[1]; }).join(',');
-  for (var i = 0; i < 12; i++) D.step(1 / 60);
+  for (var i = 0; i < 12; i++) D.ambient(1 / 60);
   var b = cells(1).map(function (c) { return c[1]; }).join(',');
   ok(a !== b, 'the flag is frozen');
 });
 
+t('fireworks go off over the finish and burn out', function () {
+  global.window.scrollY = 23000; D.syncFromScroll();
+  D.sparks().length = 0;
+  D.burst();
+  eq(D.sparks().length, 78, 'three shells of 26');
+  for (var i = 0; i < 12; i++) D.ambient(1 / 60);
+  S.calls.length = 0; D.draw();
+  var streaks = S.calls.filter(function (c) { return c[0] === 'stroke'; }).length;
+  ok(streaks >= 26, 'the first shell is not drawn (' + streaks + ' strokes)');
+  for (var j = 0; j < 60 * 4; j++) D.ambient(1 / 60);
+  eq(D.sparks().length, 0, 'sparks still alive after four seconds');
+});
+t('kerbs run down both edges', function () {
+  global.window.scrollY = 9000; D.syncFromScroll();
+  S.calls.length = 0; D.draw();
+  var kerbs = S.calls.filter(function (c) { return c[0] === 'fillRect' && c[3] === 12 && c[4] === 4; });
+  ok(kerbs.length > 100, 'too few kerb blocks: ' + kerbs.length);
+});
+
+t('through the loop with nobody on the pedals, the strip still reacts', function () {
+  /* The bug this guards: the coverage and the flag were advanced in step(),
+     which only runs while driving, and every test above called the pieces
+     directly, so none of them noticed. This one goes through loop() the way a
+     reader scrolling with the wheel does. */
+  D.release();
+  D.sparks().length = 0;
+  var now = 5000;
+  global.window.scrollY = 5000;
+  S.root.dataset.camsDown = '1';
+  for (var i = 0; i < 90; i++) { now += 16; D.loop(now); }
+  ok(D.state().camsDown > 0.9,
+     'coverage did not follow the walkthrough under the wheel: ' + D.state().camsDown.toFixed(2));
+
+  S.root.dataset.camsDown = '0';
+  global.window.scrollY = 23100;               // the bottom of the page
+  var fired = false;
+  for (var j = 0; j < 40; j++) {
+    now += 16; D.loop(now);
+    if (D.sparks().length) fired = true;
+  }
+  ok(fired, 'arriving under the wheel set nothing off');
+  ok(D.state().outro > 0.3, 'the flourish did not start under the wheel');
+});
+
 console.log('\nthe hint');
+t('running out of time hides the hint but does not retire it', function () {
+  global.localStorage._d = {};
+  ok(/setTimeout\(function \(\) \{ dropHint\(false\); \}/.test(src),
+     'the timer still retires the hint');
+  ok(!/resmap-drove-rail/.test(src), 'the burned key is still in use');
+});
 t('offered once, then never again', function () {
   global.localStorage._d = {};
-  ok(/resmap-drove-rail/.test(src), 'the hint key was not versioned for the rail');
+  ok(/resmap-drove-2/.test(src), 'the hint key was not moved on');
   var hint = S.get('drive-hint');
   hint.hidden = true;
   D.offerHint();
   ok(!hint.hidden, 'not offered on a first visit');
   D.pressGas();
   ok(hint.hidden, 'not taken away by a pedal');
-  ok(global.localStorage._d['resmap-drove-rail'], 'not remembered');
+  ok(global.localStorage._d['resmap-drove-2'], 'a pedal did not retire it');
   hint.hidden = true;
   D.offerHint();
   ok(hint.hidden, 'offered a second time');

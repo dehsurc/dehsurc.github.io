@@ -387,7 +387,9 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
    position on the road and slide in from the right. */
 .sign {
   position: absolute;
-  left: calc(100% + 11px);
+  /* Flush with the rail. The posts are drawn on the rail's canvas and end at
+     its edge, so any gap here is a plate floating off its own legs. */
+  left: 100%;
   transform: translateY(-50%);
   display: flex; align-items: baseline; gap: .3rem;
   max-width: 118px;
