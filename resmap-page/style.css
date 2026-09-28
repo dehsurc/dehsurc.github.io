@@ -709,20 +709,15 @@ section + section { border-top: 1px solid var(--rule); }
 
 .hero { padding: 3rem 0 1.6rem; }
 
-/* The one piece of standing on the page, said once and said properly. It is
-   also the only saturated thing above the fold, which gives the eye somewhere
-   to land before it starts reading. */
-.venue { margin: 0 0 1.05rem; line-height: 1; }
-.badge {
-  display: inline-block;
-  padding: .3rem .62rem .28rem;
-  border-radius: 999px;
-  background: var(--accent);
-  color: #fff;
-  font-size: 11.5px; font-weight: 600; line-height: 1;
-  letter-spacing: .1em; text-transform: uppercase;
+/* The venue, in the accent and at reading size rather than as a filled pill.
+   A chip with letterspaced capitals in it is a component; this is a line of
+   type that happens to be the one coloured thing above the fold. */
+.venue {
+  margin: 0 0 .9rem;
+  font-size: 15px; font-weight: 600; line-height: 1;
+  letter-spacing: -.005em;
+  color: var(--accent);
 }
-:root[data-theme="dark"] .badge { color: #08111b; }
 
 h1 { margin: 0 0 1.4rem; }
 .h1-name {
@@ -735,14 +730,12 @@ h1 { margin: 0 0 1.4rem; }
 }
 .h1-sub {
   display: block;
-  margin-top: .5rem;
-  max-width: 34ch;
+  margin-top: .45rem;
   font-family: var(--display);
-  font-size: clamp(1.15rem, 1.8vw, 1.4rem); font-weight: 600;
-  line-height: 1.28;
+  font-size: clamp(1.02rem, 2.3vw, 1.42rem); font-weight: 600;
+  line-height: 1.3;
   letter-spacing: -.014em;
   color: var(--ink-soft);
-  text-wrap: balance;
 }
 
 
