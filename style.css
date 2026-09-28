@@ -115,7 +115,18 @@ canvas.deco {
 :root[data-art="bands"] canvas.deco,
 :root[data-art="forms"] canvas.deco,
 :root[data-art="hatch"] canvas.deco,
-:root[data-art="flow"] canvas.deco { display: block; }
+:root[data-art="flow"] canvas.deco,
+:root[data-art="flow-quiet"] canvas.deco,
+:root[data-art="flow-long"] canvas.deco,
+:root[data-art="flow-edge"] canvas.deco,
+:root[data-art="flow-dash"] canvas.deco,
+:root[data-art="water"] canvas.deco { display: block; }
+
+/* the edge variant keeps the middle of the page clear */
+canvas.deco.edge-only {
+  -webkit-mask-image: radial-gradient(115% 75% at 50% 46%, transparent 38%, #000 88%);
+  mask-image: radial-gradient(115% 75% at 50% 46%, transparent 38%, #000 88%);
+}
 
 /* halftone: the dot field replaces the photograph */
 .halftone { display: block; image-rendering: auto; }
@@ -373,7 +384,18 @@ canvas.deco {
 :root[data-art="bands"] canvas.deco,
 :root[data-art="forms"] canvas.deco,
 :root[data-art="hatch"] canvas.deco,
-:root[data-art="flow"] canvas.deco { display: block; }
+:root[data-art="flow"] canvas.deco,
+:root[data-art="flow-quiet"] canvas.deco,
+:root[data-art="flow-long"] canvas.deco,
+:root[data-art="flow-edge"] canvas.deco,
+:root[data-art="flow-dash"] canvas.deco,
+:root[data-art="water"] canvas.deco { display: block; }
+
+/* the edge variant keeps the middle of the page clear */
+canvas.deco.edge-only {
+  -webkit-mask-image: radial-gradient(115% 75% at 50% 46%, transparent 38%, #000 88%);
+  mask-image: radial-gradient(115% 75% at 50% 46%, transparent 38%, #000 88%);
+}
 
 /* halftone: the dot field replaces the photograph */
 .halftone { display: block; image-rendering: auto; }

@@ -395,15 +395,27 @@
     })();
   }
 
-  /* ---- flow --------------------------------------------------------
+  /* ---- flow (and its variants) --------------------------------------
    * Long thin strokes released into a slowly turning field, so the page
    * carries a drawn line rather than a constructed one. The pointer
-   * swirls the field where it passes. */
+   * swirls the field where it passes. The variants change how much of it
+   * there is, not what it is. */
 
-  if (art === 'flow' && canvas && canvas.getContext) {
+  var FLOW = {
+    'flow':      { step: 46, len: 26, ds: 9,  a: 0.11, lw: 1,   edge: false },
+    'flow-quiet':{ step: 78, len: 22, ds: 9,  a: 0.08, lw: 1,   edge: false },
+    'flow-long': { step: 104, len: 70, ds: 10, a: 0.085, lw: 1,  edge: false },
+    'flow-edge': { step: 44, len: 28, ds: 9,  a: 0.13, lw: 1,   edge: true  },
+    'flow-dash': { step: 26, len: 6,  ds: 8,  a: 0.13, lw: 1.2, edge: false }
+  };
+
+  if (FLOW[art] && canvas && canvas.getContext) {
+    var cfg = FLOW[art];
+    if (cfg.edge) canvas.classList.add('edge-only');
+
     var F = fitCanvas(canvas), fp = pointer(), ft = 0;
 
-    function field(x, y, w, h) {
+    function field(x, y) {
       var a = Math.sin(x / 260 + ft) * 1.1
             + Math.cos(y / 210 - ft * 0.7) * 1.1
             + Math.sin((x + y) / 430) * 0.8;
@@ -418,25 +430,86 @@
       var ctx = F.ctx, W = F.s.w, H = F.s.h;
       if (!reduce) ft += 0.0022;
       ctx.clearRect(0, 0, W, H);
-      ctx.strokeStyle = 'rgba(' + ink() + ',0.11)';
-      ctx.lineWidth = 1;
+      ctx.strokeStyle = 'rgba(' + ink() + ',' + cfg.a + ')';
+      ctx.lineWidth = cfg.lw;
+      ctx.lineCap = 'round';
 
-      var STEP = 46;
-      for (var sy = -STEP; sy < H + STEP; sy += STEP) {
-        for (var sx = -STEP; sx < W + STEP; sx += STEP) {
+      for (var sy = -cfg.step; sy < H + cfg.step; sy += cfg.step) {
+        for (var sx = -cfg.step; sx < W + cfg.step; sx += cfg.step) {
           var x = sx, y = sy;
           ctx.beginPath();
           ctx.moveTo(x, y);
-          for (var k = 0; k < 26; k++) {                  // walk the field
-            var a = field(x, y, W, H);
-            x += Math.cos(a) * 9;
-            y += Math.sin(a) * 9;
+          for (var k = 0; k < cfg.len; k++) {            // walk the field
+            var a = field(x, y);
+            x += Math.cos(a) * cfg.ds;
+            y += Math.sin(a) * cfg.ds;
             ctx.lineTo(x, y);
           }
           ctx.stroke();
         }
       }
       requestAnimationFrame(flowFrame);
+    })();
+  }
+
+  /* ---- water -------------------------------------------------------
+   * The same field, turned on its side and held close to the horizontal
+   * so the strokes read as the surface of moving water: a long swell
+   * crossing the page, short chop riding on top of it, and a ring that
+   * spreads from the pointer the way a dropped thing would. */
+
+  if (art === 'water' && canvas && canvas.getContext) {
+    var Wt = fitCanvas(canvas), wp = pointer(), wt = 0, ripples = [];
+
+    window.addEventListener('pointerdown', function (e) {
+      ripples.push({ x: e.clientX, y: e.clientY, t: 0 });
+      if (ripples.length > 4) ripples.shift();
+    });
+
+    (function waterFrame() {
+      var ctx = Wt.ctx, W = Wt.s.w, H = Wt.s.h;
+      if (!reduce) wt += 0.012;
+      ctx.clearRect(0, 0, W, H);
+      ctx.lineWidth = 1;
+      ctx.lineCap = 'round';
+
+      var c = ink();
+      for (var y0 = -30; y0 < H + 30; y0 += 17) {
+        var depth = y0 / H;                                  // nearer = stronger
+        ctx.strokeStyle = 'rgba(' + c + ',' + (0.05 + depth * 0.09) + ')';
+        ctx.beginPath();
+
+        for (var x = -40; x <= W + 40; x += 9) {
+          var swell = Math.sin(x / 330 + wt + y0 / 260) * (7 + depth * 16);
+          var chop  = Math.sin(x / 74 - wt * 2.4 + y0 / 40) * (1.6 + depth * 3.4);
+          var y = y0 + swell + chop;
+
+          // the pointer drags the surface with it
+          if (wp.x > -9000) {
+            var dx = x - wp.x, dy = y0 - wp.y, d = Math.hypot(dx, dy);
+            if (d < 260) y -= Math.cos(d / 40 - wt * 3) * (1 - d / 260) * 13;
+          }
+          // and anything dropped on it spreads
+          for (var r = 0; r < ripples.length; r++) {
+            var rp2 = ripples[r];
+            var rd = Math.hypot(x - rp2.x, y0 - rp2.y);
+            var front = rp2.t * 5.2;
+            var band = Math.abs(rd - front);
+            if (band < 70) {
+              y += Math.cos(band / 22) * (1 - band / 70) * Math.max(0, 1 - rp2.t / 110) * 16;
+            }
+          }
+
+          if (x === -40) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+
+      for (var r2 = ripples.length - 1; r2 >= 0; r2--) {
+        ripples[r2].t += 1;
+        if (ripples[r2].t > 120) ripples.splice(r2, 1);
+      }
+      requestAnimationFrame(waterFrame);
     })();
   }
 })();
