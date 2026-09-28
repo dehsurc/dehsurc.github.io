@@ -162,17 +162,22 @@ t('coverage wedge shrinks as the walkthrough drops cameras', function () {
   ok(on.dash < off.dash, 'satellite footprint not drawn when the cameras are down');
 });
 
-t('the finish sweep runs back up the rail and stops', function () {
+t('the chequered flag flies only at the finish, and keeps waving there', function () {
   global.window.scrollY = 23000; D.syncFromScroll();
-  function sweeps(o) {
+  function cells(o) {
     D.set('outro', o);
     S.calls.length = 0; D.draw();
-    // The sweep is the only 136px-wide fill on the strip.
-    return S.calls.filter(function (c) { return c[0] === 'fillRect' && c[3] === 136; }).length;
+    return S.calls.filter(function (c) { return c[0] === 'fillRect'; });
   }
-  eq(sweeps(0), 0, 'sweeping before the finish');
-  ok(sweeps(0.5) > 0, 'no sweep at the finish');
-  eq(sweeps(1), 0, 'still sweeping once it is over');
+  var before = cells(0).length;
+  var flying = cells(1).length;
+  eq(flying - before, 28, 'the flag is not 4 x 7 cells');
+  /* The ripple runs on the model's own clock, so two frames a moment apart
+     must not draw the flag in the same place. */
+  var a = cells(1).map(function (c) { return c[1]; }).join(',');
+  for (var i = 0; i < 12; i++) D.step(1 / 60);
+  var b = cells(1).map(function (c) { return c[1]; }).join(',');
+  ok(a !== b, 'the flag is frozen');
 });
 
 console.log('\nthe hint');

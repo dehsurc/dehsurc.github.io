@@ -131,6 +131,7 @@
      Nothing to remember and nothing to clear: come forward and it is laid
      down, back up and it goes with you. */
   var outro = 0;                       // end-of-route flourish, 0 to 1
+  var tick = 0;                        // seconds since the model started
   var arrived = false;                 // latched at the end of the route
   var rpm = IDLE;
   var throttle = 0, brake = 0;
@@ -462,6 +463,13 @@
      * than asserted, in the one place a reader is already looking.
      */
     var see = 1 - camsDown;
+    /* The car keeps to its own side of the divider instead of straddling it.
+       Heading down the rail the driver's right hand points to the left of the
+       screen, so right-hand traffic puts the car in the left-hand lane. It is
+       a small thing that carries a lot: dead on the centre line it reads as a
+       token on a track, and in its lane it reads as a vehicle on a road you
+       can tell the direction of at a glance. */
+    var laneY = mid + (rBot - rTop) * 0.19;
     var nose = carX + 17;
     var reach = sx(pos + PERCEPTION_M);
 
@@ -472,10 +480,10 @@
       cone.addColorStop(1, rgba(accent, 0));
       ctx.fillStyle = cone;
       ctx.beginPath();
-      ctx.moveTo(nose, mid - 3);
+      ctx.moveTo(nose, laneY - 3);
       ctx.lineTo(span, edgeT + 1);
       ctx.lineTo(span, edgeB - 1);
-      ctx.lineTo(nose, mid + 3);
+      ctx.lineTo(nose, laneY + 3);
       ctx.closePath();
       ctx.fill();
     }
@@ -603,22 +611,37 @@
        coming rather than a stop you discover by hitting it. */
     chequer(sx(maxM()));
 
-    /* Crossing the line lights the route up behind you: a band runs back up
-       the rail from the finish towards the start, over the map that has just
-       been finished, while the car carries on down and off the end. Arriving
-       used to be the car simply leaving, which was no arrival at all. */
-    if (outro > 0.01 && outro < 0.995) {
-      var finishX = sx(maxM());
-      var headX = finishX - outro * (finishX + 40);
-      var sweep = ctx.createLinearGradient(headX - 110, 0, headX + 26, 0);
-      sweep.addColorStop(0, rgba(accent, 0));
-      sweep.addColorStop(0.78, rgba(accent, 0.34 * (1 - outro * 0.45)));
-      sweep.addColorStop(1, rgba(accent, 0));
-      ctx.fillStyle = sweep;
-      ctx.fillRect(headX - 110, rTop, 136, rBot - rTop);
+    /* The chequered flag, waved over the line.
+     *
+     * A band of light running back up the rail was doing something no race
+     * does. This is the thing everyone has seen at the end of a lap: the same
+     * chequer as the start line, grown wide enough to be a flag, pinned at the
+     * verge and rippling out across the road. The ripple runs on a clock
+     * rather than off the flourish, so it keeps waving while you sit at the
+     * end instead of freezing the moment the fade finishes. */
+    if (outro > 0.01) {
+      var fx = sx(maxM());
+      var fTop = rTop + 3, fBot = rBot - 3;
+      var fRows = 4, fCols = 7;
+      var fCell = (fBot - fTop) / fRows;
+      var lift = clamp(outro * 3, 0, 1);
+      ctx.save();
+      ctx.globalAlpha = lift;
+      for (var fr = 0; fr < fRows; fr++) {
+        /* Pinned at the verge edge and free at the far one, so the wave grows
+           across the flag the way cloth does. */
+        var grip = fr / (fRows - 1);
+        var wave = Math.sin(tick * 7 - fr * 0.9) * fCell * 0.85 * grip * lift;
+        for (var fc = 0; fc < fCols; fc++) {
+          ctx.fillStyle = (fr + fc) % 2 ? paint : 'rgba(14, 16, 20, 0.82)';
+          ctx.fillRect(fx - (fCols - 2.5) * fCell + fc * fCell + wave,
+                       fTop + fr * fCell, fCell + 0.5, fCell + 0.5);
+        }
+      }
+      ctx.restore();
     }
 
-    drawCar(offX, mid);
+    drawCar(offX, laneY);
 
     /* End of the route: the car carries on past the finish, and the road
        thanks the reader and then asks for something, which is the one thing
@@ -740,6 +763,7 @@
     if (!isFinite(want)) want = 0;
     camsDown += (want - camsDown) * Math.min(1, dt * 6);
 
+    tick += dt;
     pos += speed * dt;
 
     // The ends of the document are the ends of the road.
