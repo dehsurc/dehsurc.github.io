@@ -268,74 +268,138 @@
    * ?w= picks a spacing/swell preset while we settle on one.
    * ------------------------------------------------------------------ */
 
-  var WATER = {
-    '0': { gap: 17, amp: 1.00, wave: 1.00, chop: 1.00, lw: 1.0, a: 1.00 },
-    'a': { gap: 26, amp: 1.15, wave: 1.00, chop: 1.00, lw: 1.0, a: 1.05 },
-    'b': { gap: 36, amp: 1.30, wave: 1.15, chop: 0.90, lw: 1.0, a: 1.15 },
-    'c': { gap: 52, amp: 1.60, wave: 1.30, chop: 0.75, lw: 1.2, a: 1.30 },
-    'd': { gap: 30, amp: 1.35, wave: 1.90, chop: 0.45, lw: 1.0, a: 1.10 },
-    'e': { gap: 22, amp: 1.70, wave: 0.80, chop: 1.40, lw: 1.0, a: 1.00 }
+  /* Sea seen from above.
+   *
+   * The surface is a height field: a few wave trains running at different
+   * angles, which is what makes real swell interlock instead of lining up.
+   * What gets drawn is its contours — marching squares over a coarse grid,
+   * so the crests come out as closed, organic lines the way they read from
+   * a plane. The pointer lifts the water under it and a click sends a ring
+   * out through the field.
+   *
+   * ?w= picks a preset while we settle on one. */
+
+  var SEA = {
+    '0': { cell: 16, levels: 5, span: 1.15, scale: 1.00, a: 0.115, lw: 1.0 },
+    'a': { cell: 16, levels: 5, span: 1.15, scale: 1.00, a: 0.115, lw: 1.0 },
+    'b': { cell: 15, levels: 8, span: 1.30, scale: 1.00, a: 0.095, lw: 1.0 },
+    'c': { cell: 20, levels: 3, span: 0.85, scale: 1.55, a: 0.150, lw: 1.2 },
+    'd': { cell: 13, levels: 11, span: 1.45, scale: 0.80, a: 0.080, lw: 1.0 },
+    'e': { cell: 18, levels: 5, span: 1.15, scale: 2.10, a: 0.135, lw: 1.1 }
   };
 
   var canvas = document.querySelector('canvas.deco');
 
   if (canvas && canvas.getContext) {
-    var wcfg = WATER[new URLSearchParams(location.search).get('w')] || WATER['0'];
-    var Wt = fitCanvas(canvas), wp = pointer(), wt = 0, ripples = [];
+    var cfg = SEA[new URLSearchParams(location.search).get('w')] || SEA['0'];
+    var S = fitCanvas(canvas), sp = pointer(), st = 0, rings = [];
     var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var ink = function () {
+
+    function ink() {
       return root.dataset.theme === 'dark' ? '255, 255, 255' : '17, 17, 18';
-    };
+    }
 
     window.addEventListener('pointerdown', function (e) {
-      ripples.push({ x: e.clientX, y: e.clientY, t: 0 });
-      if (ripples.length > 4) ripples.shift();
+      rings.push({ x: e.clientX, y: e.clientY, t: 0 });
+      if (rings.length > 4) rings.shift();
     });
 
-    (function waterFrame() {
-      var ctx = Wt.ctx, W = Wt.s.w, H = Wt.s.h;
-      if (!reduce) wt += 0.012;
-      ctx.clearRect(0, 0, W, H);
-      ctx.lineWidth = wcfg.lw;
-      ctx.lineCap = 'round';
+    // Five trains at unrelated angles and speeds, plus whatever is
+    // disturbing the surface right now.
+    function height(x, y) {
+      var k = 1 / cfg.scale;
+      var h = Math.sin((x * 0.0062 + y * 0.0018) * k + st)
+            + Math.sin((x * 0.0029 - y * 0.0051) * k + st * 0.78) * 0.80
+            + Math.sin((x * 0.0115 + y * 0.0088) * k + st * 1.70) * 0.34
+            + Math.sin((x * 0.0024 + y * 0.0196) * k - st * 1.15) * 0.30
+            + Math.sin((x * 0.0380 - y * 0.0245) * k + st * 2.40) * 0.09;
 
-      var c = ink();
-      for (var y0 = -30; y0 < H + 30; y0 += wcfg.gap) {
-        var depth = y0 / H;                                  // nearer = stronger
-        ctx.strokeStyle = 'rgba(' + c + ',' + (0.05 + depth * 0.09) * wcfg.a + ')';
-        ctx.beginPath();
-
-        for (var x = -40; x <= W + 40; x += 9) {
-          var swell = Math.sin(x / (330 * wcfg.wave) + wt + y0 / 260) * (7 + depth * 16) * wcfg.amp;
-          var chop  = Math.sin(x / 74 - wt * 2.4 + y0 / 40) * (1.6 + depth * 3.4) * wcfg.chop;
-          var y = y0 + swell + chop;
-
-          // the pointer drags the surface with it
-          if (wp.x > -9000) {
-            var dx = x - wp.x, dy = y0 - wp.y, d = Math.hypot(dx, dy);
-            if (d < 260) y -= Math.cos(d / 40 - wt * 3) * (1 - d / 260) * 13;
-          }
-          // and anything dropped on it spreads
-          for (var r = 0; r < ripples.length; r++) {
-            var rp2 = ripples[r];
-            var rd = Math.hypot(x - rp2.x, y0 - rp2.y);
-            var front = rp2.t * 5.2;
-            var band = Math.abs(rd - front);
-            if (band < 70) {
-              y += Math.cos(band / 22) * (1 - band / 70) * Math.max(0, 1 - rp2.t / 110) * 16;
-            }
-          }
-
-          if (x === -40) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      if (sp.x > -9000) {
+        var d = Math.hypot(x - sp.x, y - sp.y);
+        if (d < 300) {
+          var f = 1 - d / 300;
+          h += f * f * 1.25;                       // the water stands up under it
         }
+      }
+      for (var i = 0; i < rings.length; i++) {
+        var r = rings[i];
+        var rd = Math.hypot(x - r.x, y - r.y);
+        var band = Math.abs(rd - r.t * 5.4);
+        if (band < 86) {
+          h += Math.cos(band / 27) * (1 - band / 86) *
+               Math.max(0, 1 - r.t / 115) * 1.5;
+        }
+      }
+      return h;
+    }
+
+    var grid = null, gw = 0, gh = 0;
+
+    function marching(ctx, level) {
+      var C = cfg.cell;
+      for (var j = 0; j < gh - 1; j++) {
+        for (var i = 0; i < gw - 1; i++) {
+          var a = grid[j * gw + i],       b = grid[j * gw + i + 1];
+          var c = grid[(j + 1) * gw + i + 1], d = grid[(j + 1) * gw + i];
+          var code = (a > level ? 1 : 0) | (b > level ? 2 : 0) |
+                     (c > level ? 4 : 0) | (d > level ? 8 : 0);
+          if (code === 0 || code === 15) continue;
+
+          var x0 = (i - 1) * C, y0 = (j - 1) * C;
+          var T = { x: x0 + (level - a) / (b - a) * C, y: y0 };
+          var R = { x: x0 + C, y: y0 + (level - b) / (c - b) * C };
+          var B = { x: x0 + (level - d) / (c - d) * C, y: y0 + C };
+          var Lf = { x: x0, y: y0 + (level - a) / (d - a) * C };
+
+          function seg(p, q) { ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); }
+
+          switch (code) {
+            case 1: case 14: seg(Lf, T); break;
+            case 2: case 13: seg(T, R); break;
+            case 3: case 12: seg(Lf, R); break;
+            case 4: case 11: seg(R, B); break;
+            case 6: case 9:  seg(T, B); break;
+            case 7: case 8:  seg(Lf, B); break;
+            case 5:          seg(Lf, T); seg(R, B); break;
+            case 10:         seg(T, R); seg(Lf, B); break;
+          }
+        }
+      }
+    }
+
+    (function seaFrame() {
+      var ctx = S.ctx, W = S.s.w, H = S.s.h, C = cfg.cell;
+      if (!reduce) st += 0.0075;
+
+      gw = Math.ceil(W / C) + 3;
+      gh = Math.ceil(H / C) + 3;
+      if (!grid || grid.length !== gw * gh) grid = new Float32Array(gw * gh);
+
+      for (var j = 0; j < gh; j++) {
+        for (var i = 0; i < gw; i++) {
+          grid[j * gw + i] = height((i - 1) * C, (j - 1) * C);
+        }
+      }
+
+      ctx.clearRect(0, 0, W, H);
+      ctx.lineWidth = cfg.lw;
+      ctx.lineJoin = 'round';
+
+      var c = ink(), n = cfg.levels;
+      for (var l = 0; l < n; l++) {
+        var level = cfg.span * (-1 + 2 * (l + 0.5) / n);
+        var edge = Math.abs(level) / cfg.span;                  // troughs fade
+        ctx.strokeStyle = 'rgba(' + c + ',' + (cfg.a * (1 - edge * 0.45)) + ')';
+        ctx.beginPath();
+        marching(ctx, level);
         ctx.stroke();
       }
 
-      for (var r2 = ripples.length - 1; r2 >= 0; r2--) {
-        ripples[r2].t += 1;
-        if (ripples[r2].t > 120) ripples.splice(r2, 1);
+      for (var r = rings.length - 1; r >= 0; r--) {
+        rings[r].t += 1;
+        if (rings[r].t > 125) rings.splice(r, 1);
       }
-      requestAnimationFrame(waterFrame);
+      requestAnimationFrame(seaFrame);
     })();
   }
 })();
