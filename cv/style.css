@@ -63,6 +63,10 @@ body.cv { background-image: none; }          /* no wash behind a document */
 .cv-meta a { color: var(--soft); }
 .cv-meta > * + *::before {
   content: "·";
+  /* The separator sits inside the link box, so it picks up the underline
+     unless it is taken out of the parent's text-decoration. */
+  display: inline-block;
+  text-decoration: none;
   margin-right: .55rem;
   color: var(--rule);
 }
@@ -73,33 +77,35 @@ body.cv { background-image: none; }          /* no wash behind a document */
   padding-top: 1.4rem;
   padding-bottom: .3rem;
 }
-.cv-row h2 {
-  font-size: 1.05rem; font-weight: 700; color: var(--ink);
+.cv-row .head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 1rem;
   padding-bottom: .3rem; margin-bottom: .75rem;
   border-bottom: 1px solid var(--ink);
 }
+.cv-row h2 { font-size: 1.05rem; font-weight: 700; color: var(--ink); }
 .cv-note {
-  margin: -.4rem 0 .8rem;
-  font-size: .85rem; line-height: 1.5; color: var(--faint);
+  margin: 0; text-align: right; white-space: nowrap;
+  font-size: .85rem; color: var(--faint);
 }
 
 /* ---------- dated entries ----------------------------------------------- */
 
 .entries { list-style: none; margin: 0; padding: 0; }
 .entries > li {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: .1rem .9rem;
+  position: relative;
   padding: .5rem 0;
 }
-.entries > li > .entry { grid-column: 1; grid-row: 1; }
 .entries > li > .when {
-  grid-column: 2; grid-row: 1;
-  text-align: right; white-space: nowrap;
+  position: absolute; top: .55rem; right: 0;
+  white-space: nowrap;
   font-size: .9rem; color: var(--soft);
   font-variant-numeric: tabular-nums lining-nums;
 }
-.entry h3 { font-size: 1.02rem; font-weight: 700; }
+.entry h3 {
+  font-size: 1.02rem; font-weight: 700;
+  padding-right: 9.5rem;          /* room for the date on the title's line */
+}
 .entry .org { margin: .1rem 0 0; font-size: .92rem; color: var(--faint); }
 .entry p { margin: .2rem 0 0; font-size: .97rem; color: var(--soft); }
 .role {
@@ -142,13 +148,10 @@ body.cv { background-image: none; }          /* no wash behind a document */
 /* ---------- narrow ------------------------------------------------------ */
 
 @media (max-width: 40rem) {
-  .entries > li {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .entries > li > .when {
-    grid-column: 1; grid-row: 2;
-    text-align: left; margin-top: .15rem;
-  }
+  .entries > li > .when { position: static; display: block; margin-bottom: .1rem; }
+  .entry h3 { padding-right: 0; }
+  .cv-row .head { flex-wrap: wrap; gap: .1rem; }
+  .cv-note { text-align: left; white-space: normal; }
   .kit > div { grid-template-columns: minmax(0, 1fr); gap: .1rem; }
 }
 

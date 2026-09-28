@@ -128,11 +128,13 @@ canvas.deco {
 a { color: var(--ink); text-decoration-color: var(--accent); text-underline-offset: 3px; }
 a:hover { color: var(--accent); }
 
-h1, h2, h3 {
-  font-weight: 700; line-height: 1.25; margin: 0;
-  text-wrap: balance;            /* no one-word last line on a heading */
-}
-p, dd, li { text-wrap: pretty; } /* and no orphan at the end of a paragraph */
+h1, h2, h3 { font-weight: 700; line-height: 1.25; margin: 0; }
+
+/* Balance suits a short heading and ruins a long one: it breaks the line
+   early to even the halves. Titles that run on get `pretty`, which only
+   guards the last line. */
+h1, h2 { text-wrap: balance; }
+h3, p, dd, li { text-wrap: pretty; }
 
 .venue, .pid, .foot {
   font-variant-numeric: tabular-nums lining-nums;
