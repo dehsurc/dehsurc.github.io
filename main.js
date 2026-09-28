@@ -4,6 +4,10 @@
   'use strict';
 
   var root = document.documentElement;
+
+  // ?art=bev|halftone|kinetic — temporary, for picking an art direction.
+  var art = new URLSearchParams(location.search).get('art');
+  if (art) root.dataset.art = art;
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
   /* ------------------------------------------------------------------ *
