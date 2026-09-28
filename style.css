@@ -54,7 +54,7 @@
           BlinkMacSystemFont, system-ui, "Segoe UI", Arial, sans-serif;
   /* Display face: a grotesque with uneven widths and soft corners, so the
      headings have a voice without going geometric. */
-  --display: "Bricolage Grotesque", "Freesentation", "Inter", system-ui, sans-serif;
+  --display: "Inter Tight", "Freesentation", "Inter", system-ui, sans-serif;
   --kr: "Freesentation", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
 
   --bar-h: 3rem;
@@ -267,7 +267,7 @@ h1, h2, h3 { font-weight: 700; line-height: 1.25; margin: 0; }
 .hero h1 {
   font-family: var(--display); font-weight: 700;
   font-size: clamp(2.7rem, 8.6vw, 4.5rem);
-  letter-spacing: -.032em; line-height: 1.02;
+  letter-spacing: -.024em; line-height: 1.02;
   margin-bottom: 1.2rem;
 }
 .hangul {
