@@ -172,7 +172,8 @@ Still placeholders in `index.html`:
 
 - the four links in the hero (`aria-disabled="true"`),
 - the PDF links in the citation section,
-- the `journal` / `year` fields of the BibTeX entry.
+- the page and volume numbers in the BibTeX entry, once the NeurIPS 2026
+  proceedings appear.
 
 ## Local preview
 
