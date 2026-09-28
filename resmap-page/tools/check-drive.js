@@ -207,8 +207,6 @@ t('no kerbs: at rail width they read as red dashes, not as kerbing', function ()
   var kerbs = S.calls.filter(function (c) { return c[0] === 'fillRect' && c[3] === 12 && c[4] === 4; });
   eq(kerbs.length, 0, 'kerb blocks drawn');
 });
-  ok(kerbs.length > 100, 'too few kerb blocks: ' + kerbs.length);
-});
 
 t('through the loop with nobody on the pedals, the strip still reacts', function () {
   /* The bug this guards: the coverage and the flag were advanced in step(),
