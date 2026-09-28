@@ -20,7 +20,11 @@
  * the document is long, and a road drawn at the document's own scale would
  * show one lane marking at a time.
  *
- * Reverse is a real gear. It is how you go back up.
+ * There is no reverse. It existed so the map could be un-drawn, which nobody
+ * did, and it cost a lever, a reverse ratio, a governor, a signed engine
+ * braking term and three of the bugs this file has had. Going back up is what
+ * the wheel is for: the model hands the scroll back the moment you touch it,
+ * and the map goes back with the page.
  */
 
 (function () {
@@ -75,14 +79,12 @@
   var FINAL = 3.9;                                  // final drive ratio
   var EFF = 0.85;                                   // driveline efficiency
   var GEARS = [3.55, 2.05, 1.35, 1.00, 0.78];       // five forward ratios
-  var REV_RATIO = 3.30;
   var IDLE = 780, REDLINE = 6500;                   // rpm
   var DRAG_K = 0.55;                                // ½·rho·Cd·A
   var C_RR = 0.017;                                 // rolling resistance
   var GRAV = 9.81;
   var BRAKE_MAX = 9200;                             // N, about 6 m/s²
   var SHIFT_T = 0.16;                               // s of torque cut per shift
-  var REV_LIMIT = 5.0;                              // m/s in reverse, ~18 km/h
   var STOP_V = 0.15;                                // below this, call it stopped
 
   // Torque curve: pulls from just off idle, peaks around the middle of the
@@ -97,9 +99,7 @@
   // on the page, not a number quietly declining.
   function engineBrake(r) { return 68 + r * 0.042; }
 
-  function ratio() {
-    return gear === 'R' ? REV_RATIO : GEARS[g];
-  }
+  function ratio() { return GEARS[g]; }
   function rpmAt(v) {
     var r = Math.abs(v) / (2 * Math.PI * WHEEL_R) * ratio() * FINAL * 60;
     return clamp(r, IDLE, REDLINE);
@@ -109,10 +109,7 @@
    * State
    * ---------------------------------------------------------------- */
 
-  // Two gears, because there are only two things you can do to a page: go
-  // down it or go back up. Park and Neutral had nothing to select between.
-  var gear = 'D';           // D or R
-  var g = 0;                // index into GEARS while in D
+  var g = 0;                // index into GEARS
   var shifting = 0;         // seconds of torque cut left
   var speed = 0;            // m/s, signed: positive is down the page
   var pos = 0;              // metres from the top of the document
@@ -129,6 +126,10 @@
   var ownScroll = -1, wasBehaviour = '', driving = false;
   var stops = [];
   var startPlate = null, plateW = 74, plateH = 22;
+  /* How much of the camera rig is down, 0 to 1, eased toward what the
+     walkthrough below publishes so the strip does not snap between levels. */
+  var camsDown = 0;
+  var finishEl = document.getElementById('finish');
   var W = 0, H = 0, dpr = 1;
   var shownNext = '';
   var stopCol = '#b53228';
@@ -310,7 +311,11 @@
   function atTop() {
     var y = window.scrollY;
     if (hidden ? y > 90 : y > 30) {
-      if (hidden) { hidden = false; root.classList.remove('at-top'); }
+      if (hidden) {
+        hidden = false;
+        root.classList.remove('at-top');
+        offerHint();
+      }
     } else if (!hidden) {
       hidden = true;
       root.classList.add('at-top');
@@ -326,7 +331,7 @@
   function sx(m) { return CAR_X * W + (m - pos) * ROAD_PX_PER_M; }
 
   // Top-down car, nose to the right. Headlamp wash ahead, brake lamps behind
-  // when the pedal is down, reversing lamps behind when the gear is R.
+  // when the pedal is down.
   function drawCar(x, y) {
     var len = 34, wide = 17;
     ctx.save();
@@ -372,9 +377,8 @@
     ctx.fillRect(len / 2 - 3, -wide / 2 + 1.8, 2, 3);
     ctx.fillRect(len / 2 - 3, wide / 2 - 4.8, 2, 3);
 
-    // Tail, brake and reversing lamps.
-    if (gear === 'R') ctx.fillStyle = 'rgba(255,255,255,.95)';
-    else if (brake > 0.02) ctx.fillStyle = 'rgba(240, 78, 60, .98)';
+    // Tail and brake lamps.
+    if (brake > 0.02) ctx.fillStyle = 'rgba(240, 78, 60, .98)';
     else ctx.fillStyle = 'rgba(190, 52, 42, .55)';
     ctx.fillRect(-len / 2 + 1, -wide / 2 + 1.8, 2, 3);
     ctx.fillRect(-len / 2 + 1, wide / 2 - 4.8, 2, 3);
@@ -453,6 +457,49 @@
     ctx.lineDashOffset = 0;
     ctx.globalAlpha = 1;
     stops.forEach(function (s) { crossing(sx(s.m), paint, 2.6, 0.75); });
+
+    /* What the car can see, and what it falls back on.
+     *
+     * The wedge ahead of the nose is the onboard camera coverage; the dashed
+     * box is the satellite tile cached for the same stretch. They are inversely
+     * coupled and they are driven by the walkthrough further down the page, so
+     * scrolling through it takes the coverage off this strip one level at a
+     * time. What does not move is the map: it is laid down to the same
+     * perception range either way. That is the paper's claim, drawn rather
+     * than asserted, in the one place a reader is already looking.
+     */
+    var see = 1 - camsDown;
+    var nose = carX + 17;
+    var reach = sx(pos + PERCEPTION_M);
+
+    if (see > 0.01 && reach > nose) {
+      var span = nose + (reach - nose) * see;
+      var cone = ctx.createLinearGradient(nose, 0, span, 0);
+      cone.addColorStop(0, rgba(accent, 0.20 * see));
+      cone.addColorStop(1, rgba(accent, 0));
+      ctx.fillStyle = cone;
+      ctx.beginPath();
+      ctx.moveTo(nose, mid - 3);
+      ctx.lineTo(span, edgeT + 1);
+      ctx.lineTo(span, edgeB - 1);
+      ctx.lineTo(nose, mid + 3);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    if (camsDown > 0.01 && reach > nose) {
+      ctx.save();
+      ctx.globalAlpha = camsDown * 0.75;
+      ctx.strokeStyle = rgba(accent, 0.55);
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.rect(Math.round(nose) + 0.5, edgeT + 1.5,
+               Math.round(reach - nose), Math.round(edgeB - edgeT - 3));
+      ctx.stroke();
+      ctx.restore();
+      ctx.setLineDash([]);
+    }
 
     /* The map, in its class colours with the per-polyline vertices a predicted
        map is drawn with.
@@ -548,60 +595,57 @@
       startPlate.hidden = !showPlate;
       if (showPlate) {
         startPlate.style.left = Math.round(startX) + 'px';
-        /* Legs down to the verge, the same way the guide signs stand. */
-        ctx.strokeStyle = 'rgba(' + ink + ', 0.34)';
+        /* Two legs and a beam. The name sits on the beam with nothing behind
+           it: boxed, it read as a tooltip stuck to the road rather than as
+           part of the structure. */
+        var pLeg = Math.round(plateW / 2) + 7;
+        var beamY = SIGN_TOP + plateH + 1.5;
+        ctx.strokeStyle = 'rgba(' + ink + ', 0.4)';
         ctx.lineCap = 'butt';
-        var pLeg = Math.max(8, Math.min(30, plateW * 0.3));
+        ctx.lineWidth = 1.6;
         [-pLeg, pLeg].forEach(function (dx) {
-          ctx.lineWidth = 1.6;
           ctx.beginPath();
-          ctx.moveTo(startX + dx, SIGN_TOP + plateH);
+          ctx.moveTo(startX + dx, beamY);
           ctx.lineTo(startX + dx, rTop + 3);
           ctx.stroke();
         });
+        ctx.lineWidth = 2.2;
+        ctx.beginPath();
+        ctx.moveTo(startX - pLeg, beamY);
+        ctx.lineTo(startX + pLeg, beamY);
+        ctx.stroke();
       }
     }
-    if (startX > -40 && startX < W + 40) {
+    /* A chequer is black and white in both themes. The neutral ink inverts
+       with the theme, so the dark square is a fixed one. */
+    function chequer(x) {
+      if (x < -40 || x > W + 40) return;
       var sTop = rTop + 3, sBot = rBot - 3;
       var cell = (sBot - sTop) / 4;
       for (var r = 0; r < 4; r++) {
         for (var c = 0; c < 3; c++) {
-          /* A chequer is black and white in both themes. The neutral ink
-             inverts with the theme, so the dark square is a fixed one. */
           ctx.fillStyle = (r + c) % 2 ? paint : 'rgba(14, 16, 20, 0.72)';
-          ctx.fillRect(startX - 1.5 * cell + c * cell, sTop + r * cell,
+          ctx.fillRect(x - 1.5 * cell + c * cell, sTop + r * cell,
                        cell + 0.5, cell + 0.5);
         }
       }
     }
+    chequer(startX);
+    /* And the same line at the far end, so the route has a finish you can see
+       coming rather than a stop you discover by hitting it. */
+    chequer(sx(maxM()));
 
     drawCar(offX, mid);
 
-    /* End of the route: the car carries on off the right-hand side and the
-       road says thank you. Drive back up and it takes it back. */
-
-    if (outro > 0.02) {
-      var fade = clamp((outro - 0.35) / 0.4, 0, 1);
-      if (fade > 0) {
-        var label = 'THANK YOU FOR VISITING ReSMap';
-        ctx.save();
-        ctx.globalAlpha = fade;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.font = '700 15px ' + FACE;
-
-        /* Fresh tarmac behind the words. The centre line runs straight through
-           them otherwise, and a broken line through a word is worse than no
-           line at all. */
-        var tw = ctx.measureText(label).width;
-        ctx.fillStyle = pavement;
-        box(ctx, W / 2 - tw / 2 - 16, mid - 13, tw + 32, 26, 4);
-        ctx.fill();
-
-        ctx.fillStyle = 'rgba(' + ink + ', 0.8)';
-        ctx.fillText(label, W / 2, mid);
-        ctx.restore();
-      }
+    /* End of the route: the car carries on off the right-hand side, and the
+       finish hands the reader the one thing the page is for. It used to paint
+       a thank-you on the tarmac, which was a dead end — this is the place a
+       visitor has definitely engaged, so it asks for something. Real anchors
+       rather than canvas text, so it is clickable and reachable by keyboard. */
+    if (finishEl) {
+      var lit = clamp((outro - 0.3) / 0.35, 0, 1);
+      finishEl.hidden = lit <= 0.01;
+      if (lit > 0.01) finishEl.style.opacity = lit.toFixed(3);
     }
 
     /* Signs sit at their true position and slide in from the right, the way
@@ -664,7 +708,6 @@
     throttle += ((holdGas ? 1 : 0) - throttle) * Math.min(1, dt * (holdGas ? 8 : 15));
     brake += ((holdBrake ? 1 : 0) - brake) * Math.min(1, dt * (holdBrake ? 7 : 18));
 
-    var dir = gear === 'R' ? -1 : 1;
     var v = speed;
     var absV = Math.abs(v);
 
@@ -673,7 +716,7 @@
     // Gearbox. The upshift point rises with throttle, which is what makes a
     // gentle pull-away shift early and a floored one hold each gear out.
     if (shifting > 0) shifting -= dt;
-    else if (gear === 'D') {
+    else {
       var up = 2900 + throttle * 3200;
       var dn = 1950 + throttle * 700;
       if (g < GEARS.length - 1 && rpm > up) { g++; shifting = SHIFT_T; }
@@ -683,21 +726,16 @@
     var drive = 0;
     if (shifting <= 0) {
       var gearing = ratio() * FINAL * EFF / WHEEL_R;
-      drive = dir * throttle * torque(rpm) * gearing;
-      /* Engine braking opposes the way the wheels are turning, not the way
-         the gear is pointing, and a car that is not moving has nothing for it
-         to oppose. Signing it by the gear pushed the car backwards off the
-         end of the route the moment the throttle came off: held against the
-         end, speed is zero, and the braking term is the only force left. */
+      drive = throttle * torque(rpm) * gearing;
+      /* Engine braking opposes the way the wheels are turning, and a car that
+         is not moving has nothing for it to oppose. Signed by the gear instead,
+         it pushed the car backwards off the end of the route the moment the
+         throttle came off: held against the end, speed is zero, and the braking
+         term is the only force left. */
       if (absV > 0.05) {
         drive -= Math.sign(v) * (1 - throttle) * engineBrake(rpm) * gearing;
       }
     }
-
-    // Reverse is geared and governed the way reverse is: it will not run away
-    // with you. Cutting drive outright, because the force here is signed by
-    // the direction of travel and clamping it against zero would be a no-op.
-    if (gear === 'R' && absV > REV_LIMIT) drive = 0;
 
     var resist = -Math.sign(v) * (DRAG_K * v * v + C_RR * MASS * GRAV);
     if (absV < 0.05) resist = 0;
@@ -712,6 +750,10 @@
     // creep the other way.
     if (v !== 0 && Math.sign(speed) !== Math.sign(v) && throttle < 0.02) speed = 0;
     if (Math.abs(speed) < STOP_V && throttle < 0.02) speed = 0;
+
+    var want = parseFloat(root.dataset.camsDown);
+    if (!isFinite(want)) want = 0;
+    camsDown += (want - camsDown) * Math.min(1, dt * 6);
 
     pos += speed * dt;
 
@@ -814,11 +856,11 @@
     }
 
     // Gear, where the odometer window is on a real one.
-    gctx.fillStyle = gear === 'R' ? stopCol : 'rgba(' + ink + ', 0.75)';
+    gctx.fillStyle = 'rgba(' + ink + ', 0.75)';
     gctx.font = '700 22px ' + FACE;
     gctx.textAlign = 'center';
     gctx.textBaseline = 'middle';
-    gctx.fillText(gear === 'D' ? 'D' + (g + 1) : 'R', C, C + 40);
+    gctx.fillText('D' + (g + 1), C, C + 40);
 
     gctx.fillStyle = 'rgba(' + ink + ', 0.42)';
     gctx.font = '600 13px ' + FACE;
@@ -854,9 +896,12 @@
     if (gasBtnEl) gasBtnEl.style.setProperty('--travel', throttle.toFixed(3));
     if (brakeBtnEl) brakeBtnEl.style.setProperty('--travel', brake.toFixed(3));
 
+    /* How far down the route, as a percentage. It used to read kilometres,
+       which were made up: at 32 px to the metre a whole page is about 600 m,
+       so "0.62 / 0.62 km" was a number that could not be checked against
+       anything. A percentage of the document is true. */
     if (tripEl) {
-      tripEl.textContent = (pos / 1000).toFixed(2) + ' / ' +
-                           (maxM() / 1000).toFixed(2) + ' km';
+      tripEl.textContent = Math.round(clamp(pos / maxM(), 0, 1) * 100) + '%';
     }
 
     // Next junction, the way a nav system calls it.
@@ -913,12 +958,12 @@
     if (!owned) {
       owned = true;
       pos = window.scrollY / PX_PER_M;
-      /* Pick the page's own motion up, but only the half of it the gear
-         allows. Scrolling back up the page and then pressing the accelerator
-         used to hand the car that momentum whole, so it pulled away
-         backwards in D and the page climbed until the engine won. */
+      /* Pick the page's own motion up, but only the half of it the car can
+         do anything with. Scrolling back up the page and then pressing the
+         accelerator used to hand the car that momentum whole, so it pulled
+         away backwards and the page climbed until the engine won. */
       var v = clamp(observed, -45, 45);
-      speed = gear === 'R' ? Math.min(0, v) : Math.max(0, v);
+      speed = Math.max(0, v);
       grabScroll();
     }
     startLoop();
@@ -1068,93 +1113,6 @@
 
   var gasBtn = document.getElementById('pedal-gas');
   var brakeBtn = document.getElementById('pedal-brake');
-  /* The lever.
-   *
-   * A gate with R at the top and D at the bottom, the way an automatic is laid
-   * out. Drag the knob and it follows your hand; let go and it drops into the
-   * detent it is nearest. Refused, it springs back to where it was.
-   */
-  var lever = document.getElementById('lever');
-  var knob = document.getElementById('knob');
-  var GATE = { R: 0, D: 1 };
-  var dragKnob = false, knobT = 1;
-
-  // The detents are 0.95rem in from each end, so the knob travels between them
-  // in the gate's own terms rather than in numbers that have to be kept in step
-  // with the stylesheet.
-  function knobTop(t) { return 'calc(0.95rem + (100% - 1.9rem) * ' + t.toFixed(4) + ')'; }
-
-  function showLever() {
-    knobT = GATE[gear];
-    if (knob) {
-      knob.style.top = knobTop(knobT);
-      knob.setAttribute('aria-valuenow', String(knobT));
-      knob.setAttribute('aria-valuetext', gear === 'R' ? 'Reverse' : 'Drive');
-    }
-    if (lever) {
-      lever.classList.toggle('in-r', gear === 'R');
-      lever.classList.toggle('in-d', gear === 'D');
-    }
-  }
-
-  function baulk() {
-    cockpit.classList.add('baulk');
-    setTimeout(function () { cockpit.classList.remove('baulk'); }, 320);
-  }
-
-  function setGear(next) {
-    if (next === gear) { showLever(); return; }
-    // You cannot slam a moving car into the other direction.
-    if (Math.abs(speed) > 1.2) { baulk(); showLever(); return; }
-    gear = next;
-    g = 0;
-    shifting = 0;
-    showLever();
-
-    hud();
-    startLoop();
-  }
-
-  if (knob && lever) {
-    function gateBox() { return lever.getBoundingClientRect(); }
-
-    knob.addEventListener('pointerdown', function (e) {
-      dragKnob = true;
-      lever.classList.add('grabbing');
-      try { knob.setPointerCapture(e.pointerId); } catch (err) { /* none to take */ }
-      e.preventDefault();
-    });
-    knob.addEventListener('pointermove', function (e) {
-      if (!dragKnob) return;
-      var r = gateBox();
-      var t = clamp((e.clientY - r.top - 15) / Math.max(1, r.height - 30), 0, 1);
-      knob.style.top = knobTop(t);
-      knobT = t;
-    });
-    function drop(e) {
-      if (!dragKnob) return;
-      dragKnob = false;
-      lever.classList.remove('grabbing');
-      try { knob.releasePointerCapture(e.pointerId); } catch (err) { /* gone */ }
-      setGear(knobT < 0.5 ? 'R' : 'D');
-    }
-    knob.addEventListener('pointerup', drop);
-    knob.addEventListener('pointercancel', drop);
-
-    knob.addEventListener('keydown', function (e) {
-      if (e.key === 'ArrowUp') { e.preventDefault(); setGear('R'); }
-      else if (e.key === 'ArrowDown') { e.preventDefault(); setGear('D'); }
-    });
-
-    // Clicking the gate itself picks the nearer position.
-    lever.addEventListener('pointerdown', function (e) {
-      if (e.target === knob || dragKnob) return;
-      var r = gateBox();
-      setGear((e.clientY - r.top) / Math.max(1, r.height) < 0.5 ? 'R' : 'D');
-    });
-  }
-  showLever();
-
   var topBtn = document.getElementById('to-top');
   if (topBtn) {
     topBtn.addEventListener('click', function () {
@@ -1173,11 +1131,43 @@
     });
   }
 
+  /* ---- the hint, once ----
+   *
+   * A cluster in the corner is not self-evidently a control, and the page it
+   * drives looks exactly the same to anyone who never touches it. So it says
+   * so: shown the first time the road comes into frame, taken away the moment
+   * a pedal moves, and never offered again on this browser. */
+  var hintEl = document.getElementById('drive-hint');
+  var hintTimer = 0, hintDone = false;
+
+  function hintOffered() {
+    hintDone = true;
+    try { localStorage.setItem('resmap-drove', '1'); } catch (err) { /* private mode */ }
+  }
+  function dropHint() {
+    if (hintTimer) { clearTimeout(hintTimer); hintTimer = 0; }
+    if (hintEl) hintEl.hidden = true;
+    cockpit.classList.remove('hinting');
+    if (!hintDone) hintOffered();
+  }
+  function offerHint() {
+    if (hintDone || !hintEl) return;
+    /* A blocked or empty store is the same as a first visit as far as this is
+       concerned, so the read only ever decides whether to stay quiet. */
+    var known = false;
+    try { known = !!localStorage.getItem('resmap-drove'); } catch (err) { known = false; }
+    if (known) { hintDone = true; return; }
+    hintEl.hidden = false;
+    cockpit.classList.add('hinting');
+    hintTimer = setTimeout(dropHint, 9000);
+  }
+
   function pressGas() {
+    dropHint();
     takeWheel();
     holdGas = true;
   }
-  function pressBrake() { takeWheel(); holdBrake = true; }
+  function pressBrake() { dropHint(); takeWheel(); holdBrake = true; }
   function release() { holdGas = holdBrake = false; }
 
   function pedal(btn, press) {
@@ -1210,8 +1200,8 @@
   window.addEventListener('pointerup', release);
   window.addEventListener('blur', release);
 
-  /* Keyboard: W and S are the pedals, D and R the selector. The arrow keys are
-     left alone, because they are how the page scrolls. */
+  /* Keyboard: W and S are the pedals. The arrow keys are left alone, because
+     they are how the page scrolls. */
   function editable(el) {
     return !el || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) || el.isContentEditable;
   }
@@ -1221,7 +1211,6 @@
     var k = e.key.toLowerCase();
     if (k === 'w') { e.preventDefault(); clearTimeout(liftTimer); pressGas(); }
     else if (k === 's') { e.preventDefault(); clearTimeout(liftTimer); pressBrake(); }
-    else if (k === 'r' || k === 'd') setGear(k.toUpperCase());
   });
   /* Auto-repeat sends a keyup between every keydown on X11, which switched
      the pedal off as fast as it went on. A held key is one whose release has

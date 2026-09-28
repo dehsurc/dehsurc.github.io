@@ -406,25 +406,53 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
 
 /* The start/finish gantry board. It names the road rather than pointing
    anywhere, so it takes neither the guide signs' green nor a number: a plain
-   board in the display face, the way a circuit carries its name across the
-   start straight. The chequer on the tarmac below is the line itself. */
+   name set on the gantry beam, the way a circuit carries it across the start
+   straight. The legs and the beam are drawn on the canvas; the chequer on the
+   tarmac below is the line itself. No box: boxed, it read as a tooltip stuck
+   to the road rather than as part of the structure. */
 #start-plate {
   position: absolute;
-  top: 2px;
+  top: 1px;
   transform: translateX(-50%);
-  padding: .26rem .6rem;
-  border: 1px solid var(--rule-dark);
-  border-radius: 3px;
-  background: var(--bar);
-  color: var(--ink);
+  padding: 0 .2rem .1rem;
+  color: var(--ink-soft);
   font-family: var(--display);
-  font-size: 12px; font-weight: 700; line-height: 1.2;
-  letter-spacing: .085em;
+  font-size: 11px; font-weight: 700; line-height: 1.35;
+  letter-spacing: .13em;
   white-space: nowrap;
-  opacity: .9;
   pointer-events: none;
 }
 #start-plate[hidden] { display: none; }
+
+/* The finish. The car crosses the chequer and carries on off the strip; this
+   comes up in its place with the one thing the page is for. */
+#finish {
+  position: absolute;
+  /* Centred on the carriageway, which sits in the lower part of the strip:
+     the band runs from 45% of the canvas to 9px off its bottom. */
+  left: 50%; top: 72%;
+  transform: translate(-50%, -52%);
+  margin: 0;
+  display: flex; align-items: baseline; gap: .55rem;
+  padding: .28rem .7rem;
+  border-radius: 3px;
+  background: var(--road-surface);
+  white-space: nowrap;
+}
+#finish[hidden] { display: none; }
+#finish span {
+  font-family: var(--display);
+  font-size: 10px; font-weight: 700;
+  letter-spacing: .13em; text-transform: uppercase;
+  color: var(--ink-faint);
+}
+#finish a {
+  font-size: 13px; font-weight: 600;
+  color: var(--ink);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  pointer-events: auto;
+}
 .sign b {
   flex: none;
   font-size: 10px; font-weight: 700;
@@ -456,14 +484,6 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
 }
 #cockpit[hidden] { display: none; }
 #cockpit.shut { transform: translateY(calc(100% - 1.9rem)); }
-#cockpit.baulk { animation: baulk .3s ease; }
-
-@keyframes baulk {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-3px); }
-  75% { transform: translateX(3px); }
-}
-
 #cockpit-toggle {
   position: absolute; top: .35rem; right: .4rem;
   width: 1.2rem; height: 1.2rem;
@@ -494,59 +514,6 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
   width: 7.5rem; height: 7.5rem;
   margin-left: -.15rem;
 }
-
-/* The gate: R above D, the way an automatic is laid out. */
-.lever {
-  position: relative;
-  flex: 1 1 auto;
-  height: 6.4rem;
-  min-width: 2.4rem;
-}
-.lever .gate {
-  position: absolute;
-  left: 50%; top: .5rem; bottom: .5rem;
-  width: 12px;
-  margin-left: -6px;
-  border-radius: 6px;
-  background: var(--surface);
-  box-shadow: inset 0 0 0 1px var(--rule-dark);
-}
-.lever .mark {
-  position: absolute;
-  left: 50%; margin-left: 10px;
-  font-size: 10px; font-weight: 700;
-  letter-spacing: .04em;
-  color: var(--ink-faint);
-  transform: translateY(-50%);
-}
-.lever .mark.r { top: .95rem; }
-.lever .mark.d { top: calc(100% - .95rem); }
-#lever.in-r .mark.r { color: var(--stop); }
-#lever.in-d .mark.d { color: var(--go); }
-
-#knob {
-  position: absolute;
-  left: 50%;
-  width: 26px; height: 20px;
-  margin-left: -13px;
-  padding: 0;
-  border: 1px solid var(--rule-dark);
-  border-radius: 5px;
-  background: linear-gradient(var(--bar), var(--surface));
-  cursor: grab;
-  touch-action: none;
-  transform: translateY(-50%);
-  transition: top .16s cubic-bezier(.2, .7, .3, 1);
-}
-#knob::before {
-  content: "";
-  position: absolute; inset: 5px 6px;
-  border-top: 1px solid var(--rule-dark);
-  border-bottom: 1px solid var(--rule-dark);
-  opacity: .7;
-}
-#knob:hover { border-color: var(--ink-faint); }
-#lever.grabbing #knob { cursor: grabbing; transition: none; }
 
 .readout {
   margin: 0;
@@ -592,6 +559,20 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
   opacity: .13;
   pointer-events: none;
 }
+
+/* The first-visit nudge: the accelerator lights the way it does under a
+   cursor, twice, and then the hint is gone for good. */
+.hinting .pedal.gas { animation: pedal-nudge 1.5s ease-in-out 2; }
+@keyframes pedal-nudge {
+  0%, 100% { color: var(--ink-soft); border-color: var(--rule-dark); }
+  45%      { color: var(--go);       border-color: var(--go); }
+}
+#drive-hint {
+  margin: 0 0 .25rem;
+  font-size: 11px; line-height: 1.3;
+  color: var(--ink-faint);
+}
+#drive-hint[hidden] { display: none; }
 
 .pedal.gas:hover, .pedal.gas:active { color: var(--go); border-color: var(--go); }
 .pedal.brake:hover, .pedal.brake:active { color: var(--stop); border-color: var(--stop); }
