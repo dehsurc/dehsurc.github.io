@@ -321,14 +321,6 @@ a:hover > .arrow { transform: translate(.1em, -.1em); }
 .body > p { margin: 0 0 1.1rem; max-width: 38em; }
 .body > p:last-child { margin-bottom: 0; }
 
-.also { margin: 0 0 1.4rem; font-size: .95rem; }
-.also a {
-  display: inline-flex; align-items: center; gap: .32rem;
-  color: var(--ink); text-decoration: none;
-  border-bottom: 1px solid var(--rule); padding-bottom: 1px;
-}
-.also a:hover { border-bottom-color: var(--ink); }
-
 /* ---------- publications ----------------------------------------------- */
 
 .pubs { list-style: none; margin: 0; padding: 0; }
@@ -387,27 +379,26 @@ a:hover > .arrow { transform: translate(.1em, -.1em); }
 }
 .bigmail:hover { color: var(--accent); background-size: 100% 2px; }
 .bigmail .arrow {
-  width: .62em; height: .62em; flex: none;
-  fill: none; stroke: currentColor; stroke-width: 1.7;
+  width: .6em; height: .6em; flex: none;
+  fill: none; stroke: currentColor; stroke-width: 2.1;
   stroke-linecap: round; stroke-linejoin: round;
   transition: transform .3s cubic-bezier(.4, 0, .2, 1);
 }
 .bigmail:hover .arrow { transform: translate(.12em, -.12em); }
 
+/* One line, not a stack: the links sit side by side under the address. */
 .elsewhere {
-  list-style: none; margin: 1.9rem 0 0; padding: 0;
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
-  gap: .1rem 1.5rem;
+  margin: 1.6rem 0 0;
+  display: flex; flex-wrap: wrap; align-items: center;
+  gap: .3rem 1.5rem;
+  font-size: .92rem;
 }
 .elsewhere a {
-  display: inline-flex; align-items: center; gap: .6rem;
-  padding: .4rem 0; text-decoration: none;
-  font-size: .88rem; color: var(--soft);
+  display: inline-flex; align-items: center; gap: .3rem;
+  color: var(--soft); text-decoration: none;
+  transition: color .2s ease;
 }
-.elsewhere svg { width: 15px; height: 15px; fill: var(--faint); flex: none; }
-.elsewhere a { transition: color .2s ease, transform .25s cubic-bezier(.4, 0, .2, 1); }
-.elsewhere a:hover { color: var(--accent); transform: translateX(3px); }
-.elsewhere a:hover svg { fill: var(--accent); }
+.elsewhere a:hover { color: var(--ink); }
 
 /* ---------- footer ------------------------------------------------------ */
 

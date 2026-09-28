@@ -65,7 +65,6 @@
     advised by Prof. Soonmin Hwang</p>
   <p class="cv-meta">
     <a href="mailto:tnrud17@hanyang.ac.kr">tnrud17@hanyang.ac.kr</a>
-    <a href="tel:+821085959973">+82 10 8595 9973</a>
     <span>Seoul, Republic of Korea</span>
     <a href="https://github.com/dehsurc" target="_blank" rel="noopener">github.com/dehsurc</a>
   </p>
@@ -255,29 +254,16 @@
   </div>
 </footer>
 
+<script src="../main.js" defer></script>
 <script>
-  (function () {
-    var root = document.documentElement;
-    var btn = document.getElementById('theme-toggle');
-    function paint() {
-      var dark = root.dataset.theme === 'dark';
-      btn.setAttribute('aria-pressed', String(dark));
-      btn.setAttribute('aria-label', dark ? 'Switch to light theme' : 'Switch to dark theme');
-    }
-    paint();
-    btn.addEventListener('click', function () {
-      root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
-      try { localStorage.setItem('kk-theme', root.dataset.theme); } catch (e) {}
-      paint();
-    });
-
+  window.addEventListener('DOMContentLoaded', function () {
     // The print stylesheet lays this page out for paper; the browser's own
-    // "Save as PDF" then gives a PDF with selectable text, which is what a
-    // CV needs. No library involved.
+    // "Save as PDF" then gives a PDF with selectable text and live links,
+    // which is what a CV needs. No library involved.
     document.getElementById('print').addEventListener('click', function () {
       window.print();
     });
-  })();
+  });
 </script>
 </body>
 </html>

@@ -20,7 +20,7 @@ body.cv { background-image: none; }          /* no wash behind a document */
 /* ---------- head -------------------------------------------------------- */
 
 .cv-head, .cv-row, .foot {
-  max-width: 54rem;
+  max-width: 60rem;
   margin: 0 auto;
   padding-left: var(--gutter); padding-right: var(--gutter);
 }
@@ -50,7 +50,7 @@ body.cv { background-image: none; }          /* no wash behind a document */
 
 .cv-row {
   display: grid;
-  grid-template-columns: 9rem minmax(0, 1fr);
+  grid-template-columns: 6.5rem minmax(0, 1fr);
   grid-template-rows: auto 1fr;          /* slack goes below the note, not above */
   gap: .4rem clamp(1.5rem, 4vw, 2.6rem);
   padding-top: clamp(1.8rem, 4vw, 2.4rem);
@@ -74,7 +74,7 @@ body.cv { background-image: none; }          /* no wash behind a document */
 .entries { list-style: none; margin: 0; padding: 0; }
 .entries > li {
   display: grid;
-  grid-template-columns: 9.5rem minmax(0, 1fr);
+  grid-template-columns: 8.4rem minmax(0, 1fr);
   gap: .2rem .9rem;
   padding: .85rem 0;
   border-bottom: 1px dotted var(--rule);
@@ -83,12 +83,12 @@ body.cv { background-image: none; }          /* no wash behind a document */
 .entries > li:last-child { border-bottom: 0; padding-bottom: 0; }
 .when {
   font-size: .8rem; color: var(--faint);
-  padding-top: .2rem; white-space: nowrap;
+  padding-top: .2rem;
   font-variant-numeric: tabular-nums lining-nums;
 }
 .entry h3 { font-size: 1rem; font-weight: 600; letter-spacing: -.012em; }
 .entry .org { margin: .15rem 0 0; font-size: .86rem; color: var(--faint); }
-.entry p { margin: .3rem 0 0; font-size: .92rem; color: var(--soft); max-width: 42em; }
+.entry p { margin: .3rem 0 0; font-size: .92rem; color: var(--soft); max-width: 46em; }
 .role {
   font-size: .68rem; font-weight: 500;
   color: var(--faint); border: 1px solid var(--rule); border-radius: 2px;
@@ -100,7 +100,7 @@ body.cv { background-image: none; }          /* no wash behind a document */
 
 .kit { margin: 0; font-size: .92rem; }
 .kit > div {
-  display: grid; grid-template-columns: 9.5rem minmax(0, 1fr); gap: .9rem;
+  display: grid; grid-template-columns: 8.4rem minmax(0, 1fr); gap: .9rem;
   padding: .45rem 0; border-bottom: 1px dotted var(--rule);
 }
 .kit > div:first-child { padding-top: 0; }
