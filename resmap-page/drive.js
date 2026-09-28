@@ -404,6 +404,32 @@
       ctx.stroke();
     }
 
+    /* The head of the route: a start line across the carriageway with the
+       name painted on the tarmac after it, the way a name is painted on a
+       road rather than hung beside one. Only drawn when it is in frame. */
+    var startX = sx(0);
+    if (startX > -220 && startX < W + 40) {
+      ctx.strokeStyle = paint;
+      ctx.lineWidth = 2.4;
+      ctx.beginPath();
+      ctx.moveTo(startX, rTop + 3);
+      ctx.lineTo(startX, rBot - 3);
+      ctx.stroke();
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(startX - 4, rTop + 3);
+      ctx.lineTo(startX - 4, rBot - 3);
+      ctx.stroke();
+
+      ctx.save();
+      ctx.fillStyle = paint;
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.font = '700 ' + Math.round((rBot - rTop) * 0.42) + 'px ' + FACE;
+      ctx.fillText('ReSMap', startX + 10, mid);
+      ctx.restore();
+    }
+
     /* Zebra stripes run with the traffic, so on a road drawn left to right
        they stack across the carriageway. */
     function crossing(x, style, width, alpha) {
