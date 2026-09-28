@@ -34,7 +34,38 @@
     { name: 'SatforHDMap', mod: 'C+SA', v: [27.0, 21.5, 21.3, 14.3] },
     { name: 'ReSMap',      mod: 'C+SA', v: [47.0, 45.1, 43.4, 40.9], ours: true }
   ];
-  var SCALE = 50;              // mAP at full bar width
+  /* Full bar width, taken from the data rather than picked: a value past the
+     end of the scale would be clamped and drawn short. */
+  var SCALE = Math.ceil(Math.max.apply(null, METHODS.map(function (m) {
+    return Math.max.apply(null, m.v);
+  })) / 10) * 10;
+
+  function row(name) {
+    for (var i = 0; i < METHODS.length; i++) if (METHODS[i].name === name) return METHODS[i];
+    return null;
+  }
+  function pct(m, i) { return ((m.v[0] - m.v[i]) / m.v[0] * 100).toFixed(1) + '%'; }
+
+  /* The prose under the chart quotes the chart. Written out by hand it drifted:
+     the lead over the next best method read 7.6 when the table says 6.7. These
+     placeholders are filled from METHODS, so the sentence cannot say a number
+     the bars above it are not drawing.
+       {v:Name}    that method's mAP at this level
+       {drop:Name} how much it has lost since clean, per cent
+       {lead}      how far ReSMap is ahead of the best baseline here
+       {bestClean} the best any baseline manages with every camera working   */
+  function fill(text, i) {
+    var ours = row('ReSMap');
+    var baselines = METHODS.filter(function (m) { return !m.ours; });
+    function best(at) {
+      return Math.max.apply(null, baselines.map(function (m) { return m.v[at]; }));
+    }
+    return text
+      .replace(/\{v:([^}]+)\}/g, function (_, n) { return row(n).v[i].toFixed(1); })
+      .replace(/\{drop:([^}]+)\}/g, function (_, n) { return pct(row(n), i); })
+      .replace(/\{lead\}/g, (ours.v[i] - best(i)).toFixed(1))
+      .replace(/\{bestClean\}/g, best(0).toFixed(1));
+  }
 
   /* Camera order: front, front-left, front-right, back-left, back-right, back.
      Bearings are degrees clockwise from straight ahead. */
@@ -49,13 +80,13 @@
 
   var STAGES = [
     { step: 'Clean', sub: 'all six cameras reporting', off: [],
-      note: 'Every camera is reporting and the satellite tile is one more source of evidence rather than a fallback. ReSMap reads 47.0 mAP, ahead of the next best method by 7.6.' },
+      note: 'Every camera is reporting and the satellite tile is one more source of evidence rather than a fallback. ReSMap reads {v:ReSMap} mAP, ahead of the next best method by {lead}.' },
     { step: 'Front-1', sub: 'front camera zeroed', off: [0],
-      note: 'The forward camera goes dark. MapTracker loses 42.9% of its accuracy on that one fault alone, because nothing else in the model can see ahead. ReSMap loses 4.0%.' },
+      note: 'The forward camera goes dark. MapTracker loses {drop:MapTracker} of its accuracy on that one fault alone, because nothing else in the model can see ahead. ReSMap loses {drop:ReSMap}.' },
     { step: 'Front-3', sub: 'three forward cameras zeroed', off: [0, 1, 2],
-      note: 'The whole forward arc is gone. MapTracker is down to 10.8 mAP and SDTagNet to 14.5. The satellite branch is now carrying the forward geometry, and ReSMap is still at 43.4.' },
+      note: 'The whole forward arc is gone. MapTracker is down to {v:MapTracker} mAP and SDTagNet to {v:SDTagNet}. The satellite branch is now carrying the forward geometry, and ReSMap is still at {v:ReSMap}.' },
     { step: 'All six', sub: 'no camera evidence at all', off: [0, 1, 2, 3, 4, 5],
-      note: 'No onboard vision whatsoever. ReSMap returns 40.9 mAP, higher than any of these baselines manages with all six cameras working. That is the redundancy claim, and it is the whole reason to cache the imagery.' }
+      note: 'No onboard vision whatsoever. ReSMap returns {v:ReSMap} mAP, higher than the {bestClean} that the best of these baselines manages with every camera working. That is the redundancy claim, and it is the whole reason to cache the imagery.' }
   ];
 
   function el(name, attrs) {
@@ -236,7 +267,7 @@
       lastNote = shown;
       stepEl.textContent = STAGES[shown].step;
       subEl.textContent = STAGES[shown].sub;
-      noteEl.textContent = STAGES[shown].note;
+      noteEl.textContent = fill(STAGES[shown].note, shown);
 
       rows.forEach(function (r) {
         var v = r.m.v[shown];

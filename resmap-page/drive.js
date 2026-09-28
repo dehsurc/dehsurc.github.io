@@ -63,9 +63,10 @@
   /* ---------------------------------------------------------------- *
    * The car
    *
-   * A mid-size saloon: 1500 kg, a 210 Nm engine, a five-speed automatic.
-   * The numbers are ordinary ones on purpose, so the way it pulls away, runs
-   * out of first, and settles into a cruise is the way a car does.
+   * 1500 kg on a five-speed automatic, geared and powered so that flooring it
+   * is worth doing: 438 Nm at the peak of the curve, 0-100 km/h in about 4.8 s,
+   * 250 km/h flat out. Every figure the cockpit prints is computed from the
+   * constants below, so retuning the car cannot leave a readout behind.
    * ---------------------------------------------------------------- */
 
   var MASS = 1500;                                  // kg
@@ -126,7 +127,7 @@
 
   var raf = 0, last = 0, idleFor = 0;
   var ownScroll = -1, wasBehaviour = '', driving = false;
-  var stops = [], routeM = 1;
+  var stops = [];
   var W = 0, H = 0, dpr = 1;
   var shownNext = '';
   var stopCol = '#b53228';
@@ -198,8 +199,6 @@
    * ---------------------------------------------------------------- */
 
   function measure() {
-    routeM = maxM();
-
     stops = Array.prototype.slice
       .call(document.querySelectorAll('main section[id]'))
       .map(function (s) {
@@ -703,7 +702,12 @@
   var gasBtnEl = document.getElementById('pedal-gas');
   var brakeBtnEl = document.getElementById('pedal-brake');
 
-  var V_MAX = 200;                 // km/h at the end of the scale
+  /* The end of the scale is the fastest the drivetrain can go - top gear at
+     the redline - rounded up to the next labelled tick, so the needle cannot
+     peg and read low. Chosen by hand it was 200, and the car does 250. */
+  var TICK = 40;                   // km/h between numbered ticks
+  var V_MAX = Math.ceil(REDLINE / 60 / (GEARS[GEARS.length - 1] * FINAL) *
+                        (2 * Math.PI * WHEEL_R) * 3.6 / TICK) * TICK;
   var SWEEP = Math.PI * 1.5;       // 270 degrees of it
   var START = Math.PI * 0.75;      // beginning at the lower left
 
@@ -743,7 +747,7 @@
     // Speed scale.
     for (var v = 0; v <= V_MAX; v += 10) {
       var a = START + (v / V_MAX) * SWEEP;
-      var major = v % 40 === 0;
+      var major = v % TICK === 0;
       var r1 = faceR - 10, r0 = r1 - (major ? 15 : 8);
       gctx.strokeStyle = 'rgba(' + ink + ', ' + (major ? 0.72 : 0.34) + ')';
       gctx.lineWidth = major ? 3 : 1.8;
@@ -819,7 +823,8 @@
     if (brakeBtnEl) brakeBtnEl.style.setProperty('--travel', brake.toFixed(3));
 
     if (tripEl) {
-      tripEl.textContent = (pos / 1000).toFixed(2) + ' / ' + (routeM / 1000).toFixed(2) + ' km';
+      tripEl.textContent = (pos / 1000).toFixed(2) + ' / ' +
+                           (maxM() / 1000).toFixed(2) + ' km';
     }
 
     // Next junction, the way a nav system calls it.
@@ -828,7 +833,10 @@
       if (stops[i].m > pos + 0.5) { next = stops[i]; break; }
     }
     var d = next ? metres(next.m - pos) : '';
-    var text = next ? '§' + (stops.indexOf(next) + 1) + ' ' + next.name +
+    /* The number comes off the section's own heading, the same place the signs
+       take theirs. Counting the array put every junction one ahead, and gave
+       the unnumbered walkthrough a section number it does not have. */
+    var text = next ? (next.num ? '§' + next.num + ' ' : '') + next.name +
                       (d === 'arriving' ? ' · arriving' : ' · ' + d)
                     : 'end of route';
     if (nextEl && text !== shownNext) {

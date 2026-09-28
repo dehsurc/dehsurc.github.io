@@ -35,7 +35,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700&family=Inter+Tight:wght@600;700&display=swap">
-<link rel="stylesheet" href="style.css?v=57">
+<link rel="stylesheet" href="style.css?v=58">
 
 <!-- Set the theme before first paint so there is no flash. -->
 <script>
@@ -164,7 +164,7 @@
   </div>
 
   <div class="col">
-    <p>Every number in that is measured: they are the figures in <a href="#table2">Table 2</a>, read one drop level at a time. The camera-only model is the clearest case: it has nothing else to read, so at the last step there is essentially no map left. The LiDAR- and SD-fused baselines degrade more gracefully but still lose a quarter to a half of their accuracy, because their auxiliary evidence is either bolted to the same sensor stack or too coarse to carry lane-level geometry. ReSMap ends the sequence above where every one of them started.</p>
+    <p>Every number in that is measured: they are the figures in <a href="#table2">Table 2</a>, read one drop level at a time. The camera-only model is the clearest case: it has nothing else to read, so at the last step there is essentially no map left. The LiDAR-fused baselines degrade more gracefully, losing a quarter to a third, because their second sensor is genuinely a second sensor. The SD-fused one does not: a road graph is too coarse to carry lane-level geometry, so it is down 84.5&thinsp;% by the last step. ReSMap ends the sequence above where every one of them started.</p>
   </div>
 </section>
 
@@ -421,8 +421,8 @@
   </button>
 </div>
 
-<script src="failure.js?v=57"></script>
-<script src="drive.js?v=57"></script>
-<script src="main.js?v=57"></script>
+<script src="failure.js?v=58"></script>
+<script src="drive.js?v=58"></script>
+<script src="main.js?v=58"></script>
 </body>
 </html>
