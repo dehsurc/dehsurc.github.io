@@ -34,7 +34,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700&display=swap">
-<link rel="stylesheet" href="style.css?v=42">
+<link rel="stylesheet" href="style.css?v=43">
 
 <!-- Set the theme before first paint so there is no flash. -->
 <script>
@@ -71,7 +71,6 @@
     <ul>
       <li><a href="#failure">Failure</a></li>
       <li><a href="#abstract">Abstract</a></li>
-      <li><a href="#idea">Idea</a></li>
       <li><a href="#method">Method</a></li>
       <li><a href="#results">Results</a></li>
       <li><a href="#qualitative">Qualitative</a></li>
@@ -178,18 +177,10 @@
   </div>
 </section>
 
-<section class="reveal" id="idea">
-  <div class="col">
-    <h2><span class="num">2</span>Satellite as redundancy</h2>
-    <p>Auxiliary modalities for online mapping are usually chosen for accuracy. LiDAR is still bolted to the same onboard stack that fails, and SD maps carry topology but not lane-level geometry. Satellite tiles are different in one respect that matters for deployment: they are fetched and cached ahead of time, so a hardware fault, an occlusion, or a lost video link cannot take them away.</p>
-    <p>Existing camera&ndash;satellite methods nevertheless fuse the two streams as if both were always trustworthy. Channel concatenation, masked cross-attention, and learned routers all let corrupted camera evidence leak through residual paths, and none of them decides <em>per BEV location</em> how much each modality should contribute, which is exactly what is needed, because the more reliable modality often changes along a single polyline.</p>
-    <p>ReSMap therefore asks each branch how much it trusts its own reading of every BEV cell, and uses that answer, not a learned comparison, as the fusion weight. The same isolation is carried into the decoder, so that a failing camera cannot contaminate queries that the satellite branch could still explain.</p>
-  </div>
-</section>
-
 <section class="reveal" id="method">
   <div class="col">
-    <h2><span class="num">3</span>Method</h2>
+    <h2><span class="num">2</span>Method</h2>
+    <p>LiDAR is bolted to the same onboard stack that fails, and SD maps carry topology but not lane-level geometry. A satellite tile is different in the one way that matters: it is fetched and cached before the drive, so no onboard fault can take it away. Two pieces spend that, one at the pixel and one at the query.</p>
   </div>
 
   <div class="col wide">
@@ -200,7 +191,7 @@
   </div>
 
   <div class="col">
-    <h3>3.1 &nbsp;Predict-then-Fuse</h3>
+    <h3>2.1 &nbsp;Predict-then-Fuse</h3>
     <p>Per-branch BEV segmentation decoders produce modality-specific logits from <i>F</i><sub>cam</sub> and <i>F</i><sub>sat</sub>. The maximum class-wise sigmoid confidence of each branch becomes a scalar per-pixel reliability map <i>r</i><sub>m</sub>, shared across channels and detached from the gradient, so the fusion never learns a modality-comparison weight of its own:</p>
     <p class="eq"><i>F</i><sub>fuse</sub>(<i>x</i>) = [ <i>r</i><sub>cam</sub>(<i>x</i>)&thinsp;<i>F</i><sub>cam</sub>(<i>x</i>) + <i>r</i><sub>sat</sub>(<i>x</i>)&thinsp;<i>F</i><sub>sat</sub>(<i>x</i>) ] / [ <i>r</i><sub>cam</sub>(<i>x</i>) + <i>r</i><sub>sat</sub>(<i>x</i>) + &epsilon; ]</p>
     <p>We call this the <b>Self-Confidence Gate</b>. The fallback is a closed-form property rather than a learned behaviour: as <i>r</i><sub>cam</sub> &rarr; 0, the fused feature converges to the satellite feature. Because the gating signal is a prediction confidence and not a raw-image statistic, it also holds up under failures never seen in training, such as cameras zeroed at inference.</p>
@@ -214,16 +205,9 @@
   </div>
 
   <div class="col">
-    <h3>3.2 &nbsp;Object-Centric Cooperative Multi-modal Query decoder</h3>
+    <h3>2.2 &nbsp;Object-Centric Cooperative Multi-modal Query decoder</h3>
     <p>A standard DETR-style map decoder undoes this isolation: every query reads from a shared key/value pool that already mixes the three BEVs. The naive fix, one query pool per modality, is worse, because Hungarian matching then routes each ground-truth instance to whichever pool already explains it best, entangling classes with modalities. Dividers become a camera-only skill, boundaries a camera-only skill, crossings a fusion-only skill; when a modality fails, no other branch was ever supervised to take over.</p>
-    <p>OCMQ keeps a <b>single</b> object-query pool, so the matcher sees one unified set, and creates modality-specific updates only inside each decoder layer:</p>
-    <ol class="steps">
-      <li><b>Modality embedding and intra-group self-attention.</b> The query set is replicated three times, each copy offset by a learnable modality embedding and refined by its own self-attention block.</li>
-      <li><b>Per-modality deformable cross-attention.</b> Each conditioned query set attends only to the BEV tensor of its own modality, so BEV-level corruption cannot leak across streams within a layer.</li>
-      <li><b>Gated query merging.</b> A per-token softmax gate <i>&omega;</i><sub>m</sub> scores the three updates and merges them back into one query. There is deliberately no residual to the previous-layer query: a residual would let a down-weighted modality re-enter and accumulate over layers.</li>
-      <li><b>Inter-object self-attention and refinement.</b> The merged queries exchange information across objects, followed by an FFN, as in a standard decoder layer.</li>
-    </ol>
-    <p>Every class therefore receives gradients from all three modalities, while inference-time contamination is still controlled per token.</p>
+    <p>OCMQ keeps a <b>single</b> object-query pool, so the matcher only ever sees one unified set, and builds the modality-specific updates inside each decoder layer instead. Three copies of the query set, each offset by a learnable modality embedding, cross-attend only to their own BEV, and a per-token softmax gate merges them back into one query. There is deliberately no residual to the previous layer, which a down-weighted modality would otherwise re-enter through and accumulate over. Every class therefore receives gradients from all three modalities, while contamination at inference is still controlled per token.</p>
   </div>
 
   <div class="col wide">
@@ -236,10 +220,10 @@
 
 <section class="reveal" id="results">
   <div class="col">
-    <h2><span class="num">4</span>Results</h2>
+    <h2><span class="num">3</span>Results</h2>
     <p>Everything below is nuScenes. Models are trained and evaluated on the geographically non-overlapping split, using ego-aligned AID4AD satellite tiles cropped to the BEV region of interest. Except where marked, every baseline is retrained under the same evaluation conditions, following its own paper&rsquo;s schedule.</p>
 
-    <h3>4.1 &nbsp;Clean conditions</h3>
+    <h3>3.1 &nbsp;Clean conditions</h3>
   </div>
 
   <div class="col wide">
@@ -282,9 +266,9 @@
   </div>
 
   <div class="col">
-    <p>At 60&thinsp;&times;&thinsp;30&nbsp;m, ReSMap reaches 53.0 mAP with temporal modelling and 47.0 without, in 24 epochs, ahead of the camera-only MapTracker by 12.7 mAP, the LiDAR-fused DAMap by 13.6, and the SD-fused PriorDrive by 10.5. At 100&thinsp;&times;&thinsp;50&nbsp;m, where camera evidence thins out with distance, the margin widens to 18.5 / 24.7 / 32.2 mAP, and the temporal variant is best on all three classes. The satellite branch costs little at inference: 16.1 FPS is faster than the camera-only baseline and roughly twice the LiDAR- and SD-fused models.</p>
+    <p>The margin grows with range. At 60&thinsp;&times;&thinsp;30&nbsp;m ReSMap leads the best prior method by 10.5 mAP; at 100&thinsp;&times;&thinsp;50&nbsp;m, where camera evidence thins out with distance, by 18.5. The satellite branch is cheap to carry: 16.1 FPS, faster than the camera-only baseline and about twice the LiDAR- and SD-fused ones.</p>
 
-    <h3>4.2 &nbsp;Camera failure</h3>
+    <h3>3.2 &nbsp;Camera failure</h3>
     <p>Robustness is measured by zeroing the front camera, the three front cameras, and all six cameras at inference time, replacing each dropped view with a blackout image.</p>
   </div>
 
@@ -319,7 +303,7 @@
 
 <section class="reveal" id="qualitative">
   <div class="col">
-    <h2><span class="num">5</span>Qualitative results</h2>
+    <h2><span class="num">4</span>Qualitative results</h2>
     <p>Surround-view input, the satellite tile, and the predicted vector map for each method, first on clean input and then with the cameras dropped.</p>
   </div>
 
@@ -342,7 +326,7 @@
 
 <section class="reveal" id="cite">
   <div class="col">
-    <h2><span class="num">6</span>Paper</h2>
+    <h2><span class="num">5</span>Paper</h2>
     <!-- EDIT: link the PDF once it is in assets/paper/. -->
     <p class="links">
       <a class="button" href="#" aria-disabled="true">PDF <span class="soon">(soon)</span></a>
@@ -441,8 +425,8 @@
   </button>
 </div>
 
-<script src="failure.js?v=42"></script>
-<script src="drive.js?v=42"></script>
-<script src="main.js?v=42"></script>
+<script src="failure.js?v=43"></script>
+<script src="drive.js?v=43"></script>
+<script src="main.js?v=43"></script>
 </body>
 </html>
