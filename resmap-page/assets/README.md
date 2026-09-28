@@ -10,14 +10,15 @@ are being produced.
 |-----------------|---------------|-------------------------------------------|---------|
 | `overview.webp` | §3 Method     | paper Fig. 1 (architecture)               | in      |
 | `ocmq.webp`     | §3.2          | paper Fig. 3 (query design / matching)    | in      |
-| `gate.webp`     | §7.1 Analysis | paper Fig. 2, composed from its five parts | in, no colorbar |
+| `gate.webp`     | §7.1 Analysis | paper Fig. 2, composed from its six parts  | in      |
 | `social.jpg`    | link previews | 1200 x 630, the top of the overview        | stopgap |
 | `teaser.webp`   | hero          | not in the paper: a qualitative panel under all-camera drop would do | **wanted** |
 
-`gate.webp` is missing the vertical colorbar the LaTeX places between the BEV
-columns and the bar chart: `colorbar_v.pdf` was not among the parts, and a
-scale on a heat map is not something to invent. Drop that file in and rerun
-`compose_gate.py` to put it back.
+`gate.webp` is assembled by `compose_gate.py`, which reads the six parts the
+paper builds Figure 2 from (`1-1`, `1-2`, `2-1`, `2-2`, `colorbar_v`, `3`) out
+of `SRC` at the top of the file and writes the WebP straight out. It draws the
+headers, the rotated row and axis labels and the sub-captions that the LaTeX
+tabular puts around them.
 
 ## How these were made
 
