@@ -15,7 +15,7 @@ var fs = require('fs');
 var src = fs.readFileSync(require('path').join(__dirname, '..', 'drive.js'), 'utf8');
 
 /* Expose the internals we want to drive, by appending to the IIFE body. */
-src = src.replace(/\}\)\(\);\s*$/, '  global.__drive = { draw: draw, step: step, hud: hud, measure: measure, resize: resize, syncFromScroll: syncFromScroll, offerHint: offerHint, loop: loop, ambient: ambient, burst: burst, sparks: function(){ return sparks; }, pressGas: pressGas, release: release, state: function(){ return { pos: pos, speed: speed, g: g, rpm: rpm, camsDown: camsDown, outro: outro }; }, set: function(k,v){ if(k==="pos")pos=v; if(k==="speed")speed=v; if(k==="outro")outro=v; if(k==="holdGas")holdGas=v; } };\n})();\n');
+src = src.replace(/\}\)\(\);\s*$/, '  global.__drive = { draw: draw, step: step, hud: hud, measure: measure, resize: resize, syncFromScroll: syncFromScroll, offerHint: offerHint, loop: loop, ambient: ambient, burst: burst, sparks: function(){ return sparks; }, pressGas: pressGas, release: release, state: function(){ return { pos: pos, speed: speed, g: g, rpm: rpm, outro: outro }; }, set: function(k,v){ if(k==="pos")pos=v; if(k==="speed")speed=v; if(k==="outro")outro=v; if(k==="holdGas")holdGas=v; } };\n})();\n');
 
 var fail = 0;
 function t(name, fn) {
@@ -150,27 +150,11 @@ t('the chequer is drawn at both ends of the route', function () {
   ok(atEnd >= 12, 'finish chequer missing (' + atEnd + ' fillRects)');
   ok(middle < atStart, 'chequer drawn mid-route too (' + middle + ')');
 });
-t('the coverage easing does not live in step(), which only runs while driving', function () {
-  var body = /function step\(dt\) \{([\s\S]*?)\n  \}\n/.exec(src)[1];
-  ok(!/camsDown/.test(body), 'camsDown is still advanced in step()');
-  ok(!/tick \+=/.test(body), 'the clock is still advanced in step()');
+t('the camera-coverage wedge is gone from the strip and the walkthrough', function () {
+  ok(!/camsDown|reach > nose|setLineDash\(\[3, 3\]\)/.test(src), 'coverage code still in drive.js');
+  var fail = require('fs').readFileSync(require('path').join(__dirname, '..', 'failure.js'), 'utf8');
+  ok(!/camsDown/.test(fail), 'failure.js still publishes the camera state');
 });
-t('coverage wedge shrinks as the walkthrough drops cameras', function () {
-  global.window.scrollY = 5000; D.syncFromScroll();
-  function fillsWith(down) {
-    S.root.dataset.camsDown = String(down);
-    // ambient(), not step(): this has to work for a reader using the wheel.
-    for (var i = 0; i < 200; i++) D.ambient(1 / 60);
-    S.calls.length = 0; D.draw();
-    return { cams: D.state().camsDown,
-             dash: S.calls.filter(function (c) { return c[0] === 'rect'; }).length };
-  }
-  var on = fillsWith(0), half = fillsWith(0.5), off = fillsWith(1);
-  ok(on.cams < 0.02, 'camsDown did not settle to 0: ' + on.cams);
-  ok(off.cams > 0.98, 'camsDown did not settle to 1: ' + off.cams);
-  ok(on.dash < off.dash, 'satellite footprint not drawn when the cameras are down');
-});
-
 t('the chequered flag flies only at the finish, and keeps waving there', function () {
   global.window.scrollY = 23000; D.syncFromScroll();
   function cells(o) {
@@ -217,12 +201,8 @@ t('through the loop with nobody on the pedals, the strip still reacts', function
   D.sparks().length = 0;
   var now = 5000;
   global.window.scrollY = 5000;
-  S.root.dataset.camsDown = '1';
   for (var i = 0; i < 90; i++) { now += 16; D.loop(now); }
-  ok(D.state().camsDown > 0.9,
-     'coverage did not follow the walkthrough under the wheel: ' + D.state().camsDown.toFixed(2));
 
-  S.root.dataset.camsDown = '0';
   global.window.scrollY = 23100;               // the bottom of the page
   var fired = false;
   for (var j = 0; j < 40; j++) {

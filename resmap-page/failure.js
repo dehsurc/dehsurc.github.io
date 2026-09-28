@@ -253,15 +253,6 @@
     // The satellite prior comes forward by exactly as much as the cameras lose.
     rig.style.setProperty('--sat', (0.22 + (offNow / CAMS.length) * 0.78).toFixed(3));
 
-    /* Publish it for the road strip at the top of the page, so the same
-       cameras that go dark here dim its forward coverage while its map carries
-       on being laid down. Only while this block is actually on screen: t
-       clamps at 1, so without the gate the road would stay blind for the rest
-       of the page after the walkthrough had been scrolled past. */
-    var box = track.getBoundingClientRect();
-    var onScreen = box.bottom > 0 && box.top < (window.innerHeight || 0);
-    document.documentElement.dataset.camsDown =
-      onScreen ? (offNow / CAMS.length).toFixed(3) : '0';
 
     /* The chart only ever shows one of the four measured states.
      *

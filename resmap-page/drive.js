@@ -140,9 +140,6 @@
   var raf = 0, last = 0, idleFor = 0;
   var ownScroll = -1, wasBehaviour = '', driving = false;
   var stops = [];
-  /* How much of the camera rig is down, 0 to 1, eased toward what the
-     walkthrough below publishes so the strip does not snap between levels. */
-  var camsDown = 0;
   var sparks = [];                     // the fireworks over the finish
   var W = 0, H = 0, dpr = 1;
   var shownNext = '';
@@ -452,54 +449,12 @@
     ctx.globalAlpha = 1;
     stops.forEach(function (s) { crossing(sx(s.m), paint, 2.6, 0.75); });
 
-    /* What the car can see, and what it falls back on.
-     *
-     * The wedge ahead of the nose is the onboard camera coverage; the dashed
-     * box is the satellite tile cached for the same stretch. They are inversely
-     * coupled and they are driven by the walkthrough further down the page, so
-     * scrolling through it takes the coverage off this strip one level at a
-     * time. What does not move is the map: it is laid down to the same
-     * perception range either way. That is the paper's claim, drawn rather
-     * than asserted, in the one place a reader is already looking.
-     */
-    var see = 1 - camsDown;
     /* The car sits in a lane rather than straddling the divider. It does not
        say which way the road runs -- the divider is dashed, which is a lane
        divider and not a centre line, so this is two lanes going the same way
        and either of them would do. It is simply that a car parked on the line
        between them reads as a token on a track rather than a vehicle. */
     var laneY = mid + (rBot - rTop) * 0.19;
-    var nose = carX + 17;
-    var reach = sx(pos + PERCEPTION_M);
-
-    if (see > 0.01 && reach > nose) {
-      var span = nose + (reach - nose) * see;
-      var cone = ctx.createLinearGradient(nose, 0, span, 0);
-      cone.addColorStop(0, rgba(accent, 0.20 * see));
-      cone.addColorStop(1, rgba(accent, 0));
-      ctx.fillStyle = cone;
-      ctx.beginPath();
-      ctx.moveTo(nose, laneY - 3);
-      ctx.lineTo(span, edgeT + 1);
-      ctx.lineTo(span, edgeB - 1);
-      ctx.lineTo(nose, laneY + 3);
-      ctx.closePath();
-      ctx.fill();
-    }
-
-    if (camsDown > 0.01 && reach > nose) {
-      ctx.save();
-      ctx.globalAlpha = camsDown * 0.75;
-      ctx.strokeStyle = rgba(accent, 0.55);
-      ctx.lineWidth = 1;
-      ctx.setLineDash([3, 3]);
-      ctx.beginPath();
-      ctx.rect(Math.round(nose) + 0.5, edgeT + 1.5,
-               Math.round(reach - nose), Math.round(edgeB - edgeT - 3));
-      ctx.stroke();
-      ctx.restore();
-      ctx.setLineDash([]);
-    }
 
     /* The map, in its class colours with the per-polyline vertices a predicted
        map is drawn with.
@@ -756,16 +711,11 @@
   /* Everything that moves on the strip without being the car.
    *
    * These used to be advanced in step(), which only runs while the pedals own
-   * the page. So a reader scrolling with the wheel -- which is nearly every
-   * reader -- went through the walkthrough without the coverage on the strip
-   * reacting at all, and arrived at the finish to a flag that did not wave.
-   * The loop calls this on every frame whoever is driving. */
+   * the page, so a reader scrolling with the wheel -- nearly every reader --
+   * arrived at the finish to a flag that did not wave. The loop calls this on
+   * every frame whoever is driving. */
   function ambient(dt) {
     tick += dt;
-
-    var want = parseFloat(root.dataset.camsDown);
-    if (!isFinite(want)) want = 0;
-    camsDown += (want - camsDown) * Math.min(1, dt * 6);
 
     for (var i = sparks.length - 1; i >= 0; i--) {
       var p = sparks[i];
@@ -1174,11 +1124,9 @@
     draw();
     hud(dt);
 
-    /* Awake while anything on the strip is still moving: the coverage easing
-       toward the walkthrough's level, a spark in the air, and the flag, which
-       waves for as long as you sit at the finish. */
-    var settling = Math.abs((parseFloat(root.dataset.camsDown) || 0) - camsDown) > 0.004;
-    var busy = Math.abs(needleV) > 0.008 || settling || sparks.length > 0 ||
+    /* Awake while anything on the strip is still moving: a spark in the air,
+       and the flag, which waves for as long as you sit at the finish. */
+    var busy = Math.abs(needleV) > 0.008 || sparks.length > 0 ||
       outro > 0 || (owned
       ? (Math.abs(speed) > 0.02 || holdGas || holdBrake || throttle > 0.02 || brake > 0.02)
       : Math.abs(observed) > 0.05);
