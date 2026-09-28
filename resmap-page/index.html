@@ -34,7 +34,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700&display=swap">
-<link rel="stylesheet" href="style.css?v=34">
+<link rel="stylesheet" href="style.css?v=35">
 
 <!-- Set the theme before first paint so there is no flash. -->
 <script>
@@ -111,7 +111,7 @@
 
   <div class="col wide">
     <figure class="figure">
-      <img src="assets/figures/teaser.png" alt="ReSMap keeps predicting the local HD map after the onboard cameras are zeroed out, by reallocating evidence onto the satellite branch.">
+      <img src="assets/figures/teaser.webp" alt="ReSMap keeps predicting the local HD map after the onboard cameras are zeroed out, by reallocating evidence onto the satellite branch.">
       <figcaption>When the onboard cameras fail, camera-only and prior-based baselines lose the map. ReSMap reallocates its evidence onto the geo-aligned satellite tile, which is cached offline and therefore unaffected by the failure.</figcaption>
     </figure>
   </div>
@@ -152,7 +152,7 @@
 
   <div class="col wide">
     <figure class="figure">
-      <img src="assets/figures/overview.png" alt="ReSMap architecture: camera and satellite encoders produce separate BEV features, the PTF gate fuses them by per-pixel confidence, and the OCMQ decoder merges per-modality query updates.">
+      <img src="assets/figures/overview.webp" alt="ReSMap architecture: camera and satellite encoders produce separate BEV features, the PTF gate fuses them by per-pixel confidence, and the OCMQ decoder merges per-modality query updates.">
       <figcaption><b>Overview.</b> Camera and satellite encoders produce separate BEV features. The PTF gate fuses them by per-pixel segmentation confidence; the OCMQ decoder keeps one shared object-query pool but computes camera-, satellite-, and fused-conditioned updates inside each layer.</figcaption>
     </figure>
   </div>
@@ -177,7 +177,7 @@
 
   <div class="col wide">
     <figure class="figure">
-      <img src="assets/figures/ocmq.png" alt="Comparison of a naive per-branch query design against the OCMQ design under Hungarian matching.">
+      <img src="assets/figures/ocmq.webp" alt="Comparison of a naive per-branch query design against the OCMQ design under Hungarian matching.">
       <figcaption><b>Why one query pool.</b> With independent per-modality pools (left), bipartite matching routes each ground-truth element to the strongest modality only. OCMQ (right) merges per-modality updates through a per-token gate, so every class absorbs camera, satellite, and fused gradients.</figcaption>
     </figure>
   </div>
@@ -398,7 +398,7 @@
 
   <div class="col wide">
     <figure class="figure">
-      <img src="assets/figures/gate.png" alt="Per-pixel and per-query gate response under camera dropout.">
+      <img src="assets/figures/gate.webp" alt="Per-pixel and per-query gate response under camera dropout.">
       <figcaption><b>Gate response under camera dropout.</b> Left: over active BEV cells, removing all cameras collapses <i>r</i><sub>cam</sub> while <i>r</i><sub>sat</sub> rises to cover the same regions. Right: the same routing appears at the query level: the per-token gate shifts negatively for 98% of queries, with the largest drops on those that were most camera-reliant in the clean run.</figcaption>
     </figure>
   </div>
@@ -603,8 +603,8 @@
   </button>
 </div>
 
-<script src="failure.js?v=34"></script>
-<script src="drive.js?v=34"></script>
-<script src="main.js?v=34"></script>
+<script src="failure.js?v=35"></script>
+<script src="drive.js?v=35"></script>
+<script src="main.js?v=35"></script>
 </body>
 </html>

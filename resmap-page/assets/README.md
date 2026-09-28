@@ -6,16 +6,43 @@ are being produced.
 
 ## Figures — `assets/figures/`
 
-| File           | Used in            | Source                                   |
-|----------------|--------------------|------------------------------------------|
-| `teaser.png`   | hero               | new figure: baselines vs. ReSMap under all-camera drop |
-| `overview.png` | §3 Method          | paper Fig. 1 (architecture)              |
-| `ocmq.png`     | §3.2               | paper Fig. 3 (query design / matching)   |
-| `gate.png`     | §6.1 Analysis      | paper Fig. 2 (per-pixel and per-query gate) |
-| `social.jpg`   | link previews      | 1200 × 630 crop of the teaser            |
+| File            | Used in       | Source                                    | Status  |
+|-----------------|---------------|-------------------------------------------|---------|
+| `overview.webp` | §3 Method     | paper Fig. 1 (architecture)               | in      |
+| `ocmq.webp`     | §3.2          | paper Fig. 3 (query design / matching)    | in      |
+| `gate.webp`     | §7.1 Analysis | paper Fig. 2, composed from its five parts | in, no colorbar |
+| `social.jpg`    | link previews | 1200 x 630, the top of the overview        | stopgap |
+| `teaser.webp`   | hero          | not in the paper: a qualitative panel under all-camera drop would do | **wanted** |
 
-Export at roughly 2× the display width (2000–2400 px wide is plenty) and
-keep each file under ~600 KB. PNG for diagrams, JPEG for photographic panels.
+`gate.webp` is missing the vertical colorbar the LaTeX places between the BEV
+columns and the bar chart: `colorbar_v.pdf` was not among the parts, and a
+scale on a heat map is not something to invent. Drop that file in and rerun
+`compose_gate.py` to put it back.
+
+## How these were made
+
+Rendered from the paper PDFs with ghostscript, trimmed, then encoded as WebP:
+
+```
+gs -q -dSAFER -dBATCH -dNOPAUSE -sDEVICE=png16m -r<dpi> \
+   -dTextAlphaBits=4 -dGraphicsAlphaBits=4 -sOutputFile=out.png fig.pdf
+convert out.png -bordercolor white -border 1 -fuzz 1% -trim +repage \
+        -bordercolor white -border 12 -strip flat.png
+convert flat.png -define webp:near-lossless=60 -define webp:method=6 \
+        -strip final.webp
+```
+
+`<dpi>` is `2880 / <pdf width in points> * 72`, which gives a 2880 px image:
+twice the 1440 px the figures are ever shown at.
+
+Pick the encoder by what is in the figure. Line art with flat fills compresses
+better truly lossless (`-define webp:lossless=true`): `ocmq` is 59 KB that way
+against 96 KB near-lossless. Anything with a photograph in it goes the other
+way, and `overview` is 158 KB near-lossless against 246 KB lossless. Both are
+indistinguishable from the PNG at 1:1; the PNGs they replaced were 465 KB and
+160 KB.
+
+Keep each file well under 200 KB. The four together are 288 KB.
 
 ## Video — `assets/video/`
 
