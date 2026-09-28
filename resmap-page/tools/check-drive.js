@@ -201,10 +201,12 @@ t('fireworks go off over the finish and burn out', function () {
   for (var j = 0; j < 60 * 4; j++) D.ambient(1 / 60);
   eq(D.sparks().length, 0, 'sparks still alive after four seconds');
 });
-t('kerbs run down both edges', function () {
+t('no kerbs: at rail width they read as red dashes, not as kerbing', function () {
   global.window.scrollY = 9000; D.syncFromScroll();
   S.calls.length = 0; D.draw();
   var kerbs = S.calls.filter(function (c) { return c[0] === 'fillRect' && c[3] === 12 && c[4] === 4; });
+  eq(kerbs.length, 0, 'kerb blocks drawn');
+});
   ok(kerbs.length > 100, 'too few kerb blocks: ' + kerbs.length);
 });
 

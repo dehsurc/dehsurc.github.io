@@ -402,20 +402,17 @@
     ctx.fillStyle = pavement;
     ctx.fillRect(0, rTop, W, rBot - rTop);
 
-    /* Kerbs: red and white blocks down both edges of the carriageway, the one
-       piece of roadside furniture that says circuit rather than street. They
-       are locked to the route in metres, so they stream past at the car's
-       speed and the eye reads the speed off them -- which is what the 50 m
-       distance posts they replace were for, and did far less visibly. */
-    var KERB_M = 2;
-    var kPx = KERB_M * ROAD_PX_PER_M;
-    var kerbRed = rgba(stopCol, 0.8);
-    for (var k = Math.floor((pos - carX / ROAD_PX_PER_M) / KERB_M) - 1;
-         sx(k * KERB_M) < W + kPx; k++) {
-      var kx = sx(k * KERB_M);
-      ctx.fillStyle = (k & 1) ? kerbRed : paint;
-      ctx.fillRect(kx, rTop - 4, kPx, 4);
-      ctx.fillRect(kx, rBot, kPx, 4);
+    // Distance posts every 50 m, so the scale is legible without a readout.
+    ctx.strokeStyle = 'rgba(' + ink + ', 0.22)';
+    ctx.lineWidth = 1;
+    var first = Math.floor((pos - CAR_X * W / ROAD_PX_PER_M) / 50) * 50;
+    for (var d = first; sx(d) < W + 20; d += 50) {
+      var px = sx(d);
+      if (px < -20) continue;
+      ctx.beginPath();
+      ctx.moveTo(px, rBot + 2);
+      ctx.lineTo(px, rBot + 6);
+      ctx.stroke();
     }
 
     /* Zebra stripes run with the traffic, so on a road drawn left to right
