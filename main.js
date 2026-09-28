@@ -367,7 +367,7 @@
 
     (function seaFrame() {
       var ctx = S.ctx, W = S.s.w, H = S.s.h, C = CELL;
-      if (!reduce) st += 0.0075;
+      if (!reduce) st += 0.0048;       // ~40 px/s down the page
 
       gw = Math.ceil(W / C) + 3;
       gh = Math.ceil(H / C) + 3;
