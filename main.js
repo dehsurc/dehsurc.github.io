@@ -308,11 +308,13 @@
     // disturbing the surface right now.
     function height(x, y) {
       var k = 1 / cfg.scale;
-      var h = Math.sin((x * 0.0062 + y * 0.0018) * k + st)
-            + Math.sin((x * 0.0029 - y * 0.0051) * k + st * 0.78) * 0.80
-            + Math.sin((x * 0.0115 + y * 0.0088) * k + st * 1.70) * 0.34
-            + Math.sin((x * 0.0024 + y * 0.0196) * k - st * 1.15) * 0.30
-            + Math.sin((x * 0.0380 - y * 0.0245) * k + st * 2.40) * 0.09;
+      // Signs on st set which way each train travels; all but one run with
+      // the reading direction, so the sea drifts left to right.
+      var h = Math.sin((x * 0.0062 + y * 0.0018) * k - st)
+            + Math.sin((x * 0.0029 - y * 0.0051) * k - st * 0.78) * 0.80
+            + Math.sin((x * 0.0115 + y * 0.0088) * k - st * 1.70) * 0.34
+            + Math.sin((x * 0.0024 + y * 0.0196) * k + st * 1.15) * 0.30
+            + Math.sin((x * 0.0380 - y * 0.0245) * k - st * 2.40) * 0.09;
 
       if (sp.x > -9000) {
         var d = Math.hypot(x - sp.x, y - sp.y);
