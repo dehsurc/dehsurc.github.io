@@ -342,6 +342,57 @@
   }
 
   /* ------------------------------------------------------------------ *
+   * 4b. Dataset tabs on the results tables
+   *
+   * One table per figure, with the dataset or split switched above it, rather
+   * than three tables stacked down the page: the columns are the same, so a
+   * reader compares by switching and the page stays the length it was. The
+   * tabs keep their names visible, which is what a sideways carousel would
+   * have lost. A tab marked data-draft (a table still waiting on numbers)
+   * exists only with ?draft in the address.
+   * ------------------------------------------------------------------ */
+
+  Array.prototype.slice.call(document.querySelectorAll('.table-tabs')).forEach(function (bar) {
+    var tabs = Array.prototype.slice.call(bar.querySelectorAll('[role="tab"]'));
+    function panel(tab) { return document.getElementById(tab.getAttribute('aria-controls')); }
+
+    tabs = tabs.filter(function (tab) {
+      if (!tab.hasAttribute('data-draft')) return true;
+      if (draft) { tab.hidden = false; return true; }
+      tab.remove();
+      var p = panel(tab);
+      if (p) p.remove();
+      return false;
+    });
+    // A single table needs no switch.
+    if (tabs.length < 2) { bar.hidden = true; return; }
+
+    function select(tab, focus) {
+      tabs.forEach(function (t) {
+        var on = t === tab;
+        t.setAttribute('aria-selected', String(on));
+        t.tabIndex = on ? 0 : -1;
+        var p = panel(t);
+        if (p) p.hidden = !on;
+      });
+      if (focus) tab.focus();
+    }
+
+    bar.addEventListener('click', function (event) {
+      var tab = event.target.closest('[role="tab"]');
+      if (tab) select(tab, false);
+    });
+    bar.addEventListener('keydown', function (event) {
+      var i = tabs.indexOf(document.activeElement);
+      if (i < 0) return;
+      var d = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
+      if (!d) return;
+      event.preventDefault();
+      select(tabs[(i + d + tabs.length) % tabs.length], true);
+    });
+  });
+
+  /* ------------------------------------------------------------------ *
    * 5. BibTeX copy
    * ------------------------------------------------------------------ */
 
@@ -384,69 +435,56 @@
   /* ------------------------------------------------------------------ *
    * 7. The name in the title
    *
-   * Now and then one letter of the name drops to its outline and fills back
-   * in, and a pointer over the name runs the same thing through it letter by
-   * letter. It is the paper in miniature: the evidence goes, the shape is
-   * held, the letter comes back.
+   * Each letter of the name can be redrawn as a predicted HD map element: the
+   * fill thins to a ghost, the letter's outline is drawn in as a polyline in
+   * its class colour, and the vertices land along it in drawing order, the
+   * way a vectorized map is plotted. Then it fills back in. Now and then one
+   * letter does it on its own; a pointer over the name runs it through the
+   * whole word.
    *
-   * Colour only, never position. Moving a letter means making each one its
-   * own inline-block, which breaks the kerning across the word; a colour
-   * change on plain inline spans leaves the setting exactly as it was. The
-   * name is read once, whole, by a screen reader, and none of this runs for
-   * anyone who has asked for less motion.
+   * The outlines are the font's own (tools/title/build_name_svg.py), so at
+   * rest the name is exactly the text it replaced. The sr-only copy beside
+   * the SVG is what a screen reader, a search engine and a copy see. None of
+   * this runs for anyone who has asked for less motion.
    * ------------------------------------------------------------------ */
 
-  var nameEl = document.querySelector('.h1-name');
-  if (nameEl && !reduceMotion.matches) {
-    var word = nameEl.textContent;
-    var said = document.createElement('span');
-    said.className = 'sr-only';
-    said.textContent = word;
-    var drawn = document.createElement('span');
-    drawn.setAttribute('aria-hidden', 'true');
-    var letters = word.split('').map(function (c) {
-      var span = document.createElement('span');
-      span.className = 'ch';
-      span.textContent = c;
-      drawn.appendChild(span);
-      return span;
-    });
-    nameEl.textContent = '';
-    nameEl.appendChild(said);
-    nameEl.appendChild(drawn);
+  var nameSvg = document.querySelector('.name-svg');
+  if (nameSvg && !reduceMotion.matches) {
+    var letters = Array.prototype.slice.call(nameSvg.querySelectorAll('.ch'));
+    var nameBox = nameSvg.parentNode;
 
-    var HOLD = 560;            // ms a letter spends as an outline
-    var STEP = 65;             // ms between letters in a sweep
+    var HOLD = 1150;           // ms a letter spends mapped: draw-in, vertices, a beat
+    var STEP = 90;             // ms between letters in a sweep
     var sweeping = false, over = false, lastIdle = -1;
 
-    function blink(span, delay) {
+    function map(letter, delay) {
       setTimeout(function () {
-        span.classList.add('out');
-        setTimeout(function () { span.classList.remove('out'); }, HOLD);
+        letter.classList.add('out');
+        setTimeout(function () { letter.classList.remove('out'); }, HOLD);
       }, delay);
     }
 
-    nameEl.addEventListener('mouseenter', function () {
+    nameBox.addEventListener('mouseenter', function () {
       over = true;
       if (sweeping) return;
       sweeping = true;
-      letters.forEach(function (span, i) { blink(span, i * STEP); });
+      letters.forEach(function (letter, i) { map(letter, i * STEP); });
       setTimeout(function () { sweeping = false; },
-                 (letters.length - 1) * STEP + HOLD + 400);
+                 (letters.length - 1) * STEP + HOLD + 500);
     });
-    nameEl.addEventListener('mouseleave', function () { over = false; });
+    nameBox.addEventListener('mouseleave', function () { over = false; });
 
     /* The idle one: a single letter, every six to ten seconds, and only while
        the name is on screen in a visible tab and nobody is pointing at it. */
     (function idle() {
       setTimeout(function () {
-        var box = nameEl.getBoundingClientRect();
+        var box = nameBox.getBoundingClientRect();
         var seen = box.bottom > 0 && box.top < (window.innerHeight || 0);
         if (seen && !document.hidden && !over && !sweeping) {
           var i;
           do { i = Math.floor(Math.random() * letters.length); } while (i === lastIdle && letters.length > 1);
           lastIdle = i;
-          blink(letters[i], 0);
+          map(letters[i], 0);
         }
         idle();
       }, 6000 + Math.random() * 4000);

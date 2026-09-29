@@ -31,42 +31,127 @@ function check(ok, what) {
 
 var ENT = { '&dagger;': '†', '&Dagger;': '‡', '&minus;': '-', '&#10003;': 'Y',
             '&rsquo;': "'", '&thinsp;': ' ', '&nbsp;': ' ', '&times;': 'x',
-            '&amp;': '&' };
+            '&amp;': '&', '&ndash;': '–', '&middot;': '·' };
 function text(s) {
   return s.replace(/<[^>]+>/g, '')
           .replace(/&[#a-zA-Z0-9]+;/g, function (e) { return ENT[e] || e; })
           .trim();
 }
 
-/* ---- the tables ------------------------------------------------------- */
+/* ---- the tables -------------------------------------------------------
+ *
+ * Every results table is one panel of a tabbed figure and says what it is:
+ * data-kind (clean: per-class AP; failure: camera dropout) and data-set
+ * (nusc-geo, nusc-orig, av2-geo). Rows marked pending have no numbers yet.
+ *
+ * Disagreements that are in the paper itself -- the same quantity printed
+ * differently in two of its tables -- are reported as warnings: the page
+ * prints each table as the paper does, and the fix belongs in the paper. */
 
-var tables = (html.match(/<table[\s\S]*?<\/table>/g) || []).map(function (t) {
-  return (t.match(/<tr[^>]*>[\s\S]*?<\/tr>/g) || []).map(function (r) {
-    return (r.match(/<t[hd][^>]*>[\s\S]*?<\/t[hd]>/g) || []).map(text);
+var warned = [];
+function warn(what) { warned.push(what); console.log('  WARN ' + what); }
+
+/* Disagreements verified against the paper PDF (2026-09-29): the page copies
+   the paper faithfully and the paper disagrees with itself. Listed here they
+   warn on every run instead of blocking; anything not on the list still
+   fails until someone has looked at the PDF. Fix them in the camera-ready,
+   then here and in the tables. */
+var IN_THE_PAPER = [
+  // Tab. 1, 100 x 50 m: APs 11.9 / 25.5 / 30.8 average to 22.7, printed 22.5.
+  /^SDTagNet \[100 x 50 m\] mAP 22\.5 /,
+  // Tabs. 1 and 6 train MapTracker for 72 epochs at 60 x 30 m; Tabs. 2 and 7 say 70.
+  /^MapTracker \(T\): .*Ep\. 72 \/ 70/,
+  // Non-temporal ReSMap, original split: 82.8 in Tab. 6, 82.9 in Tab. 7.
+  /^ReSMap \(ours\): mAP 82\.8 \/ Clean 82\.9/
+];
+function judge(ok, line, reported) {
+  if (ok) return check(true, line);
+  if (reported) return warn(line + ' (as reported by its own paper)');
+  if (IN_THE_PAPER.some(function (re) { return re.test(line); })) return warn(line + ' (in the paper)');
+  check(false, line);
+}
+
+var tables = [];
+html.replace(/<table([^>]*)>([\s\S]*?)<\/table>/g, function (_, attrs, body) {
+  var kind = /data-kind="([^"]+)"/.exec(attrs), set = /data-set="([^"]+)"/.exec(attrs);
+  var rows = [], group = '';
+  (body.match(/<tr[^>]*>[\s\S]*?<\/tr>/g) || []).forEach(function (r) {
+    var cells = (r.match(/<t[hd][^>]*>[\s\S]*?<\/t[hd]>/g) || []).map(text);
+    if (/class="group"/.test(r)) { group = cells[0]; return; }
+    rows.push({ cells: cells, group: group, pending: /class="pending"/.test(r) });
+  });
+  tables.push({ kind: kind && kind[1], set: set && set[1], head: rows[0].cells, rows: rows.slice(1) });
+  return '';
+});
+function find(kind, set) {
+  return tables.filter(function (t) { return t.kind === kind && t.set === set; })[0];
+}
+check(tables.every(function (t) { return t.kind && t.set; }),
+      'every results table declares data-kind and data-set (' + tables.length + ' tables)');
+['clean nusc-geo', 'clean nusc-orig', 'failure nusc-geo', 'failure nusc-orig', 'failure av2-geo']
+  .forEach(function (k) { check(!!find.apply(null, k.split(' ')), 'table present: ' + k); });
+
+function col(t, name) { return t.head.indexOf(name); }
+function key(r, t) {   // method + temporal tick, the identity of a row within a table
+  return r.cells[0].replace(/[†‡]/g, '').trim() + (r.cells[col(t, 'Temp.')] === 'Y' ? ' (T)' : '');
+}
+
+/* Failure tables state a mAP and the drop from their own clean column. */
+tables.filter(function (t) { return t.kind === 'failure'; }).forEach(function (t) {
+  console.log('\nDrop percentages, ' + t.set);
+  var c = col(t, 'Clean');
+  t.rows.forEach(function (r) {
+    if (r.pending) { console.log('  ...  ' + key(r, t) + ': pending'); return; }
+    var clean = parseFloat(r.cells[c]);
+    for (var i = c + 1; i < r.cells.length; i++) {
+      if (r.cells[i] === '–') continue;   // not reported (SafeMap: single view only)
+      var m = /^([\d.]+)\s*-([\d.]+)%$/.exec(r.cells[i]);
+      if (!m) { check(false, key(r, t) + ' ' + t.head[i] + ': cannot read "' + r.cells[i] + '"'); continue; }
+      var want = (clean - parseFloat(m[1])) / clean * 100;
+      check(Math.abs(want - parseFloat(m[2])) < 0.06,
+            key(r, t) + ' ' + t.head[i] + ' ' + m[1] + ': -' + m[2] + '% (computed ' + want.toFixed(1) + '%)');
+    }
   });
 });
-check(tables.length === 2, 'index.html has the two results tables (found ' + tables.length + ')');
 
-/* Table 2 states a mAP and the drop from its own clean column. */
-console.log('\nTable 2, drop percentages against each row\'s own clean value');
-var t2 = tables[1] || [];
-var head = t2[0] || [];
-var cleanAt = head.indexOf('Clean');
-t2.slice(1).forEach(function (r) {
-  var clean = parseFloat(r[cleanAt]);
-  for (var i = cleanAt + 1; i < r.length; i++) {
-    var m = /^([\d.]+)\s*-([\d.]+)%$/.exec(r[i]);
-    if (!m) { check(false, r[0] + ' ' + head[i] + ': cannot read "' + r[i] + '"'); continue; }
-    var want = (clean - parseFloat(m[1])) / clean * 100;
-    check(Math.abs(want - parseFloat(m[2])) < 0.06,
-          r[0] + ' ' + head[i] + ' ' + m[1] + ': -' + m[2] + '% (computed ' +
-          want.toFixed(1) + '%)');
-  }
+/* A clean table's mAP is the mean of its three class APs. */
+tables.filter(function (t) { return t.kind === 'clean'; }).forEach(function (t) {
+  console.log('\nmAP = mean(AP), ' + t.set);
+  var ap = ['APp', 'APd', 'APb'].map(function (n) { return col(t, n); }), m = col(t, 'mAP');
+  t.rows.forEach(function (r) {
+    var mean = ap.reduce(function (s, i) { return s + parseFloat(r.cells[i]); }, 0) / 3;
+    var said = parseFloat(r.cells[m]);
+    var line = key(r, t) + ' [' + r.group + '] mAP ' + said + ' vs mean ' + mean.toFixed(2);
+    /* The three APs are each rounded to 0.1, which moves their mean by up to
+       0.05, and the mAP is rounded on its own, another 0.05: the two can
+       honestly differ by 0.10. */
+    judge(Math.abs(mean - said) <= 0.1001, line, /‡/.test(r.cells[0]));
+  });
+});
+
+/* The same method's clean mAP, in the clean table and the failure table of
+   the same split at 60 x 30 m. */
+['nusc-geo', 'nusc-orig'].forEach(function (set) {
+  var ct = find('clean', set), ft = find('failure', set);
+  if (!ct || !ft) return;
+  console.log('\nClean mAP, clean table vs failure table, ' + set);
+  ft.rows.forEach(function (r) {
+    if (r.pending) return;
+    var k = key(r, ft);
+    var twin = ct.rows.filter(function (x) { return key(x, ct) === k && /60/.test(x.group); })[0];
+    if (!twin) { console.log('  ...  ' + k + ': not in the clean table'); return; }
+    var a = parseFloat(twin.cells[col(ct, 'mAP')]), b = parseFloat(r.cells[col(ft, 'Clean')]);
+    var ea = twin.cells[col(ct, 'Ep.')], eb = r.cells[col(ft, 'Ep.')];
+    var line = k + ': mAP ' + a + ' / Clean ' + b + ', Ep. ' + ea + ' / ' + eb;
+    judge(a === b && ea === eb, line, false);
+  });
 });
 
 /* ---- the walkthrough chart against Table 2 ---------------------------- */
 
-console.log('\nfailure.js METHODS against Table 2');
+console.log('\nfailure.js METHODS against Table 2 (nusc-geo)');
+var t2 = find('failure', 'nusc-geo');
+var head = t2.head, cleanAt = col(t2, 'Clean'), tempAt = col(t2, 'Temp.');
 var block = /var METHODS = \[([\s\S]*?)\n  \];/.exec(failure)[1];
 var methods = [];
 block.replace(/name: '([^']+)'[\s\S]*?v: \[([^\]]+)\]/g, function (_, n, v) {
@@ -74,11 +159,10 @@ block.replace(/name: '([^']+)'[\s\S]*?v: \[([^\]]+)\]/g, function (_, n, v) {
   return '';
 });
 check(methods.length > 0, 'METHODS parsed (' + methods.length + ' rows)');
-var tempAt = head.indexOf('Temp.');
 methods.forEach(function (m) {
-  /* The chart holds the non-temporal ReSMap row; the table holds both. Match
-     on the name, and for ReSMap on the row without the temporal tick. */
-  var rows = t2.slice(1).filter(function (r) { return r[0].indexOf(m.name) === 0; });
+  /* The chart holds the non-temporal ReSMap row; the table holds both. */
+  var rows = t2.rows.map(function (r) { return r.cells; })
+    .filter(function (r) { return r[0].indexOf(m.name) === 0; });
   if (m.name === 'ReSMap' && rows.length > 1) {
     rows = rows.filter(function (r) { return r[tempAt] !== 'Y'; });
   }
@@ -218,6 +302,11 @@ check(!/\b\d+\.\d\b(?![^{]*\})/.test(notes.replace(/\{[^}]*\}/g, '')),
       'walkthrough notes contain no hand-written decimals');
 
 console.log('');
+if (warned.length) {
+  console.log(warned.length + ' warning(s), in the paper rather than the page:');
+  warned.forEach(function (w) { console.log('  - ' + w); });
+  console.log('');
+}
 if (bad.length) {
   console.error(bad.length + ' problem(s):');
   bad.forEach(function (b) { console.error('  - ' + b); });

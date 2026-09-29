@@ -6,7 +6,7 @@
  */
 var fs=require('fs');
 var src=fs.readFileSync(require('path').join(__dirname,'..','main.js'),'utf8');
-var a=src.indexOf('  var draft ='), b=src.indexOf('  /* ------------------------------------------------------------------ *\n   * 5. BibTeX');
+var a=src.indexOf('  var draft ='), b=src.indexOf('  /* ------------------------------------------------------------------ *\n   * 4b. Dataset tabs');
 var body=src.slice(a,b);
 function run(opts){
   var exists=opts.exists||{};
@@ -82,4 +82,40 @@ var q=r.queue;
 while(q.length) q.shift()();
 t('the stale probe does not paint over the newer answer', r.note()===null && !r.video.hidden);
 
+
+/* ---- the dataset tabs on the results tables (main.js 4b) ---- */
+var ta=src.indexOf('  Array.prototype.slice.call(document.querySelectorAll(\'.table-tabs\'))');
+var tb=src.indexOf('  /* ------------------------------------------------------------------ *\n   * 5. BibTeX');
+var tabsBody=src.slice(ta,tb);
+function runTabs(isDraft){
+  var byId={}, removed=[];
+  function node(id, attrs){ var e={id:id,hidden:!!attrs.hidden,attrs:attrs,tabIndex:0,_l:{},
+    getAttribute:function(k){return k in e.attrs?e.attrs[k]:null;}, setAttribute:function(k,v){e.attrs[k]=String(v);},
+    hasAttribute:function(k){return k in e.attrs;}, remove:function(){removed.push(e.id);},
+    addEventListener:function(t,f){e._l[t]=f;}, focus:function(){doc.activeElement=e;},
+    closest:function(){return e;} }; byId[id]=e; return e; }
+  var tabs=[node('geo-tab',{'aria-controls':'geo','aria-selected':'true'}),
+            node('orig-tab',{'aria-controls':'orig','aria-selected':'false'}),
+            node('av2-tab',{'aria-controls':'av2','aria-selected':'false','data-draft':'',hidden:true})];
+  node('geo',{}); node('orig',{hidden:true}); node('av2',{hidden:true,'data-draft':''});
+  var bar=node('bar',{}); bar.querySelectorAll=function(){return tabs;};
+  var doc={activeElement:null, querySelectorAll:function(){return [bar];}, getElementById:function(i){return byId[i]||null;}};
+  new Function('document','draft',tabsBody)(doc,isDraft);
+  return {byId:byId,removed:removed,bar:bar,doc:doc,tabs:tabs,
+    click:function(id){ bar._l.click({target:byId[id]}); },
+    key:function(k){ bar._l.keydown({key:k,preventDefault:function(){}}); }};
+}
+console.log('dataset tabs, live page');
+var T=runTabs(false);
+t('the draft tab and its panel are gone', T.removed.indexOf('av2-tab')>=0 && T.removed.indexOf('av2')>=0);
+t('the first panel shows, the rest are hidden', !T.byId.geo.hidden && T.byId.orig.hidden);
+T.click('orig-tab');
+t('a click switches the panel', T.byId.geo.hidden && !T.byId.orig.hidden && T.byId['orig-tab'].attrs['aria-selected']==='true');
+T.doc.activeElement=T.byId['orig-tab']; T.key('ArrowRight');
+t('arrow keys wrap between the live tabs only', !T.byId.geo.hidden && T.byId.orig.hidden);
+console.log('dataset tabs, ?draft');
+var D=runTabs(true);
+t('the draft tab is shown', D.removed.length===0 && D.byId['av2-tab'].hidden===false);
+D.click('av2-tab');
+t('...and opens its panel', !D.byId.av2.hidden && D.byId.geo.hidden);
 if(fail){console.log(fail+' failure(s)');process.exit(1);} console.log('all good');

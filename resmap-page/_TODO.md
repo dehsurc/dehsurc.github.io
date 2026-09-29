@@ -80,17 +80,49 @@ ffmpeg -i assets/video/scene-0369_front3.mp4 -frames:v 1 -q:v 3 assets/video/sce
 - [ ] **Paper** 버튼: arXiv 나오면 `href` 넣고 `aria-disabled`, `(soon)` 제거 (`index.html` 103행)
 - [ ] **Code** 버튼: 공개 레포 나오면 같은 방식으로 (104행)
 
-## 3. 논문 쪽 확인
+## 3. 결과 표 (탭)
 
-- [ ] non-temporal original-split clean mAP가 Tab. 6에서는 **82.8**, Tab. 7에서는 **82.9**. 카메라 레디 전에 통일할 것
-      (페이지에는 이 수치가 없음)
+Table 1(clean)과 Table 2(카메라 고장)는 표 위 탭으로 데이터셋을 바꿉니다.
 
-## 4. 배포 전 체크
+| 표 | 탭 | 출처 | 상태 |
+|---|---|---|---|
+| Table 1 | nuScenes · geo split | 논문 Tab. 1 | 공개 |
+| Table 1 | nuScenes · original split | 논문 Tab. 6 | 공개 |
+| Table 2 | nuScenes · geo split | 논문 Tab. 2 | 공개 |
+| Table 2 | nuScenes · original split | 논문 Tab. 7 (mRR/mCE 제외) | 공개 |
+| Table 2 | Argoverse 2 · geo split | OpenReview 리부탈 | **`?draft`에서만** |
+
+### Argoverse 2 탭 공개 전에 채울 것
+
+- [ ] **DAMap (C+L)**, **SatforHDMap (C+SA)** 행: Clean / Front-1 / Front-3 / All
+  - 리부탈 초안(pzup·Fu3u·ZrMF.md)에서도 빈칸이었음. 최종 게시본에 들어갔는지 확인 필요
+  - 참고: OneDrive 체크포인트 이름상 clean mAP는 SatforHDMap 0.7088(ep20)/0.7056(ep24), DAMap 0.6232.
+    단, DAMap은 "LiDAR 켜고 재실행" 메모가 있어서 0.6232가 C+L인지 불확실
+- [ ] 다섯 행 모두 **Ep.** (지금 `–`)와 ReSMap의 **Temp.** 여부 확인 (74.6이 temporal인지)
+- [ ] AV2 Front-1 / Front-3 정의 확인: 캡션에는 "nuScenes와 같은 전방 카메라, All은 7개 전부"로 적어 둠
+- [ ] 다 채워지면 `index.html`의 AV2 탭 버튼과 패널에서 `data-draft`, `hidden`, `tr.pending` 제거
+
+### AV2 추가 평가 (예정)
+
+모달리티별 하나씩: **MapTracker (C), DAMap (C+L), SDTagNet (C+SD), SatforHDMap (C+SA)**.
+nuScenes 표에 있는 MapTRv2(C+L), PriorDrive(보고치) 등은 AV2에서는 빠짐.
+
+## 4. 논문 쪽 확인 (카메라 레디 전)
+
+`tools/check-numbers.js`가 매번 경고로 보여줍니다. 페이지는 논문을 그대로 옮긴 상태라, 논문을 고치면 페이지와 체커의 `IN_THE_PAPER` 목록도 같이 고칠 것.
+
+- [ ] **Tab. 6 vs Tab. 7**: non-temporal ReSMap original split clean mAP **82.8** vs **82.9**
+      (Tab. 6 per-class AP 평균은 82.8, Tab. 7 하락률은 82.9 기준으로 계산돼 있음)
+- [ ] **Tab. 1**: SDTagNet 100×50 m, AP 11.9 / 25.5 / 30.8의 평균은 22.7인데 mAP가 **22.5**
+- [ ] **MapTracker 에폭**: 60×30 m에서 Tab. 1·6은 **72**, Tab. 2·7은 **70**
+- [ ] PriorDrive 모달리티: 리부탈에서 "C+SD는 과소표기, Tab. 1·6 수정하겠다"고 약속함. 페이지도 같이 바꿀 것
+
+## 5. 배포 전 체크
 
 ```sh
 sh tools/check.sh && git push
 ```
 
-- 숫자 교차검증, 도로 스트립, 영상 칸, 제목 효과 테스트를 실제 종료 코드로 돌림
+- 숫자 교차검증(표끼리, 표↔walkthrough, mAP=AP 평균 포함), 도로 스트립, 영상 칸·표 탭, 제목 효과 테스트를 실제 종료 코드로 돌림
 - 결과를 `| tail` 같은 파이프로 넘기지 말 것. 실패가 가려짐
 - CSS/JS를 고치면 `index.html`의 `?v=N`을 올릴 것 (Pages 캐시 10분)

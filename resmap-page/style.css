@@ -60,6 +60,10 @@
      than borrowed surface greys. drive.js reads both. */
   --road-surface: #d6d9df;
   --road-line:    #fbfcfd;
+  /* Map element classes, as on the road rail (drive.js CLASS). */
+  --map-boundary: #3f9c63;
+  --map-divider:  #c2831f;
+  --map-crossing: #3277bd;
 
   --sans: "Inter", "Freesentation", -apple-system, BlinkMacSystemFont,
           system-ui, "Segoe UI", Roboto, "Apple SD Gothic Neo",
@@ -110,6 +114,9 @@
 
   --road-surface: #262c35;
   --road-line:    #858d99;
+  --map-boundary: #63c98c;
+  --map-divider:  #e0a94a;
+  --map-crossing: #6aa6e8;
 
   color-scheme: dark;
 }
@@ -696,17 +703,36 @@ h1 { margin: 0 0 1.4rem; }
   letter-spacing: -.035em;
   color: var(--ink);
 }
-/* A letter of the name dropping to its outline and filling back in. The stroke
-   is always there and only its colour changes, so a filled letter carries a
-   transparent one and looks exactly as it did before any of this. */
-.h1-name .ch {
-  -webkit-text-stroke: 1.25px transparent;
-  transition: color .38s ease, -webkit-text-stroke-color .38s ease;
+/* The name as its own outlines. At rest it is the filled glyphs and looks
+   exactly as the text did; the effect in main.js puts a letter into .out,
+   where the fill thins to a ghost and the letter is redrawn as a predicted
+   HD map element: a polyline in its class colour, vertices placed along it
+   in drawing order. Three letters to a class, in the order and colours the
+   road rail uses. */
+.name-svg { display: block; height: 1em; width: auto; overflow: visible; }
+.name-svg .glyph { fill: currentColor; transition: fill-opacity .35s ease; }
+.name-svg .vec polyline {
+  fill: none;
+  stroke-width: 1.5px; vector-effect: non-scaling-stroke;
+  stroke-linejoin: round;
+  stroke-dasharray: 1; stroke-dashoffset: 1;
+  transition: stroke-dashoffset .5s cubic-bezier(.4, 0, .2, 1), opacity .3s ease;
+  opacity: 0;
 }
-.h1-name .ch.out {
-  color: transparent;
-  -webkit-text-stroke-color: var(--accent);
+.name-svg .vec circle {
+  transform-box: fill-box; transform-origin: center;
+  transform: scale(0);
+  transition: transform .18s cubic-bezier(.3, 1.6, .5, 1);
+  transition-delay: 0s;
 }
+.name-svg .ch.out .glyph { fill-opacity: .1; }
+.name-svg .ch.out .vec polyline { stroke-dashoffset: 0; opacity: 1; }
+.name-svg .ch.out .vec circle { transform: scale(1); transition-delay: calc(var(--k) * .45s); }
+.name-svg .boundary { --map: var(--map-boundary); }
+.name-svg .divider  { --map: var(--map-divider); }
+.name-svg .crossing { --map: var(--map-crossing); }
+.name-svg .vec polyline { stroke: var(--map); }
+.name-svg .vec circle { fill: var(--map); }
 .h1-sub {
   display: block;
   margin-top: .45rem;
@@ -832,7 +858,14 @@ figcaption, .tcap {
 }
 .picker-row + .figure { margin-top: 1rem; }
 
-.scene-picker { display: flex; flex-wrap: wrap; gap: .4rem; }
+.scene-picker, .table-tabs { display: flex; flex-wrap: wrap; gap: .4rem; }
+/* The dataset switch over a results table: the same buttons as the clip
+   picker, so the page has one kind of tab. */
+.table-tabs { margin-bottom: .9rem; }
+.table-tabs[hidden], .tpanel[hidden] { display: none; }
+.table-tabs button[data-draft]::after { content: " \00b7 draft"; font-weight: 400; opacity: .7; }
+/* A row still waiting on its numbers. Only ever seen in draft. */
+tr.pending th, tr.pending td { color: var(--ink-faint); font-style: normal; }
 
 /* Where a clip will be. Dashed and quiet, the same voice as the disabled
    Paper and Code buttons. Sized like a clip in draft; one line on the live
@@ -850,7 +883,7 @@ figcaption, .tcap {
 }
 .video-pending.quiet { aspect-ratio: auto; min-height: 5.5rem; }
 video[hidden], figcaption[hidden] { display: none; }
-.scene-picker button {
+.scene-picker button, .table-tabs button {
   font: inherit; font-size: 13.5px; font-weight: 500;
   color: var(--ink-soft);
   background: none;
@@ -860,8 +893,8 @@ video[hidden], figcaption[hidden] { display: none; }
   cursor: pointer;
   transition: color .15s ease, border-color .15s ease, background .15s ease;
 }
-.scene-picker button:hover { color: var(--ink); border-color: var(--ink); }
-.scene-picker button[aria-selected="true"] {
+.scene-picker button:hover, .table-tabs button:hover { color: var(--ink); border-color: var(--ink); }
+.scene-picker button[aria-selected="true"], .table-tabs button[aria-selected="true"] {
   color: var(--paper); background: var(--ink); border-color: var(--ink);
 }
 
