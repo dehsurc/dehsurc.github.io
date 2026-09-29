@@ -8,8 +8,11 @@ outside it; main.js moves the box with the pointer."""
 import json
 d = json.load(open('title.json'))
 W, top, upm = d['width'], d['top'], d['upm']
-ROI_Y0, ROI_Y1 = -1650, 560
-ROI_H = ROI_Y1 - ROI_Y0; ROI_W = ROI_H // 2          # 30 x 60 m, forward up
+# The ego's ROI: as tall as the glyphs (-1510 to 418) and a margin, about a
+# letter wide. No frame is drawn, so its proportions are not a claim; the
+# edge is where the road stops and the map starts.
+ROI_Y0, ROI_Y1 = -1550, 460
+ROI_H = ROI_Y1 - ROI_Y0; ROI_W = 1200
 def f(v): return ('%.1f' % v).rstrip('0').rstrip('.')
 def pts(p, close=False):
     q = p + ([p[0]] if close else [])
@@ -42,10 +45,6 @@ for i, l in enumerate(L):
         m.append(f'<polyline class="divider" points="{pts(c)}"/>')
 m.append('</g>')
 o += m
-cy = (ROI_Y0 + ROI_Y1) / 2
-o.append(f'<g class="nm-roi" transform="translate(-99999 0)">'
-         f'<rect x="{-ROI_W // 2}" y="{ROI_Y0}" width="{ROI_W}" height="{ROI_H}" rx="50"/>'
-         f'<path d="M0,{f(cy-120)} L80,{f(cy+90)} L0,{f(cy+45)} L-80,{f(cy+90)} Z"/></g>')
 o.append('</svg>')
 out = ''.join(o)
 open('name.svg.html', 'w').write(out)

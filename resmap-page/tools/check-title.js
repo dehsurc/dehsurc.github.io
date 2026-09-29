@@ -18,11 +18,14 @@ var h1 = /<h1>([\s\S]*?)<\/h1>/.exec(html)[1];
 t('a screen reader, a search engine and a copy get the word', /<span class="sr-only">ReSMap<\/span>/.test(h1));
 t('the drawing is hidden from assistive tech', /<svg class="name-svg"[^>]*aria-hidden="true"/.test(h1));
 t('six glyph outlines, defined once', (h1.match(/<path id="nm-p\d"/g) || []).length === 6);
-['nm-solid', 'nm-road', 'nm-map', 'nm-roi'].forEach(function (g) {
+['nm-solid', 'nm-road', 'nm-map'].forEach(function (g) {
   t('layer present: ' + g, h1.indexOf('class="' + g + '"') >= 0);
 });
 var roi = /data-roi="(-?\d+) (\d+) (\d+)"/.exec(h1);
-t('the ROI is 30 x 60, forward up (height twice the width)', roi && +roi[2] === 2 * +roi[3]);
+// Glyphs run from -1510 (cap tops) to 418 (the p's tail), in SVG units.
+t('the ROI covers the letters top to tail and not much more',
+  roi && +roi[1] <= -1510 && +roi[1] >= -1600 && +roi[1] + +roi[2] >= 418 && +roi[1] + +roi[2] <= 500);
+t('nothing marks the ROI: no frame, no ego arrow', h1.indexOf('class="nm-roi"') < 0);
 var road = /<g class="nm-road"[\s\S]*?<\/g>/.exec(h1)[0], map = /<g class="nm-map"[\s\S]*?<\/g>/.exec(h1)[0];
 var lanes = (road.match(/class="lane"/g) || []).length, dividers = (map.match(/class="divider"/g) || []).length;
 t('every centre line is both a painted lane and a map divider (' + lanes + ')', lanes > 6 && lanes === dividers);
@@ -59,13 +62,12 @@ function run(opt) {
     e.addEventListener = function (ev, f) { e._l[ev] = f; };
     return e;
   }
-  var roiIn = node(), roiOut = node(), mark = node(), box = node();
+  var roiIn = node(), roiOut = node(), box = node();
   box.getBoundingClientRect = function () { return { left: 100, width: 749, top: opt.top || 100, bottom: (opt.top || 100) + 60 }; };
   var svg = node();
-  svg.attrs['data-roi'] = '-1650 2210 1105';
+  svg.attrs['data-roi'] = '-1550 2010 1200';
   svg.viewBox = { baseVal: { width: 7490 } };
   svg.parentNode = box;
-  svg.querySelector = function () { return mark; };
   svg.getBoundingClientRect = box.getBoundingClientRect;
   var ids = { 'nm-roi-in': roiIn, 'nm-roi-out': roiOut };
   var doc = { querySelector: function () { return svg; }, getElementById: function (i) { return ids[i]; }, hidden: false };
@@ -73,7 +75,7 @@ function run(opt) {
     doc, { innerHeight: 900 }, { matches: !!opt.reduce }, setTimeout, requestAnimationFrame, { now: function () { return now; } });
   return {
     tick: tick, box: box, svg: svg,
-    x: function () { return parseFloat(roiIn.attrs.x) + 1105 / 2; },
+    x: function () { return parseFloat(roiIn.attrs.x) + 1200 / 2; },
     on: function () { return !!svg.cls['is-road'] && !!svg.cls['has-roi']; },
     enter: function (px) { box._l.pointerenter({ clientX: px }); },
     move: function (px) { box._l.pointermove({ clientX: px }); },

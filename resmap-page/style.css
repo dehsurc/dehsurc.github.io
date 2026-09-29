@@ -711,16 +711,17 @@ h1 { margin: 0 0 1.4rem; }
 /* The name as its own outlines, in three layers. At rest only the solid one
    shows and the name looks exactly as the text did. Under the pointer the
    letters become a road -- asphalt, edge lines, a dashed line down the middle
-   of every stroke -- and inside the ego's ROI box, which follows the pointer,
+   of every stroke -- and inside the ego's ROI, which follows the pointer and
+   is drawn as nothing but the switch from road to map,
    that road is shown as the HD map built from it: road boundaries along the
    letters' edges, lane dividers down their centres, in the class colours the
    road rail uses. */
 .name-svg { display: block; height: 1em; width: auto; overflow: visible; }
 .name-svg .nm-solid { fill: currentColor; transition: opacity .35s ease; }
-.name-svg .nm-road, .name-svg .nm-map, .name-svg .nm-roi { opacity: 0; transition: opacity .35s ease; }
+.name-svg .nm-road, .name-svg .nm-map { opacity: 0; transition: opacity .35s ease; }
 .name-svg.is-road .nm-solid { opacity: 0; }
 .name-svg.is-road .nm-road { opacity: 1; }
-.name-svg.has-roi .nm-map, .name-svg.has-roi .nm-roi { opacity: 1; }
+.name-svg.has-roi .nm-map { opacity: 1; }
 .name-svg .asphalt { fill: var(--name-asphalt); }
 .name-svg .edge { fill: none; stroke: var(--name-paint); stroke-width: 64; }
 .name-svg .lane { fill: none; stroke: var(--name-paint); stroke-width: 30; stroke-dasharray: 120 90; }
@@ -731,10 +732,8 @@ h1 { margin: 0 0 1.4rem; }
 }
 .name-svg .boundary { stroke: var(--map-boundary); }
 .name-svg .divider { stroke: var(--map-divider); }
-.name-svg .nm-roi rect { fill: none; stroke: var(--accent); stroke-width: 1.3px; vector-effect: non-scaling-stroke; }
-.name-svg .nm-roi path { fill: var(--accent); }
 @media (prefers-reduced-motion: reduce) {
-  .name-svg .nm-solid, .name-svg .nm-road, .name-svg .nm-map, .name-svg .nm-roi { transition: none; }
+  .name-svg .nm-solid, .name-svg .nm-road, .name-svg .nm-map { transition: none; }
 }
 .h1-sub {
   display: block;

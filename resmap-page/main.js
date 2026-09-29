@@ -435,10 +435,10 @@
   /* ------------------------------------------------------------------ *
    * 7. The name in the title
    *
-   * Under the pointer the name turns into a road, and a box the size and
-   * shape of the model's ROI -- 30 x 60 m, forward up, the ego at its
-   * centre -- follows the pointer along it. Inside the box the road is shown
-   * as the HD map built from it; outside, it stays road. Move along the name
+   * Under the pointer the name turns into a road, and the ego's ROI follows
+   * the pointer along it. Inside the ROI the road is shown as the HD map
+   * built from it; outside, it stays road. Nothing marks the ROI itself: its
+   * edge is simply where road stops and map starts. Move along the name
    * and the map is built wherever the ego is, which is the paper's task in
    * one gesture.
    *
@@ -452,7 +452,6 @@
   if (nameSvg) {
     var roiIn = document.getElementById('nm-roi-in');
     var roiOut = document.getElementById('nm-roi-out');
-    var roiMark = nameSvg.querySelector('.nm-roi');
     var dims = (nameSvg.getAttribute('data-roi') || '0 0 0').split(' ').map(Number);
     var RY0 = dims[0], RH = dims[1], RW = dims[2];
     var span = nameSvg.viewBox.baseVal.width;
@@ -465,7 +464,6 @@
       roiIn.setAttribute('x', x0);
       roiOut.setAttribute('d', 'M-9999,-9999H99999V99999H-9999Z M' + x0 + ',' + RY0 +
                           'h' + RW + 'v' + RH + 'h' + (-RW) + 'Z');
-      roiMark.setAttribute('transform', 'translate(' + x + ' 0)');
     }
     function show(on) {
       nameSvg.classList.toggle('is-road', on);
