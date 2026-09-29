@@ -71,7 +71,9 @@
   var PERCEPTION_M = 30;
   var ROAD_PX_PER_M = 6;    // strip pixels to the metre
   var CAR_X = 0.26;         // the car's fixed position across the strip
-  var MIN_VIEWPORT = 1000;  // below this the rail hides and the links return
+  // Below this the rail hides and the links return. Gutters on both sides take
+  // 400px, and under 1100 that leaves the prose column too little.
+  var MIN_VIEWPORT = 1100;
 
   /* ---------------------------------------------------------------- *
    * The car

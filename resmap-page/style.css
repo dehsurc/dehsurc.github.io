@@ -335,7 +335,11 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
    left at the top of the window a pinned section gets the screen back: the
    walkthrough used to start a road's height down from the top of every
    viewport for no reason of its own. */
-.has-road body { padding-left: var(--rail-gutter); }
+/* The same gutter on both sides. Reserved on the left alone, it centred the
+   text in what was left of the window, which put it half a gutter to the
+   right of the window's own centre, and it read as lopsided. The right-hand
+   gutter is not wasted: the cockpit and the corner buttons live in it. */
+.has-road body { padding-inline: var(--rail-gutter); }
 .has-road .topbar { display: none; }
 .has-road { scroll-padding-top: 1rem; }
 .has-road { --chrome: 1rem; }
@@ -665,7 +669,7 @@ section { padding: 3.4rem 0; }
   /* A driving model is motion by definition. drive.js declines to start under
      this preference; this is the belt to that pair of braces. */
   #road, #cockpit { display: none !important; }
-  .has-road body { padding-left: 0; }
+  .has-road body { padding-inline: 0; }
   .has-road .topbar { display: block; top: 0; }
   .has-road .nav-scroll { display: block; }
 }
@@ -941,7 +945,7 @@ footer .small { margin-top: .4rem; }
 @media print {
   .topbar, .scene-picker, .bibtex button, #road, #cockpit, .corner { display: none; }
   /* The rail reserves a gutter on screen; on paper there is nothing to reserve. */
-  .has-road body { padding-left: 0; }
+  .has-road body { padding-inline: 0; }
   body { font-size: 10.5pt; }
   .col, .col.wide { width: 100%; }
 }
