@@ -209,27 +209,136 @@
   }
 
   /* ------------------------------------------------------------------ *
-   * 4. Qualitative scene switcher
+   * 4. Videos: the teaser in the header and the clips in section 4
+   *
+   * None of these files exist yet, and a <video> with nothing behind it
+   * renders as an empty player with its controls showing -- which is what
+   * section 4 put on the live page. So a video is shown only once it has
+   * loaded. Until then the teaser slot stays hidden and section 4 says the
+   * clips are coming. With ?draft in the address, every slot names the file
+   * it is waiting for instead, so the layout can be checked before the
+   * renders exist. Dropping a file in needs no change to the markup.
    * ------------------------------------------------------------------ */
 
-  var picker = document.querySelector('.scene-picker');
+  var draft = /[?&]draft(?:[=&]|$)/.test(location.search);
+
+  /* Whether a video's current source exists. Each call supersedes the last
+     for that element, because a source swapped mid-load leaves the previous
+     call's listeners armed, and the new file's events would answer them. */
+  function probe(video, onReady, onMissing) {
+    var mine = (video._probe || 0) + 1;
+    video._probe = mine;
+    var settled = false;
+    function settle(fn) {
+      return function () {
+        if (settled || video._probe !== mine) return;
+        settled = true;
+        fn();
+      };
+    }
+    var ready = settle(onReady), missing = settle(onMissing);
+    video.addEventListener('loadedmetadata', ready);
+    video.addEventListener('error', missing);
+    var source = video.querySelector('source');
+    if (source) source.addEventListener('error', missing);
+    // The answer may already be in by the time this runs.
+    if (video.readyState >= 1) ready();
+    else if (video.networkState === 3) missing();   // NETWORK_NO_SOURCE
+  }
+
+  function pending(text, quiet) {
+    var box = document.createElement('div');
+    box.className = 'video-pending' + (quiet ? ' quiet' : '');
+    box.textContent = text;
+    return box;
+  }
+
+  var teaserSlot = document.getElementById('teaser-slot');
+  var teaserVideo = document.getElementById('teaser-video');
+  if (teaserSlot && teaserVideo) {
+    probe(teaserVideo, function () {
+      teaserSlot.hidden = false;
+      var playing = teaserVideo.play();
+      if (playing && playing.catch) playing.catch(function () {});
+    }, function () {
+      // Nothing on the first screen of the live page; a labelled box in draft.
+      if (!draft) return;
+      teaserVideo.hidden = true;
+      teaserVideo.parentNode.insertBefore(
+        pending('assets/video/teaser.mp4 · autoplay, muted, loop'), teaserVideo);
+      teaserSlot.hidden = false;
+    });
+  }
+
+  var qual = document.getElementById('qualitative');
   var video = document.getElementById('scene-video');
 
-  if (picker && video) {
-    picker.addEventListener('click', function (event) {
-      var button = event.target.closest('button[data-scene]');
-      if (!button) return;
+  if (qual && video) {
+    var source = video.querySelector('source');
+    var caption = document.getElementById('scene-caption');
+    var base = caption ? caption.getAttribute('data-base') || '' : '';
+    var rows = Array.prototype.slice.call(qual.querySelectorAll('.picker-row'));
+    var pickers = Array.prototype.slice.call(qual.querySelectorAll('.scene-picker[data-axis]'));
+    var chosen = {};
+    var note = null;
 
-      var scene = button.dataset.scene;
-      picker.querySelectorAll('button').forEach(function (b) {
-        b.setAttribute('aria-selected', String(b === button));
-      });
+    pickers.forEach(function (picker) {
+      chosen[picker.getAttribute('data-axis')] =
+        picker.querySelector('[aria-selected="true"]') || picker.querySelector('button');
+    });
+
+    function clip(ext) {
+      return 'assets/video/' + chosen.scene.getAttribute('data-value') + '_' +
+             chosen.setting.getAttribute('data-value') + ext;
+    }
+    function say(text, quiet) {
+      if (note) note.remove();
+      note = pending(text, quiet);
+      video.hidden = true;
+      video.parentNode.insertBefore(note, video);
+    }
+
+    function show(first) {
+      if (note) { note.remove(); note = null; }
+      video.hidden = false;
+      if (caption) caption.textContent = base + ' ' + (chosen.setting.getAttribute('data-caption') || '');
 
       video.pause();
-      video.poster = 'assets/video/' + scene + '.jpg';
-      video.querySelector('source').src = 'assets/video/' + scene + '.mp4';
+      video.poster = clip('.jpg');
+      source.src = clip('.mp4');
       video.load();
+
+      probe(video, function () {
+        rows.forEach(function (r) { r.hidden = false; });
+        if (caption) caption.hidden = false;
+      }, function () {
+        if (draft) { say('missing ' + clip('.mp4')); return; }
+        if (first) {
+          /* Nothing rendered yet at all: no pickers for clips that do not
+             exist, just the one line, in the same voice as the "(soon)" on
+             the Paper and Code buttons. */
+          rows.forEach(function (r) { r.hidden = true; });
+          if (caption) caption.hidden = true;
+          say('The videos are on their way.', true);
+          return;
+        }
+        say('Not rendered for this scene and setting yet.', true);
+      });
+    }
+
+    pickers.forEach(function (picker) {
+      picker.addEventListener('click', function (event) {
+        var button = event.target.closest('button[data-value]');
+        if (!button) return;
+        picker.querySelectorAll('button').forEach(function (b) {
+          b.setAttribute('aria-selected', String(b === button));
+        });
+        chosen[picker.getAttribute('data-axis')] = button;
+        show(false);
+      });
     });
+
+    show(true);
   }
 
   /* ------------------------------------------------------------------ *
@@ -271,4 +380,76 @@
       // so that is the state to check rather than the event to wait for.
       if (img.complete && !img.naturalWidth) placehold(img);
     });
+
+  /* ------------------------------------------------------------------ *
+   * 7. The name in the title
+   *
+   * Now and then one letter of the name drops to its outline and fills back
+   * in, and a pointer over the name runs the same thing through it letter by
+   * letter. It is the paper in miniature: the evidence goes, the shape is
+   * held, the letter comes back.
+   *
+   * Colour only, never position. Moving a letter means making each one its
+   * own inline-block, which breaks the kerning across the word; a colour
+   * change on plain inline spans leaves the setting exactly as it was. The
+   * name is read once, whole, by a screen reader, and none of this runs for
+   * anyone who has asked for less motion.
+   * ------------------------------------------------------------------ */
+
+  var nameEl = document.querySelector('.h1-name');
+  if (nameEl && !reduceMotion.matches) {
+    var word = nameEl.textContent;
+    var said = document.createElement('span');
+    said.className = 'sr-only';
+    said.textContent = word;
+    var drawn = document.createElement('span');
+    drawn.setAttribute('aria-hidden', 'true');
+    var letters = word.split('').map(function (c) {
+      var span = document.createElement('span');
+      span.className = 'ch';
+      span.textContent = c;
+      drawn.appendChild(span);
+      return span;
+    });
+    nameEl.textContent = '';
+    nameEl.appendChild(said);
+    nameEl.appendChild(drawn);
+
+    var HOLD = 560;            // ms a letter spends as an outline
+    var STEP = 65;             // ms between letters in a sweep
+    var sweeping = false, over = false, lastIdle = -1;
+
+    function blink(span, delay) {
+      setTimeout(function () {
+        span.classList.add('out');
+        setTimeout(function () { span.classList.remove('out'); }, HOLD);
+      }, delay);
+    }
+
+    nameEl.addEventListener('mouseenter', function () {
+      over = true;
+      if (sweeping) return;
+      sweeping = true;
+      letters.forEach(function (span, i) { blink(span, i * STEP); });
+      setTimeout(function () { sweeping = false; },
+                 (letters.length - 1) * STEP + HOLD + 400);
+    });
+    nameEl.addEventListener('mouseleave', function () { over = false; });
+
+    /* The idle one: a single letter, every six to ten seconds, and only while
+       the name is on screen in a visible tab and nobody is pointing at it. */
+    (function idle() {
+      setTimeout(function () {
+        var box = nameEl.getBoundingClientRect();
+        var seen = box.bottom > 0 && box.top < (window.innerHeight || 0);
+        if (seen && !document.hidden && !over && !sweeping) {
+          var i;
+          do { i = Math.floor(Math.random() * letters.length); } while (i === lastIdle && letters.length > 1);
+          lastIdle = i;
+          blink(letters[i], 0);
+        }
+        idle();
+      }, 6000 + Math.random() * 4000);
+    })();
+  }
 })();

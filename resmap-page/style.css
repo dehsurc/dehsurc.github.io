@@ -696,6 +696,17 @@ h1 { margin: 0 0 1.4rem; }
   letter-spacing: -.035em;
   color: var(--ink);
 }
+/* A letter of the name dropping to its outline and filling back in. The stroke
+   is always there and only its colour changes, so a filled letter carries a
+   transparent one and looks exactly as it did before any of this. */
+.h1-name .ch {
+  -webkit-text-stroke: 1.25px transparent;
+  transition: color .38s ease, -webkit-text-stroke-color .38s ease;
+}
+.h1-name .ch.out {
+  color: transparent;
+  -webkit-text-stroke-color: var(--accent);
+}
 .h1-sub {
   display: block;
   margin-top: .45rem;
@@ -809,7 +820,36 @@ figcaption, .tcap {
   padding: 1.5rem;
 }
 
-.scene-picker { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: 1.9rem; }
+/* Two rows of tabs over the clip: which scene, and which of the paper's three
+   settings. Labelled, because two bare rows of buttons read as one list. */
+.picker-row { display: flex; align-items: baseline; gap: .9rem; margin-top: .55rem; }
+.picker-row:first-child { margin-top: 1.9rem; }
+.picker-row[hidden] { display: none; }
+.picker-label {
+  flex: none; width: 3.8rem;
+  font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.picker-row + .figure { margin-top: 1rem; }
+
+.scene-picker { display: flex; flex-wrap: wrap; gap: .4rem; }
+
+/* Where a clip will be. Dashed and quiet, the same voice as the disabled
+   Paper and Code buttons. Sized like a clip in draft; one line on the live
+   page, where there is nothing to lay out yet. */
+.video-pending {
+  display: flex; align-items: center; justify-content: center;
+  aspect-ratio: 16 / 9;
+  padding: 1.5rem;
+  border: 1px dashed var(--rule-dark);
+  border-radius: 3px;
+  background: var(--surface);
+  font-size: 13.5px; line-height: 1.6;
+  color: var(--ink-faint);
+  text-align: center;
+}
+.video-pending.quiet { aspect-ratio: auto; min-height: 5.5rem; }
+video[hidden], figcaption[hidden] { display: none; }
 .scene-picker button {
   font: inherit; font-size: 13.5px; font-weight: 500;
   color: var(--ink-soft);
@@ -824,7 +864,6 @@ figcaption, .tcap {
 .scene-picker button[aria-selected="true"] {
   color: var(--paper); background: var(--ink); border-color: var(--ink);
 }
-.scene-picker + .figure { margin-top: .9rem; }
 
 /* ---------- tables ---------- */
 

@@ -1322,7 +1322,13 @@
 
   window.addEventListener('resize', resize);
   window.addEventListener('load', function () { resize(); });
-  window.addEventListener('resmap:theme', function () { readPalette(); draw(); });
+  /* Both canvases, not just the strip. The gauge is only drawn from hud(), which
+     only runs while something is moving, so after a theme switch it kept the
+     old face until the car next moved -- and the tick marks, which read the
+     theme's ink fresh, could land on a face of the same colour. The event
+     fires inside the view transition's update, so both are right in the
+     snapshot. */
+  window.addEventListener('resmap:theme', function () { readPalette(); draw(); gauge(); });
   if (reduceMotion.addEventListener) {
     reduceMotion.addEventListener('change', resize);
   }

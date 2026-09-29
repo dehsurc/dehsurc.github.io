@@ -35,7 +35,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700&family=Inter+Tight:wght@600;700&display=swap">
-<link rel="stylesheet" href="style.css?v=72">
+<link rel="stylesheet" href="style.css?v=73">
 
 <!-- Set the theme before first paint so there is no flash. -->
 <script>
@@ -106,19 +106,19 @@
     </p>
   </div>
 
-  <!-- Hero figure slot. Left out rather than shown as a missing-image box.
-       To put one back, restore this and drop the file in:
-  <div class="col wide">
+  <!-- Teaser video. Stays hidden until assets/video/teaser.mp4 (+ teaser.jpg)
+       exists, then appears with no change here. Open the page with ?draft to
+       see the slot before the file does.
+       EDIT: the caption, once the clip is cut. -->
+  <div class="col wide" id="teaser-slot" hidden>
     <figure class="figure">
-      <img src="assets/figures/teaser.webp" alt="...">
-      <figcaption>...</figcaption>
+      <video id="teaser-video" autoplay muted loop playsinline preload="auto"
+             poster="assets/video/teaser.jpg">
+        <source src="assets/video/teaser.mp4" type="video/mp4">
+      </video>
+      <figcaption>Clean input, then all six cameras zeroed. SatforHDMap and ReSMap read the same satellite tile.</figcaption>
     </figure>
   </div>
-  For a video instead, swap the img for:
-      <video autoplay muted loop playsinline preload="metadata"
-             poster="assets/video/teaser.jpg">
-        <source src="assets/video/teaser.mp4" type="video/mp4"></video>
-  -->
 
 </header>
 
@@ -309,18 +309,40 @@
   </div>
 
   <div class="col wide">
-    <!-- EDIT: add one <button> per scene and drop the matching mp4 in assets/video/. -->
-    <div class="scene-picker" role="tablist" aria-label="Scene">
-      <button role="tab" aria-selected="true" data-scene="scene-0369">scene-0369</button>
-      <button role="tab" aria-selected="false" data-scene="scene-0100">scene-0100</button>
-      <button role="tab" aria-selected="false" data-scene="scene-0796">scene-0796</button>
+    <!-- One clip per scene and setting: assets/video/<scene>_<setting>.mp4 with
+         a .jpg poster of the same name, e.g. scene-0369_front3.mp4. The three
+         settings are the three rows of the paper's qualitative figure.
+         A clip that is not there yet says so rather than showing an empty
+         player; ?draft names the file it is waiting for.
+         EDIT: one button per rendered scene; the captions once the clips exist. -->
+    <div class="picker-row">
+      <span class="picker-label" id="scene-label">Scene</span>
+      <div class="scene-picker" role="tablist" aria-labelledby="scene-label" data-axis="scene">
+        <button role="tab" aria-selected="true" data-value="scene-0369" title="Singapore, one-north">scene-0369</button>
+        <button role="tab" aria-selected="false" data-value="scene-0368" title="Singapore, one-north">scene-0368</button>
+        <button role="tab" aria-selected="false" data-value="scene-0963" title="Singapore, one-north">scene-0963</button>
+        <button role="tab" aria-selected="false" data-value="scene-0739" title="Boston, Seaport">scene-0739</button>
+        <button role="tab" aria-selected="false" data-value="scene-0747" title="Boston, Seaport">scene-0747</button>
+      </div>
+    </div>
+    <div class="picker-row">
+      <span class="picker-label" id="setting-label">Setting</span>
+      <div class="scene-picker" role="tablist" aria-labelledby="setting-label" data-axis="setting">
+        <button role="tab" aria-selected="true" data-value="clean"
+                data-caption="60 &times; 30 m, all six cameras.">60 &times; 30 m</button>
+        <button role="tab" aria-selected="false" data-value="front3"
+                data-caption="60 &times; 30 m, with the front, front-left and front-right cameras zeroed.">Front-3 drop</button>
+        <button role="tab" aria-selected="false" data-value="long"
+                data-caption="Long range, 100 &times; 50 m, all six cameras.">100 &times; 50 m</button>
+      </div>
     </div>
     <figure class="figure">
       <video id="scene-video" controls muted loop playsinline preload="metadata"
-             poster="assets/video/scene-0369.jpg">
-        <source src="assets/video/scene-0369.mp4" type="video/mp4">
+             poster="assets/video/scene-0369_clean.jpg">
+        <source src="assets/video/scene-0369_clean.mp4" type="video/mp4">
       </video>
-      <figcaption id="scene-caption">Left to right: MapTracker, SatforHDMap, ReSMap, ground truth. The cameras are zeroed from the halfway point of each clip.</figcaption>
+      <figcaption id="scene-caption"
+                  data-base="Top: the six surround cameras and the satellite tile. Below: ground truth, then each method's predicted map.">Top: the six surround cameras and the satellite tile. Below: ground truth, then each method's predicted map. 60 &times; 30 m, all six cameras.</figcaption>
     </figure>
   </div>
 </section>
@@ -416,8 +438,8 @@
   </button>
 </div>
 
-<script src="failure.js?v=72"></script>
-<script src="drive.js?v=72"></script>
-<script src="main.js?v=72"></script>
+<script src="failure.js?v=73"></script>
+<script src="drive.js?v=73"></script>
+<script src="main.js?v=73"></script>
 </body>
 </html>

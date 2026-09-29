@@ -6,7 +6,7 @@
 #     sh tools/check.sh && git push
 dir=$(dirname "$0")
 status=0
-for c in check-numbers check-drive; do
+for c in check-numbers check-drive check-video check-title; do
   if out=$(node "$dir/$c.js" 2>&1); then
     echo "pass  $c ($(printf '%s\n' "$out" | grep -c '^  ok') checks)"
   else

@@ -213,6 +213,11 @@ t('through the loop with nobody on the pedals, the strip still reacts', function
   ok(D.state().outro > 0.3, 'the flourish did not start under the wheel');
 });
 
+t('a theme switch redraws the gauge as well as the strip', function () {
+  ok(/'resmap:theme', function \(\) \{ readPalette\(\); draw\(\); gauge\(\); \}/.test(src),
+     'the theme handler does not redraw the gauge');
+});
+
 console.log('\nthe hint');
 t('running out of time hides the hint but does not retire it', function () {
   global.localStorage._d = {};

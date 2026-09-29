@@ -4,60 +4,76 @@
 
 ## 1. 영상 (최우선)
 
-지금 영상은 §4에만 있고, 그마저 파일이 하나도 없습니다(`assets/video/` 없음).
-X·슬랙으로 들어온 방문자는 첫 화면만 보고 나가는 경우가 많아서, 결과 영상은 맨 위로 올려야 합니다.
-다만 파일이 나오기 전에 섹션만 올리면 첫 화면에 빈 칸이 생기니, 영상이 준비된 뒤에 옮깁니다.
+두 칸 모두 **이미 페이지에 만들어져 있습니다.** 파일만 넣으면 HTML 수정 없이 나타납니다.
 
-### 목표 배치
+- 파일이 없을 때 공개 화면: teaser 칸은 숨김, §4는 "The videos are on their way." 한 줄
+- 주소 뒤에 `?draft`를 붙이면 두 칸 모두 기다리는 파일명이 적힌 자리표시가 보임 (레이아웃 확인용)
+- 동작 검증: `node tools/check-video.js`
 
-1. **Hero 비교 영상**: 제목·링크 바로 아래, walkthrough 위
-   - 자리는 `index.html`의 `Hero figure slot` 주석에 준비돼 있음. 파일 넣고 주석 풀면 됨
-   - 자동재생, 음소거, 반복 (`autoplay muted loop playsinline`)
-2. **Walkthrough**: 그 다음. 영상으로 "이렇게 된다"를 보여준 뒤 수치로 뒷받침하는 순서
-3. **§4 장면 선택기**: 상세 비교용으로 그대로 뒤에 둠
+### Teaser와 §4의 역할 구분
 
-### Hero 영상 내용
+둘 다 여러 모델 비교이지만, 역할이 다릅니다. teaser는 **광고**, §4는 **자료실**입니다.
 
-- [ ] 모델: **ReSMap, SatforHDMap, MapTracker, GT** (가능하면 SDTagNet 포함)
-- [ ] **SatforHDMap은 꼭 넣을 것.** 같은 위성 입력인데 clean 27.0에서 all-drop 14.3으로 떨어집니다.
-      이 모델이 옆에 있어야 성능 차이가 위성 입력이 아니라 방법론에서 나온다는 게 보입니다
-- [ ] 클립 중간부터 카메라를 0으로 만들어서 전후 대비가 보이게 (§4 캡션과 같은 설정)
-- [ ] 길이 10–15초 안쪽, fps 5 (fps 10은 너무 짧다는 피드백 있었음)
+| | Teaser (hero) | §4 Qualitative results |
+|---|---|---|
+| 보는 사람 | 첫 화면만 보고 나갈 수도 있는 방문자 | 끝까지 내려온, 확인하고 싶은 사람 |
+| 목적 | 한 문장을 한눈에: 카메라가 죽어도 ReSMap은 맵을 그린다 | 증거: 골라서 보여준 게 아니라는 것 |
+| 장면 | 가장 잘 보이는 한 장면 | 장면 5개 × 설정 3개, 탭으로 선택 |
+| 화면 구성 | 단순하게: ReSMap vs SatforHDMap (+ 가능하면 카메라 전용 baseline) | 전부: 6개 카메라 + 위성 + 모든 모델 + GT |
+| 조건 | clean → all-drop 전환 한 번 | 60×30 clean / Front-3 drop / 100×50 (논문 qualitative figure의 세 행) |
+| 재생 | 자동재생, 음소거, 반복 | 컨트롤 있음 |
+| 길이 | 10–15초 | 제한 없음 |
+
+- teaser는 §4 렌더링에서 가장 좋은 장면을 잘라 만들면 됨. 파이프라인은 하나로 충분
+- 여력이 하나뿐이면 **teaser 우선**
+
+### Teaser
+
+- [ ] 모델: **ReSMap vs SatforHDMap** 최소. MapTracker는 OneDrive가 풀리면 추가
+- [ ] **SatforHDMap이 필수인 이유**: 같은 위성 입력인데 clean 27.0 → all-drop 14.3으로 무너짐.
+      이게 옆에 있어야 성능이 위성 입력이 아니라 방법론에서 나온다는 게 보임.
+      ReSMap 단독 영상은 "위성이 다 한 거 아니냐"는 질문에 답을 못 함
+- [ ] SatforHDMap은 HF에 체크포인트가 있어서 OneDrive 없이도 가능 (재추론 필요)
+- [ ] 클립 중간에 6개 카메라를 모두 0으로
+- [ ] fps 5 (fps 10은 너무 짧다는 피드백)
+- [ ] 캡션: 지금은 초안 ("Clean input, then all six cameras zeroed. SatforHDMap and ReSMap read the same satellite tile.")
+
+### §4 장면 × 설정
+
+- [ ] 장면 (버튼은 이미 이 다섯 개로 맞춰 둠):
+  - onenorth: `scene-0369`, `scene-0368`, `scene-0963`
+  - boston: `scene-0739`, `scene-0747`
+  - 새 장면은 onenorth / boston만 가능 (100×50 위성 타일을 재생성한 도시가 이 둘뿐)
+- [ ] 설정별 모델 구성이 다름에 주의:
+  - 60×30 clean / Front-3 drop: MapTracker, SDTagNet, SatforHDMap, ReSMap
+  - 100×50: SDTagNet(long-range 체크포인트 있음), ReSMap. SatforHDMap은 60×30 체크포인트뿐
+- [ ] 캡션: 공통 문장은 `figcaption`의 `data-base`, 설정별 문장은 각 탭 버튼의 `data-caption`. 실제 영상의 열 순서에 맞게 고칠 것
+- [ ] 15개를 다 채울 필요는 없음. 없는 조합은 "Not rendered for this scene and setting yet."으로 표시됨
 
 ### 파일 규격
 
-| 용도 | 경로 | 비고 |
-|---|---|---|
-| Hero 영상 | `assets/video/teaser.mp4` | H.264, `yuv420p`, `+faststart`, 무음 |
-| Hero 포스터 | `assets/video/teaser.jpg` | 첫 프레임, 로딩 전 표시 |
-| §4 장면 | `assets/video/<scene>.mp4` | picker 버튼의 `data-scene` 값과 파일명이 같아야 함 |
-| §4 포스터 | `assets/video/<scene>.jpg` | |
+| 용도 | 경로 |
+|---|---|
+| Teaser 영상 / 포스터 | `assets/video/teaser.mp4` / `teaser.jpg` |
+| §4 영상 / 포스터 | `assets/video/<scene>_<setting>.mp4` / `.jpg` (`setting` = `clean`, `front3`, `long`) |
 
-웹용 인코딩 예시:
+예: `scene-0369_front3.mp4`. 웹용 인코딩:
 
 ```sh
 ffmpeg -i in.mp4 -c:v libx264 -pix_fmt yuv420p -crf 23 -preset slow \
-       -movflags +faststart -an assets/video/teaser.mp4
-ffmpeg -i assets/video/teaser.mp4 -frames:v 1 -q:v 3 assets/video/teaser.jpg
+       -movflags +faststart -an assets/video/scene-0369_front3.mp4
+ffmpeg -i assets/video/scene-0369_front3.mp4 -frames:v 1 -q:v 3 assets/video/scene-0369_front3.jpg
 ```
-
-### §4 장면 선택기 정리
-
-- [ ] **picker 버튼과 실제 장면이 안 맞음.** 지금 버튼은 `scene-0369 / scene-0100 / scene-0796`인데,
-      렌더링해 본 장면은 scene-0369, scene-0739(boston), onenorth `4efbf4c0`·`54cdaaae`, boston `373bf99c`.
-      실제 파일에 맞춰 버튼을 고칠 것
-- [ ] 캡션 "Left to right: MapTracker, SatforHDMap, ReSMap, ground truth"가 실제 영상의 열 순서와 맞는지 확인
-- [ ] 새 장면은 **onenorth / boston만** 가능 (100×50 위성 타일을 재생성한 도시가 이 둘뿐)
 
 ### 제작 파이프라인 / 막힌 부분
 
 - 스크립트: `min_ws/make_teaser_video.py` (resmap conda env). 지금 버전은 **ReSMap 단독**
-  (GT + ReSMap × 60×30 clean / Front-3 drop / 100×50)이라 모델 비교 영상이 아님. 비교 열 추가 필요
+  (GT + ReSMap × 60×30 clean / Front-3 drop / 100×50)이라 모델 비교 열 추가가 필요
 - 예전 출력 `min_ws/teaser_vis/`는 현재 없음. 다시 돌려야 함
-- **MapTracker**: 체크포인트/예측 json이 OneDrive에만 있음. `rclone config reconnect onedrive:`로
-  토큰 재연결해야 받을 수 있음
-- **SDTagNet**: 예측 json이 없어서 `tools/test.py --format-only`로 재추론해야 함
-- 세부 위치(체크포인트, submission json, 위성 타일 재생성 과정)는 Claude 메모리 `scene0369-video-assets`에 정리돼 있음
+- **MapTracker**: 체크포인트/예측이 OneDrive에만 있음. `rclone config reconnect onedrive:` 필요
+- **SDTagNet**: 예측 json 없음. `tools/test.py --format-only`로 재추론
+- **SatforHDMap**: HF 체크포인트로 재추론
+- 세부 위치는 Claude 메모리 `scene0369-video-assets`에 있음
 
 ## 2. 링크
 
@@ -75,6 +91,6 @@ ffmpeg -i assets/video/teaser.mp4 -frames:v 1 -q:v 3 assets/video/teaser.jpg
 sh tools/check.sh && git push
 ```
 
-- 숫자 교차검증(표 ↔ walkthrough ↔ 본문)과 도로 스트립 동작 테스트를 실제 종료 코드로 돌림
+- 숫자 교차검증, 도로 스트립, 영상 칸, 제목 효과 테스트를 실제 종료 코드로 돌림
 - 결과를 `| tail` 같은 파이프로 넘기지 말 것. 실패가 가려짐
 - CSS/JS를 고치면 `index.html`의 `?v=N`을 올릴 것 (Pages 캐시 10분)
