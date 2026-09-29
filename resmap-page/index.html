@@ -35,7 +35,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700&family=Inter+Tight:wght@600;700&display=swap">
-<link rel="stylesheet" href="style.css?v=84">
+<link rel="stylesheet" href="style.css?v=85">
 
 <!-- Set the theme before first paint so there is no flash. -->
 <script>
@@ -225,9 +225,10 @@
 <section class="reveal" id="results">
   <div class="col">
     <h2><span class="num">3</span>Results</h2>
-    <p>Everything below is nuScenes. Models are trained and evaluated on the geographically non-overlapping split, using ego-aligned AID4AD satellite tiles cropped to the BEV region of interest. Except where marked, every baseline is retrained under the same evaluation conditions, following its own paper&rsquo;s schedule.</p>
+    <p>The main benchmark is the geographically non-overlapping split of nuScenes, where training and validation cover different parts of each city; the tabs over each table switch to nuScenes&rsquo; original split and to Argoverse&nbsp;2. On nuScenes the satellite input is ego-aligned AID4AD tiles cropped to the BEV region of interest, on Argoverse&nbsp;2 our own tiles from Google Maps. Except where marked, every baseline is retrained under the same evaluation conditions, following its own paper&rsquo;s schedule.</p>
 
     <h3>3.1 &nbsp;Clean conditions</h3>
+    <p>AP<sub>p</sub>, AP<sub>d</sub> and AP<sub>b</sub> are average precision on pedestrian crossings, lane dividers and road boundaries, each averaged over Chamfer-distance thresholds of 0.5, 1.0 and 1.5&nbsp;m (1.0, 1.5 and 2.0&nbsp;m at 100&thinsp;&times;&thinsp;50&nbsp;m); mAP is the mean of the three.</p>
   </div>
 
   <div class="col wide">
@@ -247,7 +248,7 @@
         <thead>
           <tr>
             <th scope="col">Method</th><th scope="col">Venue</th><th scope="col">Mod.</th><th scope="col">Temp.</th><th scope="col">Ep.</th>
-            <th scope="col" class="n">AP<sub>p</sub></th><th scope="col" class="n">AP<sub>d</sub></th><th scope="col" class="n">AP<sub>b</sub></th><th scope="col" class="n">mAP</th><th scope="col" class="n">FPS</th>
+            <th scope="col" class="n" title="Average precision, pedestrian crossings">AP<sub>p</sub></th><th scope="col" class="n" title="Average precision, lane dividers">AP<sub>d</sub></th><th scope="col" class="n" title="Average precision, road boundaries">AP<sub>b</sub></th><th scope="col" class="n">mAP</th><th scope="col" class="n">FPS</th>
           </tr>
         </thead>
         <tbody>
@@ -283,7 +284,7 @@
         <thead>
           <tr>
             <th scope="col">Method</th><th scope="col">Venue</th><th scope="col">Mod.</th><th scope="col">Temp.</th><th scope="col">Ep.</th>
-            <th scope="col" class="n">AP<sub>p</sub></th><th scope="col" class="n">AP<sub>d</sub></th><th scope="col" class="n">AP<sub>b</sub></th><th scope="col" class="n">mAP</th><th scope="col" class="n">FPS</th>
+            <th scope="col" class="n" title="Average precision, pedestrian crossings">AP<sub>p</sub></th><th scope="col" class="n" title="Average precision, lane dividers">AP<sub>d</sub></th><th scope="col" class="n" title="Average precision, road boundaries">AP<sub>b</sub></th><th scope="col" class="n">mAP</th><th scope="col" class="n">FPS</th>
           </tr>
         </thead>
         <tbody>
@@ -313,7 +314,7 @@
         <thead>
           <tr>
             <th scope="col">Method</th><th scope="col">Venue</th><th scope="col">Mod.</th><th scope="col">Temp.</th><th scope="col">Ep.</th>
-            <th scope="col" class="n">AP<sub>p</sub></th><th scope="col" class="n">AP<sub>d</sub></th><th scope="col" class="n">AP<sub>b</sub></th><th scope="col" class="n">mAP</th><th scope="col" class="n">FPS</th>
+            <th scope="col" class="n" title="Average precision, pedestrian crossings">AP<sub>p</sub></th><th scope="col" class="n" title="Average precision, lane dividers">AP<sub>d</sub></th><th scope="col" class="n" title="Average precision, road boundaries">AP<sub>b</sub></th><th scope="col" class="n">mAP</th><th scope="col" class="n">FPS</th>
           </tr>
         </thead>
         <tbody>
@@ -562,8 +563,8 @@
   </button>
 </div>
 
-<script src="failure.js?v=84"></script>
-<script src="drive.js?v=84"></script>
-<script src="main.js?v=84"></script>
+<script src="failure.js?v=85"></script>
+<script src="drive.js?v=85"></script>
+<script src="main.js?v=85"></script>
 </body>
 </html>
