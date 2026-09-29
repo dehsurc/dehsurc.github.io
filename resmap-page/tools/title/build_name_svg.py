@@ -98,7 +98,8 @@ for n, (info, pos) in enumerate(zip(buf.glyph_infos, buf.glyph_positions)):
     fl = Flat(gs)
     gs[gname].draw(TransformPen(fl, (1, 0, 0, -1, ox, 0)))
     polys = [resample(c, SPACING)[0] for c in fl.contours if len(c) > 2]
-    letters.append({'ch': WORD[n], 'cls': CLASSES[n], 'd': sp.getCommands(), 'polys': polys})
+    letters.append({'ch': WORD[n], 'cls': CLASSES[n], 'd': sp.getCommands(), 'polys': polys,
+                    'dense': [c for c in fl.contours if len(c) > 2]})
     x += pos.x_advance + (track if n < len(WORD) - 1 else 0)
 
 # Vertical frame: the CSS line box of the text it replaces. line-height is 1,
