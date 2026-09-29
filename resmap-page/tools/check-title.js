@@ -91,7 +91,12 @@ function run(opt) {
   }
   var lens = node(), box = node();
   // The name is 749 x 100 px on screen; the viewBox is 7490 x 2048 from y = -1769.
-  box.getBoundingClientRect = function () { var y = opt.top || 100; return { left: 100, width: 749, top: y, height: 100, bottom: y + 100 }; };
+  // It sits 100 px down the page, so scrolling moves it up by scrollY.
+  var win = { innerHeight: 900, scrollY: 0, _l: {}, addEventListener: function (ev, f) { win._l[ev] = f; } };
+  box.getBoundingClientRect = function () {
+    var y = (opt.top || 100) - win.scrollY;
+    return { left: 100, width: 749, top: y, height: 100, bottom: y + 100 };
+  };
   var svg = node();
   svg.attrs['data-lens'] = '880 -546';
   svg.viewBox = { baseVal: { x: 0, y: -1769, width: 7490, height: 2048 } };
@@ -99,7 +104,7 @@ function run(opt) {
   svg.getBoundingClientRect = box.getBoundingClientRect;
   var doc = { querySelector: function () { return svg; }, getElementById: function () { return lens; }, hidden: false };
   new Function('document', 'window', 'reduceMotion', 'setTimeout', 'requestAnimationFrame', 'performance', body)(
-    doc, { innerHeight: 900 }, { matches: !!opt.reduce }, setTimeout, requestAnimationFrame, { now: function () { return now; } });
+    doc, win, { matches: !!opt.reduce }, setTimeout, requestAnimationFrame, { now: function () { return now; } });
   function ev(px, py) { return { clientX: px, clientY: py === undefined ? 150 : py }; }
   return {
     tick: tick,
@@ -107,6 +112,7 @@ function run(opt) {
     y: function () { return parseFloat(lens.attrs.cy); },
     on: function () { return !!svg.cls['has-roi']; },
     enter: function (px, py) { box._l.pointerenter(ev(px, py)); },
+    scrollTo: function (y) { win.scrollY = y; if (win._l.scroll) win._l.scroll(); },
     move: function (px, py) { box._l.pointermove(ev(px, py)); },
     leave: function () { box._l.pointerleave(); }
   };
@@ -132,17 +138,33 @@ var d = run({});
 d.tick(1000); t('nothing before 1.1 s', !d.on());
 d.tick(300);  t('then the lens passes along the name once', d.on() && d.x() < 7490 && Math.abs(d.y() - (-546)) < 1);
 d.tick(2600); t('...right the way across, then goes', !d.on() && d.x() > 7490);
-d.tick(20000); t('only once', !d.on());
+d.tick(20000); t('it does not repeat while the page stays at the top', !d.on());
+
+console.log('coming back to the top');
+d.scrollTo(3000); d.tick(100);
+d.scrollTo(10); d.tick(100);
+t('not the instant it arrives: a smooth scroll gets 250 ms to land', !d.on());
+d.tick(300);
+t('scrolling back up to the top plays it again', d.on());
+d.tick(3000); t('...and it finishes', !d.on());
+d.scrollTo(30); d.tick(500);
+t('small scrolls at the top do not replay it', !d.on());
+d.scrollTo(3000); d.tick(100); d.scrollTo(600); d.tick(500);
+t('coming back into view but not to the top does not play it', !d.on());
+d.scrollTo(0); d.tick(400);
+t('...reaching the top does', d.on());
 
 var h = run({});
-h.enter(300); h.tick(16); h.leave(); h.tick(3000);
-t('a pointer first means no demo', !h.on());
+h.enter(300); h.tick(1500);
+t('no pass while the pointer is on the name', h.on() && Math.abs(h.x() - 2000) < 1);
 
 var off = run({ top: -500 });
 off.tick(4000); t('no demo while the title is off screen', !off.on());
 
 var still = run({ reduce: true });
 still.tick(4000); t('reduced motion: no demo', !still.on());
+still.scrollTo(3000); still.tick(100); still.scrollTo(0); still.tick(500);
+t('reduced motion: none on coming back to the top either', !still.on());
 still.enter(100 + 374.5); still.move(100 + 700); still.tick(16);
 t('reduced motion: the lens goes where the pointer is, without gliding', Math.abs(still.x() - 7000) < 1);
 
