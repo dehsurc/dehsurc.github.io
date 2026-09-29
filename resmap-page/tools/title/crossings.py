@@ -8,7 +8,9 @@ from PIL import Image, ImageDraw
 from scipy import ndimage
 
 S = 0.28
-AT = {'R': 0.5, 'M': 0.62, 'p': 0.62}   # letters that get one, and where along the stem
+# Letters that get one, and where: a fraction along the stem, or for a letter
+# whose centreline is one curve (S), a fraction along that curve's length.
+AT = {'S': ('curve', 0.5), 'M': ('stem', 0.62), 'p': ('stem', 0.62)}
 DEPTH = 190                               # font units along the stroke (half = 95)
 GAP = 60                                  # divider stops this far short of the crossing
 
@@ -30,19 +32,36 @@ for L in d['letters']:
     if L['ch'] not in AT: continue
     m, x0, y0 = raster(L['dense'])
     dist = ndimage.distance_transform_edt(m) / S
-    # The longest straight run of centreline: that is the stem.
-    best = None
-    for li, line in enumerate(L['center']):
-        for si in range(len(line) - 1):
-            a, b = line[si], line[si + 1]
-            ln = math.dist(a, b)
-            if best is None or ln > best[0]: best = (ln, li, si)
-    ln, li, si = best
-    a, b = L['center'][li][si], L['center'][li][si + 1]
-    dx, dy = (b[0] - a[0]) / ln, (b[1] - a[1]) / ln
+    # Where it goes: on the longest straight run of centreline (the stem), or,
+    # for a letter with no stem to speak of, part-way along its longest curve.
+    lines = L['center']
+    mode, frac = AT[L['ch']]
+    def lens(l): return [math.dist(p, q) for p, q in zip(l, l[1:])]
+    if mode == 'stem':     # the line holding the longest straight segment
+        li = max(range(len(lines)), key=lambda i: max(lens(lines[i])))
+    else:                  # the longest line
+        li = max(range(len(lines)), key=lambda i: sum(lens(lines[i])))
+    line = lines[li]
+    seg = lens(line)
+    straight = mode == 'stem'
+    if straight:
+        si = max(range(len(seg)), key=lambda i: seg[i])
+        s_at = sum(seg[:si]) + seg[si] * frac
+    else:
+        s_at = sum(seg) * frac
+    def at(s):                                # point and unit tangent at arc length s
+        acc = 0.0
+        for i, ln in enumerate(seg):
+            if acc + ln >= s or i == len(seg) - 1:
+                f = (s - acc) / ln
+                a, b = line[i], line[i + 1]
+                return (a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f), i
+            acc += ln
+    (cx, cy), _ = at(s_at)
+    (ax, ay), _ = at(max(0, s_at - 120)); (bx, by), _ = at(min(sum(seg), s_at + 120))
+    tl = math.hypot(bx - ax, by - ay)
+    dx, dy = (bx - ax) / tl, (by - ay) / tl
     nx, ny = -dy, dx
-    t = AT[L['ch']]
-    cx, cy = a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t
     r, c = int((cy - y0) * S), int((cx - x0) * S)
     half = dist[r, c] * 0.93                 # to just inside the stroke's edges
     hd = DEPTH / 2
@@ -51,11 +70,11 @@ for L in d['letters']:
             (cx - nx * half - dx * hd, cy - ny * half - dy * hd),
             (cx + nx * half - dx * hd, cy + ny * half - dy * hd)]
     L['crossings'].append(poly)
-    # Cut the divider around it.
+    # Cut the divider around it, along the line's own length so a curve is cut too.
     cut = hd + GAP
-    pa = (cx - dx * cut, cy - dy * cut); pb = (cx + dx * cut, cy + dy * cut)
-    line = L['center'][li]
-    before = line[:si + 1] + [pa]; after = [pb] + line[si + 1:]
+    pa, ia = at(s_at - cut); pb, ib = at(s_at + cut)
+    before = line[:ia + 1] + [pa]; after = [pb] + line[ib + 1:]
     L['center'][li:li + 1] = [before, after]
-    print(f"{L['ch']}: crossing {2*half:.0f} x {DEPTH} units across a {ln:.0f}-unit stem")
+    ln = sum(seg)
+    print(f"{L['ch']}: crossing {2*half:.0f} x {DEPTH} units, {'on the stem' if straight else 'along the curve'}")
 json.dump(d, open('title.json', 'w'))
