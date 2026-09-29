@@ -64,9 +64,6 @@
   --map-boundary: #3f9c63;
   --map-divider:  #c2831f;
   --map-crossing: #3277bd;
-  /* The name drawn as a road. */
-  --name-asphalt: #555c66;
-  --name-paint:   #f4f5f7;
 
   --sans: "Inter", "Freesentation", -apple-system, BlinkMacSystemFont,
           system-ui, "Segoe UI", Roboto, "Apple SD Gothic Neo",
@@ -120,8 +117,6 @@
   --map-boundary: #63c98c;
   --map-divider:  #e0a94a;
   --map-crossing: #6aa6e8;
-  --name-asphalt: #3b424d;
-  --name-paint:   #d7dbe1;
 
   color-scheme: dark;
 }
@@ -708,24 +703,19 @@ h1 { margin: 0 0 1.4rem; }
   letter-spacing: -.035em;
   color: var(--ink);
 }
-/* The name as its own outlines, in three layers. At rest only the solid one
-   shows and the name looks exactly as the text did. Under the pointer the
-   letters become a road -- asphalt, edge lines, a dashed line down the middle
-   of every stroke -- and inside the ego's ROI, which follows the pointer and
-   is drawn as nothing but the switch from road to map,
-   that road is shown as the HD map built from it: road boundaries along the
-   letters' edges, lane dividers down their centres, in the class colours the
-   road rail uses. */
+/* The name as its own outlines. At rest it is the solid letters and looks
+   exactly as the text did. Under the pointer a round lens follows it, and
+   inside the lens the letters are shown as the HD map a model would build
+   from them: road boundaries along their edges, lane dividers down the
+   middle of every stroke, in the class colours the road rail uses. The lens
+   covers the solid letters with a disc of page colour rather than cutting
+   them, so there is no seam at rest. */
 .name-svg { display: block; height: 1em; width: auto; overflow: visible; }
-.name-svg .nm-solid { fill: currentColor; transition: opacity .35s ease; }
-.name-svg .nm-road, .name-svg .nm-map { opacity: 0; transition: opacity .35s ease; }
-.name-svg.is-road .nm-solid { opacity: 0; }
-.name-svg.is-road .nm-road { opacity: 1; }
+.name-svg .nm-solid { fill: currentColor; }
+.name-svg .nm-map { opacity: 0; transition: opacity .3s ease; }
 .name-svg.has-roi .nm-map { opacity: 1; }
-.name-svg .asphalt { fill: var(--name-asphalt); }
-.name-svg .edge { fill: none; stroke: var(--name-paint); stroke-width: 64; }
-.name-svg .lane { fill: none; stroke: var(--name-paint); stroke-width: 30; stroke-dasharray: 120 90; }
-.name-svg .ghost { fill: currentColor; fill-opacity: .06; }
+.name-svg .paper { fill: var(--paper); }
+.name-svg .ghost { fill: currentColor; fill-opacity: .07; }
 .name-svg .boundary, .name-svg .divider {
   fill: none; stroke-width: 1.7px; vector-effect: non-scaling-stroke;
   stroke-linejoin: round; stroke-linecap: round;
@@ -733,7 +723,7 @@ h1 { margin: 0 0 1.4rem; }
 .name-svg .boundary { stroke: var(--map-boundary); }
 .name-svg .divider { stroke: var(--map-divider); }
 @media (prefers-reduced-motion: reduce) {
-  .name-svg .nm-solid, .name-svg .nm-road, .name-svg .nm-map { transition: none; }
+  .name-svg .nm-map { transition: none; }
 }
 .h1-sub {
   display: block;

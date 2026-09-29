@@ -18,23 +18,20 @@ var h1 = /<h1>([\s\S]*?)<\/h1>/.exec(html)[1];
 t('a screen reader, a search engine and a copy get the word', /<span class="sr-only">ReSMap<\/span>/.test(h1));
 t('the drawing is hidden from assistive tech', /<svg class="name-svg"[^>]*aria-hidden="true"/.test(h1));
 t('six glyph outlines, defined once', (h1.match(/<path id="nm-p\d"/g) || []).length === 6);
-['nm-solid', 'nm-road', 'nm-map'].forEach(function (g) {
-  t('layer present: ' + g, h1.indexOf('class="' + g + '"') >= 0);
-});
-var roi = /data-roi="(-?\d+) (\d+) (\d+)"/.exec(h1);
-// Glyphs run from -1510 (cap tops) to 418 (the p's tail), in SVG units.
-t('the ROI covers the letters top to tail and not much more',
-  roi && +roi[1] <= -1510 && +roi[1] >= -1600 && +roi[1] + +roi[2] >= 418 && +roi[1] + +roi[2] <= 500);
-t('nothing marks the ROI: no frame, no ego arrow', h1.indexOf('class="nm-roi"') < 0);
-var road = /<g class="nm-road"[\s\S]*?<\/g>/.exec(h1)[0], map = /<g class="nm-map"[\s\S]*?<\/g>/.exec(h1)[0];
-var lanes = (road.match(/class="lane"/g) || []).length, dividers = (map.match(/class="divider"/g) || []).length;
-t('every centre line is both a painted lane and a map divider (' + lanes + ')', lanes > 6 && lanes === dividers);
-t('the map has a boundary for every contour (' + (map.match(/class="boundary"/g) || []).length + ')',
+t('two layers: the solid name and the map', h1.indexOf('class="nm-solid"') >= 0 && h1.indexOf('class="nm-map"') >= 0);
+t('no road: no asphalt, no painted lanes', !/class="(asphalt|lane|edge)"|nm-road/.test(h1));
+t('the solid letters are never cut (no seam at rest)', !/class="nm-solid"[^>]*clip-path/.test(h1));
+t('the lens is a circle, and the map shows only inside it',
+  /<clipPath id="nm-in"><circle id="nm-lens"/.test(h1) && /class="nm-map" clip-path="url\(#nm-in\)"/.test(h1));
+t('inside the lens a disc of page colour hides the solid letters', /class="nm-map"[^>]*><rect class="paper"/.test(h1));
+var map = /<g class="nm-map"[\s\S]*?<\/g>/.exec(h1)[0];
+t('a boundary for every contour (' + (map.match(/class="boundary"/g) || []).length + ')',
   (map.match(/class="boundary"/g) || []).length === 10);
-t('the road only outside the ROI, the map only inside',
-  /class="nm-road" clip-path="url\(#nm-out\)"/.test(h1) && /class="nm-map" clip-path="url\(#nm-in\)"/.test(h1));
-t('no vertex dots', !/<circle/.test(h1));
-['--map-boundary', '--map-divider', '--name-asphalt', '--name-paint'].forEach(function (k) {
+t('a divider down every stroke (' + (map.match(/class="divider"/g) || []).length + ')',
+  (map.match(/class="divider"/g) || []).length > 6);
+t('no vertex dots', !/<circle(?! id="nm-lens")/.test(h1));
+t('the road tokens are gone from the stylesheet', !/--name-asphalt|--name-paint/.test(css));
+['--map-boundary', '--map-divider'].forEach(function (k) {
   t(k + ' set in both themes', (css.match(new RegExp(k + ':', 'g')) || []).length === 2);
 });
 
@@ -44,7 +41,7 @@ function run(opt) {
   var now = 0, timers = [], frames = [];
   function setTimeout(fn, ms) { timers.push({ at: now + ms, fn: fn }); }
   function requestAnimationFrame(fn) { frames.push(fn); return frames.length; }
-  function tick(ms) {               // advance the clock one 16 ms frame at a time
+  function tick(ms) {
     var end = now + ms;
     while (now < end) {
       now = Math.min(end, now + 16);
@@ -62,47 +59,49 @@ function run(opt) {
     e.addEventListener = function (ev, f) { e._l[ev] = f; };
     return e;
   }
-  var roiIn = node(), roiOut = node(), box = node();
-  box.getBoundingClientRect = function () { return { left: 100, width: 749, top: opt.top || 100, bottom: (opt.top || 100) + 60 }; };
+  var lens = node(), box = node();
+  // The name is 749 x 100 px on screen; the viewBox is 7490 x 2048 from y = -1769.
+  box.getBoundingClientRect = function () { var y = opt.top || 100; return { left: 100, width: 749, top: y, height: 100, bottom: y + 100 }; };
   var svg = node();
-  svg.attrs['data-roi'] = '-1550 2010 1200';
-  svg.viewBox = { baseVal: { width: 7490 } };
+  svg.attrs['data-lens'] = '880 -546';
+  svg.viewBox = { baseVal: { x: 0, y: -1769, width: 7490, height: 2048 } };
   svg.parentNode = box;
   svg.getBoundingClientRect = box.getBoundingClientRect;
-  var ids = { 'nm-roi-in': roiIn, 'nm-roi-out': roiOut };
-  var doc = { querySelector: function () { return svg; }, getElementById: function (i) { return ids[i]; }, hidden: false };
+  var doc = { querySelector: function () { return svg; }, getElementById: function () { return lens; }, hidden: false };
   new Function('document', 'window', 'reduceMotion', 'setTimeout', 'requestAnimationFrame', 'performance', body)(
     doc, { innerHeight: 900 }, { matches: !!opt.reduce }, setTimeout, requestAnimationFrame, { now: function () { return now; } });
+  function ev(px, py) { return { clientX: px, clientY: py === undefined ? 150 : py }; }
   return {
-    tick: tick, box: box, svg: svg,
-    x: function () { return parseFloat(roiIn.attrs.x) + 1200 / 2; },
-    on: function () { return !!svg.cls['is-road'] && !!svg.cls['has-roi']; },
-    enter: function (px) { box._l.pointerenter({ clientX: px }); },
-    move: function (px) { box._l.pointermove({ clientX: px }); },
+    tick: tick,
+    x: function () { return parseFloat(lens.attrs.cx); },
+    y: function () { return parseFloat(lens.attrs.cy); },
+    on: function () { return !!svg.cls['has-roi']; },
+    enter: function (px, py) { box._l.pointerenter(ev(px, py)); },
+    move: function (px, py) { box._l.pointermove(ev(px, py)); },
     leave: function () { box._l.pointerleave(); }
   };
 }
 
 console.log('the pointer');
 var r = run({});
-r.enter(100 + 374.5);             // the middle of a 749 px wide name
+r.enter(100 + 374.5, 100 + 60);   // middle of the name, 60% of the way down
 r.tick(16);
-t('entering turns the name into a road with the ROI on it', r.on());
-t('the box arrives at the pointer, not somewhere else', Math.abs(r.x() - 3745) < 1);
-r.move(100 + 700);
+t('entering switches the lens on', r.on());
+t('the lens arrives at the pointer, in x and in y',
+  Math.abs(r.x() - 3745) < 1 && Math.abs(r.y() - (-1769 + 0.6 * 2048)) < 1);
+r.move(100 + 700, 100 + 20);
 r.tick(16);
-var mid = r.x();
-t('moving: the box trails the pointer', mid > 3745 && mid < 7000);
+t('moving: the lens trails the pointer', r.x() > 3745 && r.x() < 7000 && r.y() < -1769 + 0.6 * 2048);
 r.tick(800);
-t('...and settles on it', Math.abs(r.x() - 7000) < 1);
+t('...and settles on it', Math.abs(r.x() - 7000) < 1 && Math.abs(r.y() - (-1769 + 0.2 * 2048)) < 1);
 r.leave(); r.tick(16);
-t('leaving puts the name back', !r.on());
+t('leaving switches it off', !r.on());
 
 console.log('the first visit');
 var d = run({});
 d.tick(1000); t('nothing before 1.1 s', !d.on());
-d.tick(300);  t('then the ego drives the name once', d.on() && d.x() < 7490);
-d.tick(2600); t('...right the way across, and the name comes back', !d.on() && d.x() > 7490);
+d.tick(300);  t('then the lens passes along the name once', d.on() && d.x() < 7490 && Math.abs(d.y() - (-546)) < 1);
+d.tick(2600); t('...right the way across, then goes', !d.on() && d.x() > 7490);
 d.tick(20000); t('only once', !d.on());
 
 var h = run({});
@@ -115,7 +114,7 @@ off.tick(4000); t('no demo while the title is off screen', !off.on());
 var still = run({ reduce: true });
 still.tick(4000); t('reduced motion: no demo', !still.on());
 still.enter(100 + 374.5); still.move(100 + 700); still.tick(16);
-t('reduced motion: the box goes where the pointer is, without gliding', Math.abs(still.x() - 7000) < 1);
+t('reduced motion: the lens goes where the pointer is, without gliding', Math.abs(still.x() - 7000) < 1);
 
 if (fail) { console.log(fail + ' failure(s)'); process.exit(1); }
 console.log('all good');
