@@ -332,9 +332,54 @@
     requestAnimationFrame(update);
   }
 
+  /* ---- sizing the pin ----
+   *
+   * The stage is as tall as its content and pins centred in the window, and
+   * the track is that plus the scroll it stays pinned for. All three are
+   * measured here rather than fixed in the stylesheet, because the stage's
+   * height depends on the width it wraps at.
+   *
+   * The note is reserved at the height of the longest of the four first. It
+   * changes length from level to level, and a stage that changed height in the
+   * middle of the pin would change the travel it is being scrolled through:
+   * the level under the reader's hand would jump. */
+  var stageEl = track.firstElementChild;
+  var unpinned = window.matchMedia('(max-width: 62rem) and (max-height: 34rem)');
+  var PIN_VH = 1.6;            // scroll spent pinned, in window heights
+
+  function fit() {
+    if (noteEl) {
+      var keep = noteEl.textContent;
+      noteEl.style.minHeight = '';
+      var tallest = 0;
+      STAGES.forEach(function (st, i) {
+        noteEl.textContent = fill(st.note, i);
+        tallest = Math.max(tallest, noteEl.offsetHeight);
+      });
+      noteEl.textContent = keep;
+      noteEl.style.minHeight = tallest + 'px';
+    }
+
+    if (unpinned.matches) {
+      track.style.height = '';
+      stageEl.style.removeProperty('--stage-top');
+      return;
+    }
+    var vh = window.innerHeight || 800;
+    var h = stageEl.offsetHeight;
+    var edge = parseFloat(getComputedStyle(document.documentElement)
+      .getPropertyValue('--chrome')) * 16 || 16;
+    stageEl.style.setProperty('--stage-top', Math.max(edge, (vh - h) / 2) + 'px');
+    track.style.height = Math.round(h + vh * PIN_VH) + 'px';
+  }
+
+  function refit() { fit(); update(); }
+
+  fit();
   update();
   window.addEventListener('scroll', request, { passive: true });
-  window.addEventListener('resize', request);
-  window.addEventListener('load', update);
+  window.addEventListener('resize', refit);
+  window.addEventListener('load', refit);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(refit);
 
 })();

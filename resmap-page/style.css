@@ -146,17 +146,19 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
 
 /* ---------- pinned camera-failure walkthrough ---------- */
 
-/* The walkthrough leads the page, so it earns a shorter run: four stages over
-   two and a half screens, before the reader has committed to anything. */
+/* The walkthrough leads the page, so it earns a shorter run. failure.js sets
+   the track's height (the stage plus the scroll it is pinned for) and the
+   stage's sticky offset; these are only the fallbacks without it.
+
+   The stage is as tall as what is in it, and pins centred in the window. It
+   used to be a whole window tall with the content centred inside, which put
+   a couple of hundred pixels of nothing above and below it on the way in and
+   on the way out. */
 .track { position: relative; height: 260vh; }
 
 .stage {
   position: sticky;
-  top: var(--chrome);
-  height: calc(100vh - var(--chrome));
-  min-height: 34rem;
-  display: flex;
-  align-items: center;
+  top: var(--stage-top, var(--chrome));
 }
 
 /* The teaser sits above the numbered document, so its heading carries no
@@ -297,11 +299,9 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
    that plays while it slides off the top of the screen is a walkthrough you
    do not see. Everything in it shrinks to fit one phone screen. */
 @media (max-width: 62rem) {
-  .stage { min-height: 0; }
   .stage-grid { grid-template-columns: 1fr; gap: 1rem; }
   .rig svg { max-width: 10.5rem; }
   .rig figcaption { display: none; }
-  .track { height: 240vh; }
   /* The sub-caption is the first thing to go: the level's name is on the
      button that is lit, so it is said twice. */
   .stage-head { margin-bottom: .9rem; padding-bottom: .45rem; flex-wrap: wrap; }
@@ -315,17 +315,14 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
   .bar-lane { height: 11px; }
   .bar-val { font-size: 12px; }
   .chart .tcap { font-size: 11px; }
-  /* Reserved: the note changes length between stages, and letting the block
-     resize under a scroll that is reading its position feeds back. */
-  .stage-note { min-height: 5.5em; margin-top: 1rem; font-size: 13.5px; }
+  .stage-note { margin-top: 1rem; font-size: 13.5px; }
 }
 
 /* Too short to pin anything: let it stack and run off its own passage
    through the viewport, which failure.js falls back to on its own. */
 @media (max-width: 62rem) and (max-height: 34rem) {
-  .stage { height: auto; padding: 1.5rem 0; }
-  .track { height: auto; }
-  .stage-note { min-height: 7.5em; }
+  .stage { position: static; padding: 1.5rem 0; }
+  .track { height: auto !important; }
 }
 
 /* ---------- the road ---------- */
