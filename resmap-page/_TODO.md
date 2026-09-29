@@ -90,15 +90,18 @@ Table 1(clean)과 Table 2(카메라 고장)는 표 위 탭으로 데이터셋을
 | Table 1 | nuScenes · original split | 논문 Tab. 6 | 공개 |
 | Table 2 | nuScenes · geo split | 논문 Tab. 2 | 공개 |
 | Table 2 | nuScenes · original split | 논문 Tab. 7 (mRR/mCE 제외) | 공개 |
+| Table 1 | Argoverse 2 · geo split | 로그의 클래스별 AP 3행 + 평가 예정 칸 | 공개 (빈 칸은 `–`) |
 | Table 2 | Argoverse 2 · geo split | 리부탈 3행 + 평가 예정 칸 | 공개 (빈 칸은 `–`) |
 
 ### Argoverse 2 탭에서 채울 것
+
+(ReSMap non-temporal은 AV2에서 돌리지 않음. 행 없음.)
+**채우기 전에 `min_ws/ReSMap_numbers_inconsistencies.md` E4·E5를 먼저 볼 것**: 위성 baseline이 카메라 고장에서 ReSMap보다 덜 떨어진 기존 측정이 있고, SatMap/SatforHDMap 이름이 섞여 있음.
 
 평가가 끝나면 `index.html`에서 해당 행의 `class="pending"`을 빼고, 위 행들과 같은 형식(mAP, 자기 Clean 대비 하락률)으로 적으면 됩니다.
 
 - [ ] **DAMap (C+L)**: Clean / Front-1 / Front-3 / All
 - [ ] **SatforHDMap (C+SA)**: Clean / Front-1 / Front-3 / All
-- [ ] **ReSMap non-temporal**: Clean / Front-1 / Front-3 / All
 - [ ] 모든 행의 **Ep.** (지금 `–`)
 - [ ] 하락률 계산 방식을 논문 표와 통일할지 결정 (리부탈은 반올림 전 값 기준)
 

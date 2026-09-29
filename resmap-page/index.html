@@ -35,7 +35,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700&family=Inter+Tight:wght@600;700&display=swap">
-<link rel="stylesheet" href="style.css?v=83">
+<link rel="stylesheet" href="style.css?v=84">
 
 <!-- Set the theme before first paint so there is no flash. -->
 <script>
@@ -236,6 +236,7 @@
       <div class="table-tabs" role="tablist" aria-label="Dataset and split">
         <button role="tab" aria-selected="true" aria-controls="t1-geo" id="t1-geo-tab">nuScenes &middot; geo split</button>
         <button role="tab" aria-selected="false" aria-controls="t1-orig" id="t1-orig-tab" tabindex="-1">nuScenes &middot; original split</button>
+        <button role="tab" aria-selected="false" aria-controls="t1-av2" id="t1-av2-tab" tabindex="-1">Argoverse 2 &middot; geo split</button>
       </div>
 
       <div class="tpanel" id="t1-geo" role="tabpanel" aria-labelledby="t1-geo-tab">
@@ -303,6 +304,29 @@
       </table>
       </div>
       <p class="tcap"><b>Table 1.</b> The same comparison on the original split of nuScenes, where training and validation cover overlapping regions and road layouts seen in training reappear at evaluation. <sup>&dagger;</sup>Consistent-GT supervision. <sup>&Dagger;</sup>Numbers taken from the original paper. FPS is not measured on this split. Best per column in bold.</p>
+      </div>
+      <div class="tpanel" id="t1-av2" role="tabpanel" aria-labelledby="t1-av2-tab" hidden>
+      <div class="scroll">
+      <table data-kind="clean" data-set="av2-geo">
+        <caption class="sr-only">Online HD map construction performance on the geographically non-overlapping split of Argoverse 2.</caption>
+        <colgroup><col><col><col><col><col><col><col><col><col><col></colgroup>
+        <thead>
+          <tr>
+            <th scope="col">Method</th><th scope="col">Venue</th><th scope="col">Mod.</th><th scope="col">Temp.</th><th scope="col">Ep.</th>
+            <th scope="col" class="n">AP<sub>p</sub></th><th scope="col" class="n">AP<sub>d</sub></th><th scope="col" class="n">AP<sub>b</sub></th><th scope="col" class="n">mAP</th><th scope="col" class="n">FPS</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="group"><th colspan="10" scope="colgroup">60&thinsp;&times;&thinsp;30&nbsp;m</th></tr>
+          <tr><th scope="row">MapTracker<sup>&dagger;</sup></th><td>ECCV&rsquo;24</td><td>C</td><td>&#10003;</td><td>&ndash;</td><td class="n">70.0</td><td class="n b">75.1</td><td class="n">69.0</td><td class="n">71.3</td><td class="n">&ndash;</td></tr>
+          <tr class="pending"><th scope="row">DAMap</th><td>ICCV&rsquo;25</td><td>C+L</td><td></td><td>&ndash;</td><td class="n">&ndash;</td><td class="n">&ndash;</td><td class="n">&ndash;</td><td class="n">&ndash;</td><td class="n">&ndash;</td></tr>
+          <tr><th scope="row">SDTagNet</th><td>NeurIPS&rsquo;25</td><td>C+SD</td><td></td><td>&ndash;</td><td class="n">64.3</td><td class="n">70.8</td><td class="n">68.4</td><td class="n">67.8</td><td class="n">&ndash;</td></tr>
+          <tr class="pending"><th scope="row">SatforHDMap</th><td>ICRA&rsquo;24</td><td>C+SA</td><td></td><td>&ndash;</td><td class="n">&ndash;</td><td class="n">&ndash;</td><td class="n">&ndash;</td><td class="n">&ndash;</td><td class="n">&ndash;</td></tr>
+          <tr class="ours"><th scope="row">ReSMap (ours)</th><td>NeurIPS&rsquo;26</td><td>C+SA</td><td>&#10003;</td><td>&ndash;</td><td class="n b">75.3</td><td class="n b">75.1</td><td class="n b">73.3</td><td class="n b">74.6</td><td class="n">&ndash;</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <p class="tcap"><b>Table 1.</b> The same comparison on the geographically non-overlapping split of Argoverse 2 at 60&thinsp;&times;&thinsp;30&nbsp;m, with our own ego-aligned tiles from Google Maps and every baseline retrained under the nuScenes protocol. <sup>&dagger;</sup>Consistent-GT supervision. FPS is not measured on this dataset. Best per column in bold; AP<sub>d</sub> is a tie at this precision.</p>
       </div>
     </figure>
   </div>
@@ -391,8 +415,7 @@
           <tr class="pending"><th scope="row">DAMap</th><td>C+L</td><td></td><td>&ndash;</td><td class="n">&ndash;</td><td class="n">&ndash;</td><td class="n">&ndash;</td><td class="n">&ndash;</td></tr>
           <tr><th scope="row">SDTagNet</th><td>C+SD</td><td></td><td>&ndash;</td><td class="n">67.8</td><td class="n">64.6 <span class="dn">&minus;4.7%</span></td><td class="n">52.3 <span class="dn">&minus;22.8%</span></td><td class="n">18.6 <span class="dn">&minus;72.6%</span></td></tr>
           <tr class="pending"><th scope="row">SatforHDMap</th><td>C+SA</td><td></td><td>&ndash;</td><td class="n">&ndash;</td><td class="n">&ndash;</td><td class="n">&ndash;</td><td class="n">&ndash;</td></tr>
-          <tr class="ours pending"><th scope="row">ReSMap (ours)</th><td>C+SA</td><td></td><td>&ndash;</td><td class="n">&ndash;</td><td class="n">&ndash;</td><td class="n">&ndash;</td><td class="n">&ndash;</td></tr>
-          <tr class="ours"><th scope="row">ReSMap (ours)</th><td>C+SA</td><td>&#10003;</td><td>&ndash;</td><td class="n b">74.6</td><td class="n b">70.7 <span class="dn">&minus;5.1%</span></td><td class="n b">59.2 <span class="dn">&minus;20.5%</span></td><td class="n b">30.8 <span class="dn">&minus;58.7%</span></td></tr>
+                  <tr class="ours"><th scope="row">ReSMap (ours)</th><td>C+SA</td><td>&#10003;</td><td>&ndash;</td><td class="n b">74.6</td><td class="n b">70.7 <span class="dn">&minus;5.1%</span></td><td class="n b">59.2 <span class="dn">&minus;20.5%</span></td><td class="n b">30.8 <span class="dn">&minus;58.7%</span></td></tr>
         </tbody>
       </table>
       </div>
@@ -539,8 +562,8 @@
   </button>
 </div>
 
-<script src="failure.js?v=83"></script>
-<script src="drive.js?v=83"></script>
-<script src="main.js?v=83"></script>
+<script src="failure.js?v=84"></script>
+<script src="drive.js?v=84"></script>
+<script src="main.js?v=84"></script>
 </body>
 </html>

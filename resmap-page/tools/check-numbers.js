@@ -88,7 +88,7 @@ function find(kind, set) {
 }
 check(tables.every(function (t) { return t.kind && t.set; }),
       'every results table declares data-kind and data-set (' + tables.length + ' tables)');
-['clean nusc-geo', 'clean nusc-orig', 'failure nusc-geo', 'failure nusc-orig', 'failure av2-geo']
+['clean nusc-geo', 'clean nusc-orig', 'clean av2-geo', 'failure nusc-geo', 'failure nusc-orig', 'failure av2-geo']
   .forEach(function (k) { check(!!find.apply(null, k.split(' ')), 'table present: ' + k); });
 
 function col(t, name) { return t.head.indexOf(name); }
@@ -127,6 +127,7 @@ tables.filter(function (t) { return t.kind === 'clean'; }).forEach(function (t) 
   console.log('\nmAP = mean(AP), ' + t.set);
   var ap = ['APp', 'APd', 'APb'].map(function (n) { return col(t, n); }), m = col(t, 'mAP');
   t.rows.forEach(function (r) {
+    if (r.pending) { console.log('  ...  ' + key(r, t) + ': pending'); return; }
     var mean = ap.reduce(function (s, i) { return s + parseFloat(r.cells[i]); }, 0) / 3;
     var said = parseFloat(r.cells[m]);
     var line = key(r, t) + ' [' + r.group + '] mAP ' + said + ' vs mean ' + mean.toFixed(2);
@@ -139,7 +140,7 @@ tables.filter(function (t) { return t.kind === 'clean'; }).forEach(function (t) 
 
 /* The same method's clean mAP, in the clean table and the failure table of
    the same split at 60 x 30 m. */
-['nusc-geo', 'nusc-orig'].forEach(function (set) {
+['nusc-geo', 'nusc-orig', 'av2-geo'].forEach(function (set) {
   var ct = find('clean', set), ft = find('failure', set);
   if (!ct || !ft) return;
   console.log('\nClean mAP, clean table vs failure table, ' + set);
@@ -148,6 +149,7 @@ tables.filter(function (t) { return t.kind === 'clean'; }).forEach(function (t) 
     var k = key(r, ft);
     var twin = ct.rows.filter(function (x) { return key(x, ct) === k && /60/.test(x.group); })[0];
     if (!twin) { console.log('  ...  ' + k + ': not in the clean table'); return; }
+    if (twin.pending) return;
     var a = parseFloat(twin.cells[col(ct, 'mAP')]), b = parseFloat(r.cells[col(ft, 'Clean')]);
     var ea = twin.cells[col(ct, 'Ep.')], eb = r.cells[col(ft, 'Ep.')];
     var line = k + ': mAP ' + a + ' / Clean ' + b + ', Ep. ' + ea + ' / ' + eb;
