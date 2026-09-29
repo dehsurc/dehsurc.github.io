@@ -707,7 +707,8 @@ h1 { margin: 0 0 1.4rem; }
    exactly as the text did. Under the pointer a round lens follows it, and
    inside the lens the letters are shown as the HD map a model would build
    from them: road boundaries along their edges, lane dividers down the
-   middle of every stroke, in the class colours the road rail uses. The lens
+   middle of every stroke, a pedestrian crossing across a few of the stems,
+   in the class colours the road rail uses. The lens
    covers the solid letters with page-coloured copies of them rather than
    cutting them, so there is no seam at rest, and nothing outside the letters
    is ever covered. */
@@ -719,12 +720,13 @@ h1 { margin: 0 0 1.4rem; }
    anti-aliased rim of the ink shows through inside the lens. */
 .name-svg .paper { fill: var(--paper); stroke: var(--paper); stroke-width: 2px; vector-effect: non-scaling-stroke; }
 .name-svg .ghost { fill: currentColor; fill-opacity: .07; }
-.name-svg .boundary, .name-svg .divider {
+.name-svg .boundary, .name-svg .divider, .name-svg .crossing {
   fill: none; stroke-width: 1.7px; vector-effect: non-scaling-stroke;
   stroke-linejoin: round; stroke-linecap: round;
 }
 .name-svg .boundary { stroke: var(--map-boundary); }
 .name-svg .divider { stroke: var(--map-divider); }
+.name-svg .crossing { stroke: var(--map-crossing); }
 @media (prefers-reduced-motion: reduce) {
   .name-svg .nm-map { transition: none; }
 }

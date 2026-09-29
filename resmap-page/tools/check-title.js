@@ -32,6 +32,33 @@ t('a boundary for every contour (' + (map.match(/class="boundary"/g) || []).leng
   (map.match(/class="boundary"/g) || []).length === 10);
 t('a divider down every stroke (' + (map.match(/class="divider"/g) || []).length + ')',
   (map.match(/class="divider"/g) || []).length > 6);
+var crossings = (map.match(/<polyline class="crossing" points="([^"]+)"/g) || []).map(function (m) {
+  return /points="([^"]+)"/.exec(m)[1].split(' ').map(function (p) { return p.split(',').map(Number); });
+});
+t('a pedestrian crossing across three of the stems', crossings.length === 3);
+t('each crossing is a closed four-cornered polygon', crossings.every(function (c) {
+  return c.length === 5 && c[0][0] === c[4][0] && c[0][1] === c[4][1];
+}));
+/* The lane divider stops at a crossing, as it would on a road. Sample every
+   divider segment and make sure none of it runs through a crossing. */
+function inside(pt, poly) {
+  var hit = false;
+  for (var i = 0, j = poly.length - 2; i < poly.length - 1; j = i++) {
+    var a = poly[i], b = poly[j];
+    if ((a[1] > pt[1]) !== (b[1] > pt[1]) && pt[0] < (b[0] - a[0]) * (pt[1] - a[1]) / (b[1] - a[1]) + a[0]) hit = !hit;
+  }
+  return hit;
+}
+var through = 0;
+(map.match(/<polyline class="divider" points="([^"]+)"/g) || []).forEach(function (m) {
+  var p = /points="([^"]+)"/.exec(m)[1].split(' ').map(function (q) { return q.split(',').map(Number); });
+  for (var i = 0; i < p.length - 1; i++) for (var k = 0; k <= 20; k++) {
+    var q = [p[i][0] + (p[i+1][0] - p[i][0]) * k / 20, p[i][1] + (p[i+1][1] - p[i][1]) * k / 20];
+    if (crossings.some(function (c) { return inside(q, c); })) through++;
+  }
+});
+t('the lane divider is cut where it meets a crossing', through === 0);
+t('--map-crossing set in both themes', (css.match(/--map-crossing:/g) || []).length === 2);
 t('no vertex dots', !/<circle(?! id="nm-lens")/.test(h1));
 t('the road tokens are gone from the stylesheet', !/--name-asphalt|--name-paint/.test(css));
 ['--map-boundary', '--map-divider'].forEach(function (k) {

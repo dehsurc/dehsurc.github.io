@@ -2,7 +2,8 @@
 centrelines.py). Two layers over one set of glyph outlines:
   solid - the name as text; always there, never cut
   map   - the same letters as a predicted HD map: road boundaries along the
-          edges, lane dividers down the centre of every stroke. It shows only
+          edges, lane dividers down the centre of every stroke, and here and
+          there a pedestrian crossing across a stem (crossings.py). It shows only
           inside a round lens that main.js moves with the pointer, over
           page-coloured copies of the letters that hide the solid ones.
 Cutting the solid letters at the lens edge instead would leave a hairline
@@ -34,6 +35,8 @@ for i, l in enumerate(L):
         m.append(f'<polyline class="boundary" points="{pts(p, True)}"/>')
     for c in l['center']:
         m.append(f'<polyline class="divider" points="{pts(c)}"/>')
+    for x in l.get('crossings', []):
+        m.append(f'<polyline class="crossing" points="{pts(x, True)}"/>')
 m.append('</g>')
 o += m
 o.append('</svg>')

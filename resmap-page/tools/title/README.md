@@ -10,4 +10,6 @@
 2. `centrelines.py` — rasterizes each letter, skeletonizes it and traces the stroke
    centrelines (the lane dividers). Needs `scikit-image`; run it with the `resmap`
    env's python, read-only.
-3. `emit_name_svg.py` — writes the markup; paste it into the `<h1>`.
+3. `crossings.py` — puts a pedestrian crossing across the straight stem of R, M and
+   p, sized to the stroke, and cuts the divider through it. Same env as step 2.
+4. `emit_name_svg.py` — writes the markup; paste it into the `<h1>`.
