@@ -708,13 +708,16 @@ h1 { margin: 0 0 1.4rem; }
    inside the lens the letters are shown as the HD map a model would build
    from them: road boundaries along their edges, lane dividers down the
    middle of every stroke, in the class colours the road rail uses. The lens
-   covers the solid letters with a disc of page colour rather than cutting
-   them, so there is no seam at rest. */
+   covers the solid letters with page-coloured copies of them rather than
+   cutting them, so there is no seam at rest, and nothing outside the letters
+   is ever covered. */
 .name-svg { display: block; height: 1em; width: auto; overflow: visible; }
 .name-svg .nm-solid { fill: currentColor; }
 .name-svg .nm-map { opacity: 0; transition: opacity .3s ease; }
 .name-svg.has-roi .nm-map { opacity: 1; }
-.name-svg .paper { fill: var(--paper); }
+/* Page colour over the solid letters, a pixel wider than they are so no
+   anti-aliased rim of the ink shows through inside the lens. */
+.name-svg .paper { fill: var(--paper); stroke: var(--paper); stroke-width: 2px; vector-effect: non-scaling-stroke; }
 .name-svg .ghost { fill: currentColor; fill-opacity: .07; }
 .name-svg .boundary, .name-svg .divider {
   fill: none; stroke-width: 1.7px; vector-effect: non-scaling-stroke;

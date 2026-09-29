@@ -23,7 +23,10 @@ t('no road: no asphalt, no painted lanes', !/class="(asphalt|lane|edge)"|nm-road
 t('the solid letters are never cut (no seam at rest)', !/class="nm-solid"[^>]*clip-path/.test(h1));
 t('the lens is a circle, and the map shows only inside it',
   /<clipPath id="nm-in"><circle id="nm-lens"/.test(h1) && /class="nm-map" clip-path="url\(#nm-in\)"/.test(h1));
-t('inside the lens a disc of page colour hides the solid letters', /class="nm-map"[^>]*><rect class="paper"/.test(h1));
+t('inside the lens, page-coloured copies of the letters hide the solid ones',
+  (h1.match(/<use class="paper" href="#nm-p\d"\/>/g) || []).length === 6);
+t('nothing outside the letters is covered: no disc, no rect in the map layer',
+  !/<g class="nm-map"[^>]*>[\s\S]*?<rect/.test(h1.replace(/<\/g>[\s\S]*$/, '')));
 var map = /<g class="nm-map"[\s\S]*?<\/g>/.exec(h1)[0];
 t('a boundary for every contour (' + (map.match(/class="boundary"/g) || []).length + ')',
   (map.match(/class="boundary"/g) || []).length === 10);

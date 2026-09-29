@@ -3,8 +3,8 @@ centrelines.py). Two layers over one set of glyph outlines:
   solid - the name as text; always there, never cut
   map   - the same letters as a predicted HD map: road boundaries along the
           edges, lane dividers down the centre of every stroke. It shows only
-          inside a round lens that main.js moves with the pointer, over a
-          disc of page colour that hides the solid letters beneath it.
+          inside a round lens that main.js moves with the pointer, over
+          page-coloured copies of the letters that hide the solid ones.
 Cutting the solid letters at the lens edge instead would leave a hairline
 seam there at rest, where two anti-aliased halves meet."""
 import json, re
@@ -25,10 +25,11 @@ for i, l in enumerate(L):
 o.append(f'<clipPath id="nm-in"><circle id="nm-lens" cx="-99999" cy="{f(MID)}" r="{R}"/></clipPath>')
 o.append('</defs>')
 o.append('<g class="nm-solid">' + ''.join(f'<use href="#nm-p{i}"/>' for i in range(len(L))) + '</g>')
-m = ['<g class="nm-map" clip-path="url(#nm-in)">',
-     '<rect class="paper" x="-9999" y="-9999" width="99999" height="99999"/>']
+m = ['<g class="nm-map" clip-path="url(#nm-in)">']
 for i, l in enumerate(L):
-    m.append(f'<use class="ghost" href="#nm-p{i}"/>')
+    # Page colour in the shape of the letter, not a disc: a disc covered
+    # whatever sat near the name -- the venue line above it, for one.
+    m.append(f'<use class="paper" href="#nm-p{i}"/><use class="ghost" href="#nm-p{i}"/>')
     for p in l['polys']:
         m.append(f'<polyline class="boundary" points="{pts(p, True)}"/>')
     for c in l['center']:
