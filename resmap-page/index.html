@@ -35,7 +35,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700&family=Inter+Tight:wght@600;700&display=swap">
-<link rel="stylesheet" href="style.css?v=74">
+<link rel="stylesheet" href="style.css?v=75">
 
 <!-- Set the theme before first paint so there is no flash. -->
 <script>
@@ -315,16 +315,16 @@
   </div>
 
   <div class="col wide">
-    <!-- ==== TABLE 2 · paper Tab. 2 (geo split), Tab. 7 (original split), and the
-         Argoverse 2 rebuttal table: update numbers here.
-         The Argoverse 2 tab is data-draft: it shows only with ?draft until the
-         DAMap and SatforHDMap rows are measured. Remove data-draft from its
-         button and panel to publish it. ==== -->
+    <!-- ==== TABLE 2 · paper Tab. 2 (geo split), Tab. 7 (original split), and
+         Argoverse 2 (rebuttal rows + rows still being evaluated): update numbers here.
+         A row still waiting on its numbers is <tr class="pending"> with &ndash; in
+         every cell; when it lands, drop the class and write the cells the same way
+         as the rows above it (mAP, then the drop from its own Clean). ==== -->
     <figure class="table-block" id="table2">
       <div class="table-tabs" role="tablist" aria-label="Dataset and split">
         <button role="tab" aria-selected="true" aria-controls="t2-geo" id="t2-geo-tab">nuScenes &middot; geo split</button>
         <button role="tab" aria-selected="false" aria-controls="t2-orig" id="t2-orig-tab" tabindex="-1">nuScenes &middot; original split</button>
-        <button role="tab" aria-selected="false" aria-controls="t2-av2" id="t2-av2-tab" tabindex="-1" data-draft hidden>Argoverse 2 &middot; geo split</button>
+        <button role="tab" aria-selected="false" aria-controls="t2-av2" id="t2-av2-tab" tabindex="-1">Argoverse 2 &middot; geo split</button>
       </div>
 
       <div class="tpanel" id="t2-geo" role="tabpanel" aria-labelledby="t2-geo-tab">
@@ -376,7 +376,7 @@
       <p class="tcap"><b>Table 2.</b> Camera dropout on the original split of nuScenes, at 60&thinsp;&times;&thinsp;30&nbsp;m. <sup>&Dagger;</sup>Numbers taken from the original paper; SafeMap reports single-view dropout only. Best per column in bold.</p>
       </div>
 
-      <div class="tpanel" id="t2-av2" role="tabpanel" aria-labelledby="t2-av2-tab" data-draft hidden>
+      <div class="tpanel" id="t2-av2" role="tabpanel" aria-labelledby="t2-av2-tab" hidden>
       <div class="scroll">
       <table data-kind="failure" data-set="av2-geo">
         <caption class="sr-only">Robustness under camera dropout on the geographically non-overlapping split of Argoverse 2.</caption>
@@ -387,15 +387,16 @@
           </tr>
         </thead>
         <tbody>
-          <tr><th scope="row">MapTracker<sup>&dagger;</sup></th><td>C</td><td>&#10003;</td><td>&ndash;</td><td class="n">71.3</td><td class="n">64.4 <span class="dn">&minus;9.7%</span></td><td class="n">30.0 <span class="dn">&minus;57.9%</span></td><td class="n">0.2 <span class="dn">&minus;99.7%</span></td></tr>
+          <tr><th scope="row">MapTracker<sup>&dagger;</sup></th><td>C</td><td>&#10003;</td><td>&ndash;</td><td class="n">71.3</td><td class="n">64.4 <span class="dn">&minus;9.7%</span></td><td class="n">30.0 <span class="dn">&minus;57.9%</span></td><td class="n">0.2 <span class="dn">&minus;99.8%</span></td></tr>
           <tr class="pending"><th scope="row">DAMap</th><td>C+L</td><td></td><td>&ndash;</td><td class="n">&ndash;</td><td class="n">&ndash;</td><td class="n">&ndash;</td><td class="n">&ndash;</td></tr>
-          <tr><th scope="row">SDTagNet</th><td>C+SD</td><td></td><td>&ndash;</td><td class="n">67.8</td><td class="n">64.6 <span class="dn">&minus;4.7%</span></td><td class="n">52.3 <span class="dn">&minus;22.9%</span></td><td class="n">18.6 <span class="dn">&minus;72.6%</span></td></tr>
+          <tr><th scope="row">SDTagNet</th><td>C+SD</td><td></td><td>&ndash;</td><td class="n">67.8</td><td class="n">64.6 <span class="dn">&minus;4.7%</span></td><td class="n">52.3 <span class="dn">&minus;22.8%</span></td><td class="n">18.6 <span class="dn">&minus;72.6%</span></td></tr>
           <tr class="pending"><th scope="row">SatforHDMap</th><td>C+SA</td><td></td><td>&ndash;</td><td class="n">&ndash;</td><td class="n">&ndash;</td><td class="n">&ndash;</td><td class="n">&ndash;</td></tr>
-          <tr class="ours"><th scope="row">ReSMap (ours)</th><td>C+SA</td><td>&#10003;</td><td>&ndash;</td><td class="n b">74.6</td><td class="n b">70.7 <span class="dn">&minus;5.2%</span></td><td class="n b">59.2 <span class="dn">&minus;20.6%</span></td><td class="n b">30.8 <span class="dn">&minus;58.7%</span></td></tr>
+          <tr class="ours pending"><th scope="row">ReSMap (ours)</th><td>C+SA</td><td></td><td>&ndash;</td><td class="n">&ndash;</td><td class="n">&ndash;</td><td class="n">&ndash;</td><td class="n">&ndash;</td></tr>
+          <tr class="ours"><th scope="row">ReSMap (ours)</th><td>C+SA</td><td>&#10003;</td><td>&ndash;</td><td class="n b">74.6</td><td class="n b">70.7 <span class="dn">&minus;5.1%</span></td><td class="n b">59.2 <span class="dn">&minus;20.5%</span></td><td class="n b">30.8 <span class="dn">&minus;58.7%</span></td></tr>
         </tbody>
       </table>
       </div>
-      <p class="tcap"><b>Table 2.</b> Camera dropout on the geographically non-overlapping split of Argoverse 2, with ego-aligned satellite tiles from Google Maps and every baseline retrained under the nuScenes protocol. Argoverse 2 has seven ring cameras; Front-1 and Front-3 drop the same forward views as on nuScenes, and All drops all seven.</p>
+      <p class="tcap"><b>Table 2.</b> Camera dropout on the geographically non-overlapping split of Argoverse 2, with our own ego-aligned tiles from Google Maps. Unlike the curated AID4AD imagery on nuScenes, these tiles are not matched in time to the drives and are used without alignment refinement, so they keep the staleness and localization error a deployed system would see. Every baseline is retrained under the nuScenes protocol. <sup>&dagger;</sup>Consistent-GT supervision. Rows showing &ndash; are still being evaluated.</p>
       </div>
     </figure>
   </div>
@@ -538,8 +539,8 @@
   </button>
 </div>
 
-<script src="failure.js?v=74"></script>
-<script src="drive.js?v=74"></script>
-<script src="main.js?v=74"></script>
+<script src="failure.js?v=75"></script>
+<script src="drive.js?v=75"></script>
+<script src="main.js?v=75"></script>
 </body>
 </html>

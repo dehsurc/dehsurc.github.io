@@ -107,9 +107,17 @@ tables.filter(function (t) { return t.kind === 'failure'; }).forEach(function (t
       if (r.cells[i] === '–') continue;   // not reported (SafeMap: single view only)
       var m = /^([\d.]+)\s*-([\d.]+)%$/.exec(r.cells[i]);
       if (!m) { check(false, key(r, t) + ' ' + t.head[i] + ': cannot read "' + r.cells[i] + '"'); continue; }
-      var want = (clean - parseFloat(m[1])) / clean * 100;
-      check(Math.abs(want - parseFloat(m[2])) < 0.06,
-            key(r, t) + ' ' + t.head[i] + ' ' + m[1] + ': -' + m[2] + '% (computed ' + want.toFixed(1) + '%)');
+      var v = parseFloat(m[1]);
+      var want = (clean - v) / clean * 100;
+      /* Both mAPs are printed to 0.1, so the drop recomputed from them can
+         differ from one computed on the unrounded values -- which is how the
+         rebuttal's Argoverse 2 table was made -- by up to this much, plus 0.05
+         for printing the percentage itself. The paper's own tables were
+         computed from the rounded values and agree to 0.05. */
+      var slack = 100 * (0.05 + 0.05 * v / clean) / clean + 0.05;
+      check(Math.abs(want - parseFloat(m[2])) <= slack,
+            key(r, t) + ' ' + t.head[i] + ' ' + m[1] + ': -' + m[2] + '% (computed ' + want.toFixed(2) +
+            '%, within ' + slack.toFixed(2) + ')');
     }
   });
 });
