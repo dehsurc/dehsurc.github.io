@@ -120,14 +120,10 @@
     // means clipping the outgoing snapshot, which has to sit on top for the
     // duration. See the [data-wipe] rules in style.css.
     var closing = next === 'light';
-    if (closing) frames = frames.slice().reverse();
-    /* Marked for both directions. Opening, the new snapshot has to start fully
-       clipped (see [data-wipe="in"] in style.css): between the transition
-       becoming ready and the first frame of the animation it sat on top
-       unclipped, so the whole screen went dark, then blinked back as the
-       clip started from nothing. The road loop also holds still while this
-       is set. */
-    root.dataset.wipe = closing ? 'out' : 'in';
+    if (closing) {
+      root.dataset.wipe = 'out';
+      frames = frames.slice().reverse();
+    }
 
     var transition = document.startViewTransition(function () { paint(next); });
 
@@ -137,16 +133,17 @@
 
     transition.ready.then(function () {
       root.animate({ clipPath: frames }, {
-        /* The two directions are exact time-reverses: the same length, and
-           curves that mirror each other. Opening used to lead with speed on
-           cubic-bezier(.3, .7, .2, 1) over 620 ms; the shape overshoots the
-           viewport by 18%, so it had finished crossing the screen after
-           240 ms and spent the rest out of sight, against 395 ms on screen
-           for closing. Going dark felt nearly twice as fast. Mirrored, both
-           spend 395 ms on screen. */
-        duration: 560,
+        /* What matters is the time the shape spends crossing the screen, not
+           the duration: it overshoots the viewport by 18%. Opening on
+           cubic-bezier(.3, .7, .2, 1) over 620 ms crossed it in 240 ms, against
+           395 ms for closing, and going dark felt twice as fast. Mirroring the
+           closing curve fixed the timing but started so slowly that for the
+           first 300 ms the shape barely left the button, and then the screen
+           seemed to go dark all at once. This still leaves the button at
+           once and settles, and crosses in about 380 ms. */
+        duration: closing ? 560 : 660,
         easing: closing ? 'cubic-bezier(.55, 0, .35, 1)'
-                        : 'cubic-bezier(.65, 0, .45, 1)',
+                        : 'cubic-bezier(.45, .25, .3, 1)',
         // Without this the clip reverts to its base value on the last frame
         // and the closing wipe flashes the whole outgoing theme back in.
         fill: 'forwards',
