@@ -133,13 +133,16 @@
 
     transition.ready.then(function () {
       root.animate({ clipPath: frames }, {
-        duration: closing ? 560 : 620,
-        // Opening leads with speed and settles. The literal mirror of that
-        // curve holds the shape at full size and then collapses it in the
-        // last few frames, which reads as a blink rather than a wipe, so
-        // closing gets a symmetric curve instead.
+        /* The two directions are exact time-reverses: the same length, and
+           curves that mirror each other. Opening used to lead with speed on
+           cubic-bezier(.3, .7, .2, 1) over 620 ms; the shape overshoots the
+           viewport by 18%, so it had finished crossing the screen after
+           240 ms and spent the rest out of sight, against 395 ms on screen
+           for closing. Going dark felt nearly twice as fast. Mirrored, both
+           spend 395 ms on screen. */
+        duration: 560,
         easing: closing ? 'cubic-bezier(.55, 0, .35, 1)'
-                        : 'cubic-bezier(.3, .7, .2, 1)',
+                        : 'cubic-bezier(.65, 0, .45, 1)',
         // Without this the clip reverts to its base value on the last frame
         // and the closing wipe flashes the whole outgoing theme back in.
         fill: 'forwards',
