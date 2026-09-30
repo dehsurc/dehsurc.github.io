@@ -120,10 +120,14 @@
     // means clipping the outgoing snapshot, which has to sit on top for the
     // duration. See the [data-wipe] rules in style.css.
     var closing = next === 'light';
-    if (closing) {
-      root.dataset.wipe = 'out';
-      frames = frames.slice().reverse();
-    }
+    if (closing) frames = frames.slice().reverse();
+    /* Marked for both directions. Opening, the new snapshot has to start fully
+       clipped (see [data-wipe="in"] in style.css): between the transition
+       becoming ready and the first frame of the animation it sat on top
+       unclipped, so the whole screen went dark, then blinked back as the
+       clip started from nothing. The road loop also holds still while this
+       is set. */
+    root.dataset.wipe = closing ? 'out' : 'in';
 
     var transition = document.startViewTransition(function () { paint(next); });
 

@@ -689,6 +689,10 @@ section { padding: 3.4rem 0; }
 ::view-transition-old(root) { z-index: 1; }
 ::view-transition-new(root) { z-index: 2; }
 
+/* Opening wipe: the incoming palette starts clipped to nothing, so nothing of
+   it shows before the animation's first frame takes over the clip. */
+:root[data-wipe="in"]::view-transition-new(root) { clip-path: inset(50%); }
+
 /* Contracting wipe: the outgoing palette has to sit on top to shrink away. */
 :root[data-wipe="out"]::view-transition-old(root) { z-index: 2; }
 :root[data-wipe="out"]::view-transition-new(root) { z-index: 1; }
