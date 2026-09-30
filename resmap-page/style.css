@@ -64,7 +64,6 @@
   --map-boundary: #3f9c63;
   --map-divider:  #c2831f;
   --map-crossing: #3277bd;
-  --band:         #f6f7f9;
 
   --sans: "Inter", "Freesentation", -apple-system, BlinkMacSystemFont,
           system-ui, "Segoe UI", Roboto, "Apple SD Gothic Neo",
@@ -118,7 +117,6 @@
   --map-boundary: #63c98c;
   --map-divider:  #e0a94a;
   --map-crossing: #6aa6e8;
-  --band:         #14171b;
 
   color-scheme: dark;
 }
@@ -562,31 +560,6 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
    used to be a line above every section and another under every heading, so
    each boundary drew two, and the equation drew two more of its own. */
 section { padding: 3.4rem 0; }
-
-/* Every other section on a faintly darker band, so the page has a rhythm
-   without anything drawn on it. Text-and-table sections only: the figures
-   and the video have white grounds of their own, and on a band they would
-   sit there as white boxes.
-
-   The band fades in over its first few rem and out over its last, so the
-   tone changes as a gradient rather than at a line. It is a layer behind
-   the section, widened by exactly the body's side padding (the rail's
-   gutters) so it reaches the window edges without overflowing them. */
-section.band { position: relative; isolation: isolate; }
-section.band::before {
-  content: "";
-  position: absolute; z-index: -1;
-  top: 0; bottom: 0; left: 0; right: 0;
-  background: linear-gradient(to bottom,
-    transparent 0, var(--band) 6rem,
-    var(--band) calc(100% - 6rem), transparent 100%);
-  pointer-events: none;
-}
-.has-road section.band::before {
-  left: calc(-1 * var(--rail-gutter));
-  right: calc(-1 * var(--rail-gutter));
-}
-.band .bibtex pre { background: var(--paper); }
 
 /* ---------- top bar ---------- */
 
@@ -1036,7 +1009,6 @@ footer .small { margin-top: .4rem; }
   .topbar, .scene-picker, .bibtex button, #road, #cockpit, .corner { display: none; }
   /* The rail reserves a gutter on screen; on paper there is nothing to reserve. */
   .has-road body { padding-inline: 0; }
-  section.band::before { display: none; }
   body { font-size: 10.5pt; }
   .col, .col.wide { width: 100%; }
 }
