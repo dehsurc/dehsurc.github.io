@@ -292,7 +292,22 @@
 
     var transition = document.startViewTransition(function () { paint(next); });
 
-    function done() { delete root.dataset.wipe; }
+    /* The effect is filled forwards so it holds its last frame until the
+       transition ends -- and a filled animation outlives the transition: it
+       stays on the root's ::view-transition-old pseudo and applies to the next
+       one too. For the shapes that went unnoticed, since each new clip-path
+       replaced the last. The static egg leaves opacity 0 and the CRT scale 0,
+       so after either one every later switch showed nothing of the old theme
+       and just blinked. So: clear them when the transition ends, and clear
+       any stragglers before a new one starts. */
+    function clearEffects() {
+      document.getAnimations().forEach(function (a) {
+        if (a.effect && a.effect.pseudoElement &&
+            a.effect.pseudoElement.indexOf('view-transition') >= 0) a.cancel();
+      });
+    }
+    clearEffects();
+    function done() { delete root.dataset.wipe; clearEffects(); }
     transition.finished.then(done, done);
     transition.ready.then(function () { remember(next); }, function () { remember(next); });
 
