@@ -12,10 +12,10 @@
 
 body.cv { background-image: none; }          /* no wash behind a document */
 
-/* No rules under the links. The underline broke around descenders and skipped
-   the full stops in an address, which looked worse than no underline at all;
-   it comes back only under the pointer, and unbroken. */
-.cv a { text-decoration: none; }
+/* Links take the colour of the text around them and carry no rule, so a
+   linked phrase does not sit a shade darker than the sentence holding it.
+   The rule returns under the pointer, unbroken. */
+.cv a { color: inherit; text-decoration: none; }
 .cv a:hover {
   text-decoration: underline;
   text-decoration-skip-ink: none;
@@ -61,7 +61,6 @@ body.cv { background-image: none; }          /* no wash behind a document */
   margin: .55rem 0 0;
   font-size: 1.02rem; color: var(--soft);
 }
-.cv-sub a { color: var(--ink); }
 
 /* the contact line reads as one run, separated rather than stacked */
 .cv-meta {
@@ -70,7 +69,6 @@ body.cv { background-image: none; }          /* no wash behind a document */
   gap: .2rem .55rem;
   font-size: .95rem; color: var(--faint);
 }
-.cv-meta a { color: var(--soft); }
 .cv-meta > * + *::before {
   content: "·";
   /* The separator sits inside the link box, so it picks up the underline
@@ -142,7 +140,7 @@ body.cv { background-image: none; }          /* no wash behind a document */
 .pub .meta { margin: .12rem 0 0; }
 .venue { font-size: .93rem; color: var(--soft); }
 .pub .links { margin: .2rem 0 0; }
-.pub .links a { font-size: .93rem; color: var(--ink); }
+.pub .links a { font-size: .93rem; }
 
 /* ---------- skills ------------------------------------------------------ */
 
