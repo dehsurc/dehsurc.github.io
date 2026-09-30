@@ -440,7 +440,11 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
   transition: transform .3s cubic-bezier(.2, .7, .3, 1), opacity .25s ease;
 }
 #cockpit[hidden] { display: none; }
-#cockpit.shut { transform: translateY(calc(100% - 1.9rem)); }
+/* Folded, the cockpit is one small button and nothing else. It used to slide
+   down and leave its top 1.9rem on screen, which was the top of the gauge cut
+   off mid-arc: a panel half hidden rather than put away. */
+#cockpit.shut { width: auto; padding: 0; }
+#cockpit.shut > :not(#cockpit-toggle) { display: none; }
 #cockpit-toggle {
   position: absolute; top: .35rem; right: .4rem;
   width: 1.2rem; height: 1.2rem;
@@ -458,6 +462,17 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
   transition: transform .2s ease;
 }
 #cockpit.shut #cockpit-toggle svg { transform: rotate(180deg); }
+.toggle-label { display: none; }
+#cockpit.shut #cockpit-toggle {
+  position: static;
+  width: auto; height: auto;
+  display: flex; align-items: center; gap: .4rem;
+  padding: .45rem .7rem;
+  color: var(--ink-soft);
+  font: inherit; font-size: 12px; font-weight: 600; letter-spacing: .04em;
+}
+#cockpit.shut #cockpit-toggle:hover { color: var(--ink); }
+#cockpit.shut .toggle-label { display: inline; }
 
 .cluster {
   display: flex; align-items: center; gap: .5rem;

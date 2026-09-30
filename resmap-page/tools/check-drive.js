@@ -218,6 +218,13 @@ t('a theme switch redraws the gauge as well as the strip', function () {
      'the theme handler does not redraw the gauge');
 });
 
+t('folding the cockpit puts it away rather than half-hiding it', function () {
+  var css = require('fs').readFileSync(require('path').join(__dirname, '..', 'style.css'), 'utf8');
+  ok(!/#cockpit\.shut\s*\{[^}]*translateY/.test(css), 'the folded cockpit still slides partly off screen');
+  ok(/#cockpit\.shut > :not\(#cockpit-toggle\) \{ display: none; \}/.test(css), 'the folded cockpit still shows its contents');
+  ok(/'Open the cockpit'/.test(src), 'the toggle does not say what it will do when folded');
+});
+
 console.log('\nthe hint');
 t('running out of time hides the hint but does not retire it', function () {
   global.localStorage._d = {};

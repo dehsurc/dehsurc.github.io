@@ -1308,6 +1308,7 @@
     collapse.addEventListener('click', function () {
       var open = !cockpit.classList.toggle('shut');
       collapse.setAttribute('aria-expanded', String(open));
+      collapse.setAttribute('aria-label', open ? 'Collapse the cockpit' : 'Open the cockpit');
     });
   }
 
