@@ -81,6 +81,15 @@
       return [polygon(x, y, flat(6, 0), phase),
               polygon(x, y, flat(6, cover(reach, 6)), phase)];
     },
+    function starWipe(x, y, reach) {
+      var phase = -Math.PI / 2, out = cover(reach, 10) / .45, radii = [];
+      for (var i = 0; i < 10; i++) radii.push(i % 2 ? out * .45 : out);
+      return [polygon(x, y, flat(10, 0), phase), polygon(x, y, radii, phase)];
+    },
+    function triangleWipe(x, y, reach) {
+      var phase = Math.random() * Math.PI * 2 / 3;
+      return [polygon(x, y, flat(3, 0), phase), polygon(x, y, flat(3, cover(reach, 3)), phase)];
+    },
     function boxWipe(x, y, reach, w, h) {
       return ['inset(' + round(y) + 'px ' + round(w - x) + 'px ' +
                 round(h - y) + 'px ' + round(x) + 'px round 999px)',
@@ -120,6 +129,18 @@
       var ph = Math.random() * Math.PI / 3, r = cover(reach, 6);
       return [holed(ring(x, y, 0, 0, 6, ph), w, h), holed(ring(x, y, r, r, 6, ph), w, h)];
     },
+    function starHole(x, y, reach, w, h) {
+      var out = cover(reach, 10) / .45, pts0 = [], pts1 = [];
+      for (var i = 0; i < 10; i++) {
+        var a = -Math.PI / 2 + (i / 10) * Math.PI * 2, r = i % 2 ? out * .45 : out;
+        pts0.push([x, y]); pts1.push([x + Math.cos(a) * r, y + Math.sin(a) * r]);
+      }
+      return [holed(pts0, w, h), holed(pts1, w, h)];
+    },
+    function triangleHole(x, y, reach, w, h) {
+      var ph = Math.random() * Math.PI * 2 / 3, r = cover(reach, 3);
+      return [holed(ring(x, y, 0, 0, 3, ph), w, h), holed(ring(x, y, r, r, 3, ph), w, h)];
+    },
     function boxHole(x, y, reach, w, h) {
       var from = [[x, y], [x, y], [x, y], [x, y]];
       var to = [[-2, -2], [w + 2, -2], [w + 2, h + 2], [-2, h + 2]];
@@ -132,6 +153,77 @@
     lastShape = i;
     return HOLES[i];
   }
+
+  /* Easter eggs: now and then, instead of a shape, something with a bit of
+     character. Each one only transforms the outgoing snapshot (the still image
+     on top), so like the shapes they work the same in both directions and
+     never touch the incoming page's first frames. */
+  var NOISE = 'url("data:image/svg+xml,' + encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="180" height="180">' +
+    '<filter id="n"><feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="2" stitchTiles="stitch"/>' +
+    '<feColorMatrix type="saturate" values="0"/><feComponentTransfer>' +
+    '<feFuncR type="discrete" tableValues="0 1"/><feFuncG type="discrete" tableValues="0 1"/>' +
+    '<feFuncB type="discrete" tableValues="0 1"/></feComponentTransfer></filter>' +
+    '<rect width="100%" height="100%" filter="url(#n)"/></svg>') + '")';
+
+  function blinds(w, h, open) {       // horizontal bands, each `open` (0..1) of its height
+    var n = 9, band = h / n, pts = [];
+    for (var i = 0; i < n; i++) {
+      var c = (i + .5) * band, half = band * open / 2 + (open ? 1 : 0);
+      var t = round(c - half), b = round(c + half);
+      pts.push('-5px ' + t + 'px', (w + 5) + 'px ' + t + 'px', (w + 5) + 'px ' + b + 'px', '-5px ' + b + 'px');
+    }
+    return 'polygon(' + pts.join(', ') + ')';
+  }
+
+  var EGGS = {
+    // An old tube switching off: a flash, the picture crushed to a bright line,
+    // the line to a dot, the dot out.
+    crt: function () {
+      return [[
+        { transform: 'scale(1, 1)', filter: 'brightness(1)', offset: 0 },
+        { transform: 'scale(1, 1)', filter: 'brightness(1.9) contrast(1.15)', offset: .12,
+          easing: 'cubic-bezier(.3, 0, .2, 1)' },
+        { transform: 'scale(1, .004)', filter: 'brightness(2.8)', offset: .55,
+          easing: 'cubic-bezier(.5, 0, .3, 1)' },
+        { transform: 'scale(.004, .004)', filter: 'brightness(4)', offset: .88 },
+        { transform: 'scale(0, 0)', filter: 'brightness(4)', offset: 1 }
+      ], { duration: 720 }];
+    },
+    // Static: the picture jumps, goes grey and grainy, and cuts out in steps.
+    static: function () {
+      var mask = { maskImage: NOISE, webkitMaskImage: NOISE, maskSize: '360px 360px', webkitMaskSize: '360px 360px' };
+      function k(offset, extra) {
+        var o = { offset: offset, easing: 'steps(1, end)' };
+        for (var key in extra) o[key] = extra[key];
+        return o;
+      }
+      function m(offset, pos, opacity, dx) {
+        var o = k(offset, { maskPosition: pos, webkitMaskPosition: pos, opacity: opacity,
+                            transform: 'translate(' + dx + 'px, 0)',
+                            filter: 'grayscale(1) contrast(1.7) brightness(1.15)' });
+        for (var key in mask) o[key] = mask[key];
+        return o;
+      }
+      return [[
+        k(0,   { transform: 'translate(0, 0)', filter: 'none', opacity: 1 }),
+        k(.07, { transform: 'translate(-7px, 2px)', filter: 'contrast(1.5) brightness(1.3)', opacity: 1 }),
+        k(.12, { transform: 'translate(6px, -2px)', filter: 'grayscale(.6) contrast(1.6)', opacity: 1 }),
+        m(.17, '0px 0px', 1, -3), m(.26, '61px 113px', .95, 4), m(.35, '140px 27px', .85, -2),
+        m(.44, '33px 160px', .72, 3), m(.53, '118px 88px', .58, -4), m(.62, '72px 12px', .44, 2),
+        m(.71, '165px 131px', .3, -1), m(.8, '19px 52px', .17, 2), m(.89, '96px 170px', .07, 0),
+        m(1, '0px 0px', 0, 0)
+      ], { duration: 780 }];
+    },
+    // Venetian blinds: the old theme narrows to stripes and the stripes to nothing.
+    blinds: function (x, y, reach, w, h) {
+      return [{ clipPath: [blinds(w, h, 1), blinds(w, h, 0)] },
+              { duration: 640, easing: 'cubic-bezier(.55, 0, .35, 1)' }];
+    }
+  };
+  var EGG_RATE = 1 / 7;
+  // ?wipe=<name> pins one effect: any shape or egg by name, for checking them.
+  var PINNED = (/[?&]wipe=([a-z]+)/.exec(location.search) || [])[1] || null;
 
   function pickShape() {
     var i = Math.floor(Math.random() * SHAPES.length);
@@ -171,10 +263,30 @@
        (to dark) is its exact reverse in look: the light snapshot stays whole
        and a hole in the chosen shape grows out of the button, the dark page
        showing through it. */
-    if (closing) {
-      frames = pickShape()(x, y, reach, w, h).slice().reverse();
+    var egg = PINNED ? (EGGS[PINNED] ? PINNED : null)
+                     : (Math.random() < EGG_RATE ? Object.keys(EGGS)[Math.floor(Math.random() * 3)] : null);
+    var effect;
+    if (egg) {
+      effect = EGGS[egg](x, y, reach, w, h);
     } else {
-      frames = pickHole()(x, y, reach, w, h);
+      var shape = closing ? pickShape() : pickHole();
+      if (PINNED) {
+        var table = closing ? SHAPES : HOLES;
+        for (var s = 0; s < table.length; s++) {
+          if (table[s].name.indexOf(PINNED) === 0) shape = table[s];
+        }
+      }
+      frames = shape(x, y, reach, w, h);
+      if (closing) frames = frames.slice().reverse();
+      effect = [{ clipPath: frames }, {
+        /* What matters is the time the shape spends crossing the screen, not
+           the duration: it overshoots the viewport by 18%. Opening on
+           cubic-bezier(.3, .7, .2, 1) over 620 ms crossed it in 240 ms, against
+           395 ms for closing, and going dark felt twice as fast. This leaves
+           the button at once and settles, and crosses in about 380 ms. */
+        duration: closing ? 560 : 660,
+        easing: closing ? 'cubic-bezier(.55, 0, .35, 1)' : 'cubic-bezier(.45, .25, .3, 1)'
+      }];
     }
     root.dataset.wipe = 'out';
 
@@ -185,23 +297,12 @@
     transition.ready.then(function () { remember(next); }, function () { remember(next); });
 
     transition.ready.then(function () {
-      root.animate({ clipPath: frames }, {
-        /* What matters is the time the shape spends crossing the screen, not
-           the duration: it overshoots the viewport by 18%. Opening on
-           cubic-bezier(.3, .7, .2, 1) over 620 ms crossed it in 240 ms, against
-           395 ms for closing, and going dark felt twice as fast. Mirroring the
-           closing curve fixed the timing but started so slowly that for the
-           first 300 ms the shape barely left the button, and then the screen
-           seemed to go dark all at once. This still leaves the button at
-           once and settles, and crosses in about 380 ms. */
-        duration: closing ? 560 : 660,
-        easing: closing ? 'cubic-bezier(.55, 0, .35, 1)'
-                        : 'cubic-bezier(.45, .25, .3, 1)',
-        // Without this the clip reverts to its base value on the last frame
-        // and the closing wipe flashes the whole outgoing theme back in.
-        fill: 'forwards',
-        pseudoElement: '::view-transition-old(root)'
-      });
+      var opts = effect[1];
+      // Without this the effect reverts on its last frame and flashes the whole
+      // outgoing theme back in.
+      opts.fill = 'forwards';
+      opts.pseudoElement = '::view-transition-old(root)';
+      root.animate(effect[0], opts);
     }).catch(function () { /* transition skipped; the theme still applied */ });
   }
 
