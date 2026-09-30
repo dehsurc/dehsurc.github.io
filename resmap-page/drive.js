@@ -1211,6 +1211,7 @@
     if (hintTimer) { clearTimeout(hintTimer); hintTimer = 0; }
     if (hintEl) hintEl.hidden = true;
     cockpit.classList.remove('hinting');
+    cockpit.classList.remove('nudge');
     if (learned && !hintDone) hintOffered();
   }
   function offerHint() {
@@ -1223,6 +1224,12 @@
     if (known) { hintDone = true; return; }
     hintEl.hidden = false;
     cockpit.classList.add('hinting');
+    /* Folded, the hint inside cannot be seen, so the folded button itself
+       glows twice instead -- only for someone who has never opened or closed
+       the cockpit, which is a first visit in all but name. */
+    var pref = null;
+    try { pref = localStorage.getItem('resmap-cockpit'); } catch (err) { /* private mode */ }
+    if (!pref) cockpit.classList.add('nudge');
     /* Long enough to be read by someone who is reading the page rather than
        watching the corner of it. It goes the instant a pedal moves. */
     hintTimer = setTimeout(function () { dropHint(false); }, 22000);
@@ -1303,12 +1310,28 @@
    * Wiring
    * ---------------------------------------------------------------- */
 
+  /* The cockpit starts folded (class="shut" in the markup, so it never flashes
+     open first): most readers are here to read, and the car on the rail is
+     there whether or not anyone drives it. Whichever way a reader leaves it
+     is how it opens for them next time. */
+  var COCKPIT_KEY = 'resmap-cockpit';
   var collapse = document.getElementById('cockpit-toggle');
-  if (collapse) {
-    collapse.addEventListener('click', function () {
-      var open = !cockpit.classList.toggle('shut');
+  function fold(open) {
+    cockpit.classList.toggle('shut', !open);
+    if (collapse) {
       collapse.setAttribute('aria-expanded', String(open));
       collapse.setAttribute('aria-label', open ? 'Collapse the cockpit' : 'Open the cockpit');
+    }
+  }
+  var cockpitPref = null;
+  try { cockpitPref = localStorage.getItem(COCKPIT_KEY); } catch (err) { /* private mode */ }
+  if (cockpitPref === 'open') fold(true);
+  if (collapse) {
+    collapse.addEventListener('click', function () {
+      var open = cockpit.classList.contains('shut');
+      fold(open);
+      cockpitPref = open ? 'open' : 'shut';
+      try { localStorage.setItem(COCKPIT_KEY, cockpitPref); } catch (err) { /* private mode */ }
     });
   }
 

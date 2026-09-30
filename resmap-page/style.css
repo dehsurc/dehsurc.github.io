@@ -473,6 +473,18 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
 }
 #cockpit.shut #cockpit-toggle:hover { color: var(--ink); }
 #cockpit.shut .toggle-label { display: inline; }
+/* First visit, folded: the button lights twice the way the accelerator does
+   when the cockpit is open, so it reads as something to press. */
+#cockpit.shut.nudge { animation: cockpit-nudge 1.5s ease-in-out 2; }
+@keyframes cockpit-nudge {
+  0%, 100% { border-color: var(--rule-dark); }
+  45%      { border-color: var(--go); box-shadow: 0 6px 22px rgba(0, 0, 0, .10), 0 0 0 3px color-mix(in srgb, var(--go) 18%, transparent); }
+}
+#cockpit.shut.nudge #cockpit-toggle { animation: cockpit-nudge-ink 1.5s ease-in-out 2; }
+@keyframes cockpit-nudge-ink {
+  0%, 100% { color: var(--ink-soft); }
+  45%      { color: var(--go); }
+}
 
 .cluster {
   display: flex; align-items: center; gap: .5rem;

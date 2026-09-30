@@ -225,6 +225,16 @@ t('folding the cockpit puts it away rather than half-hiding it', function () {
   ok(/'Open the cockpit'/.test(src), 'the toggle does not say what it will do when folded');
 });
 
+t('the cockpit starts folded, and remembers how a reader left it', function () {
+  var html = require('fs').readFileSync(require('path').join(__dirname, '..', 'index.html'), 'utf8');
+  ok(/<div id="cockpit" class="shut" hidden>/.test(html), 'the markup does not start folded');
+  ok(/id="cockpit-toggle"[^>]*aria-expanded="false"[^>]*aria-label="Open the cockpit"/.test(html),
+     'the toggle does not start as an Open button');
+  ok(/localStorage\.getItem\(COCKPIT_KEY\)/.test(src) && /localStorage\.setItem\(COCKPIT_KEY/.test(src),
+     'the choice is not remembered');
+  ok(/if \(!pref\) cockpit\.classList\.add\('nudge'\)/.test(src), 'no first-visit nudge on the folded button');
+});
+
 console.log('\nthe hint');
 t('running out of time hides the hint but does not retire it', function () {
   global.localStorage._d = {};
