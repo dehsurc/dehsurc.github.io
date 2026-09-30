@@ -64,6 +64,7 @@
   --map-boundary: #3f9c63;
   --map-divider:  #c2831f;
   --map-crossing: #3277bd;
+  --band:         #f6f7f9;
 
   --sans: "Inter", "Freesentation", -apple-system, BlinkMacSystemFont,
           system-ui, "Segoe UI", Roboto, "Apple SD Gothic Neo",
@@ -117,6 +118,7 @@
   --map-boundary: #63c98c;
   --map-divider:  #e0a94a;
   --map-crossing: #6aa6e8;
+  --band:         #14171b;
 
   color-scheme: dark;
 }
@@ -560,6 +562,19 @@ a:hover { text-decoration: underline; text-underline-offset: 2px; }
    used to be a line above every section and another under every heading, so
    each boundary drew two, and the equation drew two more of its own. */
 section { padding: 3.4rem 0; }
+
+/* Every other section on a faintly darker band, so the page has a rhythm
+   without anything drawn on it. Text-and-table sections only: the figures
+   and the video have white grounds of their own, and on a band they would
+   sit there as white boxes. Full width, under the rail's gutters too: the
+   shadow carries the colour out to the window edges and the clip keeps it
+   from spilling above or below the section. */
+section.band {
+  background: var(--band);
+  box-shadow: 0 0 0 100vmax var(--band);
+  clip-path: inset(0 -100vmax);
+}
+.band .bibtex pre { background: var(--paper); }
 
 /* ---------- top bar ---------- */
 
