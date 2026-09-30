@@ -88,6 +88,51 @@
     }
   ];
 
+  /* The viewport with a hole in it, as one even-odd polygon: the four window
+     corners, a zero-width slit in to the hole, the hole's own ring, and back
+     out. Every size uses the same number of points, so it interpolates. */
+  function holed(ring, w, h) {
+    var pts = ['0px 0px', w + 'px 0px', w + 'px ' + h + 'px', '0px ' + h + 'px', '0px 0px'];
+    ring.forEach(function (p) { pts.push(round(p[0]) + 'px ' + round(p[1]) + 'px'); });
+    pts.push(round(ring[0][0]) + 'px ' + round(ring[0][1]) + 'px', '0px 0px');
+    return 'polygon(evenodd, ' + pts.join(', ') + ')';
+  }
+  function ring(x, y, rx, ry, n, phase) {
+    var out = [];
+    for (var i = 0; i < n; i++) {
+      var a = phase + (i / n) * Math.PI * 2;
+      out.push([x + Math.cos(a) * rx, y + Math.sin(a) * ry]);
+    }
+    return out;
+  }
+  var HOLES = [
+    function circleHole(x, y, reach, w, h) {
+      return [holed(ring(x, y, 0, 0, 48, 0), w, h), holed(ring(x, y, reach, reach, 48, 0), w, h)];
+    },
+    function ellipseHole(x, y, reach, w, h) {
+      return [holed(ring(x, y, 0, 0, 48, 0), w, h), holed(ring(x, y, reach * 1.35, reach, 48, 0), w, h)];
+    },
+    function diamondHole(x, y, reach, w, h) {
+      var ph = Math.random() * Math.PI / 2, r = cover(reach, 4);
+      return [holed(ring(x, y, 0, 0, 4, ph), w, h), holed(ring(x, y, r, r, 4, ph), w, h)];
+    },
+    function hexHole(x, y, reach, w, h) {
+      var ph = Math.random() * Math.PI / 3, r = cover(reach, 6);
+      return [holed(ring(x, y, 0, 0, 6, ph), w, h), holed(ring(x, y, r, r, 6, ph), w, h)];
+    },
+    function boxHole(x, y, reach, w, h) {
+      var from = [[x, y], [x, y], [x, y], [x, y]];
+      var to = [[-2, -2], [w + 2, -2], [w + 2, h + 2], [-2, h + 2]];
+      return [holed(from, w, h), holed(to, w, h)];
+    }
+  ];
+  function pickHole() {
+    var i = Math.floor(Math.random() * HOLES.length);
+    if (i === lastShape) i = (i + 1) % HOLES.length;
+    lastShape = i;
+    return HOLES[i];
+  }
+
   function pickShape() {
     var i = Math.floor(Math.random() * SHAPES.length);
     if (i === lastShape) i = (i + 1) % SHAPES.length;
@@ -112,18 +157,26 @@
     // Distance to the furthest corner, plus headroom so the shape leaves the
     // viewport before the easing curve flattens out.
     var reach = Math.hypot(Math.max(x, w - x), Math.max(y, h - y)) * 1.18;
-    var frames = pickShape()(x, y, reach, w, h);
-
-    // The two directions are time-reverses of each other. Going dark the new
-    // theme opens out of the button; coming back to light the dark snapshot
-    // closes into it instead, so the shape gathers rather than spreads. That
-    // means clipping the outgoing snapshot, which has to sit on top for the
-    // duration. See the [data-wipe] rules in style.css.
     var closing = next === 'light';
+    var frames;
+
+    /* Both directions clip the OUTGOING snapshot, which sits on top for the
+       whole wipe (see [data-wipe] in style.css). That is the direction that
+       always worked: the outgoing snapshot is a still image, ready before the
+       first frame. Going dark used to clip the incoming page instead, and in
+       some browsers that live image is not painted for the first frames, so
+       the whole screen went dark and blank before the shape appeared.
+
+       Closing (to light) shrinks the dark snapshot into the button. Opening
+       (to dark) is its exact reverse in look: the light snapshot stays whole
+       and a hole in the chosen shape grows out of the button, the dark page
+       showing through it. */
     if (closing) {
-      root.dataset.wipe = 'out';
-      frames = frames.slice().reverse();
+      frames = pickShape()(x, y, reach, w, h).slice().reverse();
+    } else {
+      frames = pickHole()(x, y, reach, w, h);
     }
+    root.dataset.wipe = 'out';
 
     var transition = document.startViewTransition(function () { paint(next); });
 
@@ -147,8 +200,7 @@
         // Without this the clip reverts to its base value on the last frame
         // and the closing wipe flashes the whole outgoing theme back in.
         fill: 'forwards',
-        pseudoElement: closing ? '::view-transition-old(root)'
-                               : '::view-transition-new(root)'
+        pseudoElement: '::view-transition-old(root)'
       });
     }).catch(function () { /* transition skipped; the theme still applied */ });
   }
