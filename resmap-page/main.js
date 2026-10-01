@@ -605,6 +605,88 @@
     });
 
   /* ------------------------------------------------------------------ *
+   * 6b. Figures open full screen
+   *
+   * Click, tap or Enter on a figure and it fills the window over a dark
+   * scrim, with its caption under it. On a desktop a second click shows it
+   * at its natural size, to be dragged or scrolled around; on a phone it can
+   * be pinched. It closes on the scrim, the close button, Escape, or the
+   * phone's back gesture -- it takes a history entry, so back closes the
+   * figure instead of leaving the page.
+   * ------------------------------------------------------------------ */
+
+  var shots = Array.prototype.slice.call(document.querySelectorAll('.figure img'));
+  if (shots.length) {
+    var box = document.createElement('div');
+    box.className = 'lightbox';
+    box.setAttribute('role', 'dialog');
+    box.setAttribute('aria-modal', 'true');
+    box.setAttribute('aria-label', 'Figure');
+    box.hidden = true;
+    box.innerHTML = '<button type="button" class="lightbox-close" aria-label="Close">' +
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>' +
+      '<div class="lightbox-stage"><img alt=""></div><p class="lightbox-hint">Pinch to zoom</p>' +
+      '<p class="lightbox-cap"></p>';
+    document.body.appendChild(box);
+    var stage = box.querySelector('.lightbox-stage');
+    var big = box.querySelector('img');
+    var cap = box.querySelector('.lightbox-cap');
+    var closeBtn = box.querySelector('.lightbox-close');
+    var opener = null, viaHistory = false;
+
+    function open(img) {
+      opener = img;
+      big.src = img.currentSrc || img.src;
+      big.alt = img.alt;
+      var fc = img.closest('figure') && img.closest('figure').querySelector('figcaption');
+      cap.innerHTML = fc ? fc.innerHTML : '';
+      cap.hidden = !fc;
+      box.classList.remove('actual');
+      box.hidden = false;
+      root.dataset.lightbox = '1';
+      requestAnimationFrame(function () { box.classList.add('shown'); });
+      closeBtn.focus({ preventScroll: true });
+      try { history.pushState({ lightbox: 1 }, ''); viaHistory = true; } catch (e) { viaHistory = false; }
+    }
+    function shut(fromHistory) {
+      if (box.hidden) return;
+      box.classList.remove('shown');
+      delete root.dataset.lightbox;
+      setTimeout(function () { box.hidden = true; big.removeAttribute('src'); }, 180);
+      if (opener) opener.focus({ preventScroll: true });
+      if (viaHistory && !fromHistory) { viaHistory = false; history.back(); }
+      viaHistory = false;
+    }
+
+    shots.forEach(function (img) {
+      img.classList.add('zoomable');
+      img.tabIndex = 0;
+      img.setAttribute('role', 'button');
+      img.setAttribute('aria-label', 'Enlarge figure: ' + (img.alt || ''));
+      img.addEventListener('click', function () { open(img); });
+      img.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(img); }
+      });
+    });
+
+    box.addEventListener('click', function (e) {
+      if (e.target === big) {
+        // Natural size on a large screen; a phone pinches instead.
+        if (window.matchMedia('(hover: hover) and (pointer: fine)').matches &&
+            big.naturalWidth > stage.clientWidth) box.classList.toggle('actual');
+        return;
+      }
+      if (e.target === box || e.target === stage || e.target.closest('.lightbox-close')) shut(false);
+    });
+    document.addEventListener('keydown', function (e) {
+      if (box.hidden) return;
+      if (e.key === 'Escape') { e.preventDefault(); shut(false); }
+      if (e.key === 'Tab') { e.preventDefault(); closeBtn.focus(); }   // keep focus in the dialog
+    });
+    window.addEventListener('popstate', function () { if (!box.hidden) shut(true); });
+  }
+
+  /* ------------------------------------------------------------------ *
    * 7. The name in the title
    *
    * A round lens follows the pointer over the name, and inside it the

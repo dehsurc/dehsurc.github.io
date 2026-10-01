@@ -1280,6 +1280,7 @@
   }
   document.addEventListener('keydown', function (e) {
     if (e.metaKey || e.ctrlKey || e.altKey || road.hidden) return;
+    if (root.dataset.lightbox) return;          // a figure is open over the page
     if (editable(document.activeElement)) return;
     var k = e.key.toLowerCase();
     if (k === 'w') { e.preventDefault(); clearTimeout(liftTimer); pressGas(); }

@@ -835,6 +835,11 @@ b, strong { font-weight: 600; }
 /* Real MathML, so the browser sets it in its own maths face: no library, no
    webfont, and subscripts that sit where a typesetter would put them. */
 .eq { margin: 1.7rem 0; }
+/* A display equation wider than a phone scrolls on its own instead of
+   widening the page: on a 320-390 px screen the fusion fraction ran to 397 px
+   and the whole document shifted sideways under a thumb. */
+.eq { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; }
+@media (max-width: 30rem) { .eq math[display="block"] { font-size: 1.02em; } }
 math { font-size: 1.04em; }
 math[display="block"] { font-size: 1.22em; }
 .eq math { color: var(--ink); }
@@ -1038,4 +1043,101 @@ footer .small { margin-top: .4rem; }
   .has-road body { padding-inline: 0; }
   body { font-size: 10.5pt; }
   .col, .col.wide { width: 100%; }
+}
+
+/* ---------- figures, full screen ---------- */
+
+.figure img.zoomable { cursor: zoom-in; }
+.figure img.zoomable:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.lightbox {
+  position: fixed; inset: 0;
+  z-index: 200;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: .9rem;
+  padding: max(3.2rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right))
+           max(1.2rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+  background: #0a0c0f;
+  opacity: 0;
+  transition: opacity .18s ease;
+  overscroll-behavior: contain;
+}
+.lightbox[hidden] { display: none; }
+.lightbox.shown { opacity: 1; }
+/* The page behind stays where it was. */
+:root[data-lightbox] { overflow: hidden; }
+
+.lightbox-stage {
+  display: flex; align-items: center; justify-content: center;
+  max-width: 100%; max-height: 100%;
+  min-height: 0;
+  flex: 0 1 auto;
+}
+.lightbox-stage img {
+  display: block;
+  max-width: min(96vw, 1800px);
+  max-height: calc(100vh - 9rem);
+  max-height: calc(100dvh - 9rem);
+  width: auto; height: auto;
+  object-fit: contain;
+  /* Figures are drawn on white; they stay on white in the dark theme too. */
+  background: #fff;
+  border-radius: 3px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, .35);
+  cursor: zoom-in;
+  transform: scale(.97);
+  transition: transform .18s ease;
+  touch-action: pinch-zoom;
+}
+.lightbox.shown .lightbox-stage img { transform: none; }
+
+/* Natural size: the stage scrolls and the image is as big as it was drawn. */
+.lightbox.actual .lightbox-stage {
+  align-self: stretch;
+  overflow: auto;
+  justify-content: flex-start; align-items: flex-start;
+  flex: 1 1 auto;
+}
+.lightbox.actual .lightbox-stage img { max-width: none; max-height: none; cursor: zoom-out; margin: auto; }
+
+.lightbox-cap {
+  max-width: min(52rem, 100%);
+  max-height: 22vh;
+  overflow-y: auto;
+  margin: 0;
+  font-size: 14px; line-height: 1.6;
+  color: rgba(235, 238, 242, .86);
+  text-align: left;
+}
+.lightbox-cap b { color: #fff; }
+/* Phones: wide figures fit the width and are small; say they can be pinched. */
+.lightbox-hint {
+  display: none;
+  margin: 0;
+  font-size: 12px; letter-spacing: .02em;
+  color: rgba(235, 238, 242, .55);
+}
+@media (hover: none) and (pointer: coarse) { .lightbox-hint { display: block; } }
+
+.lightbox-close {
+  position: absolute;
+  top: max(.6rem, env(safe-area-inset-top)); right: max(.6rem, env(safe-area-inset-right));
+  width: 44px; height: 44px;
+  display: grid; place-items: center;
+  padding: 0;
+  border: 0; border-radius: 999px;
+  background: rgba(255, 255, 255, .12);
+  color: #fff;
+  cursor: pointer;
+}
+.lightbox-close:hover { background: rgba(255, 255, 255, .22); }
+.lightbox-close svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+
+@media (max-width: 46rem) {
+  .lightbox { gap: .6rem; padding-top: max(3.6rem, env(safe-area-inset-top)); }
+  .lightbox-stage img { max-width: 100%; max-height: calc(100dvh - 11rem); }
+  .lightbox-cap { font-size: 13px; max-height: 26vh; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lightbox, .lightbox-stage img { transition: none; }
 }
