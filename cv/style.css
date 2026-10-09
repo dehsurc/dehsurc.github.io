@@ -1,0 +1,204 @@
+/* =========================================================================
+   /cv/ — the long version, set as a document rather than as a page of the
+   site: one serif, a centred masthead, ruled section headings, dates on
+   the right of their entry, one narrow measure. It shares the site's
+   tokens and its theme switch, and nothing else.
+   ========================================================================= */
+
+:root {
+  --sans: "Source Serif 4", "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --display: var(--sans);
+}
+
+body.cv { background-image: none; }          /* no wash behind a document */
+
+/* Links take the colour of the text around them and carry no rule, so a
+   linked phrase does not sit a shade darker than the sentence holding it.
+   The rule returns under the pointer, unbroken. */
+.cv a { color: inherit; text-decoration: none; }
+.cv a:hover {
+  text-decoration: underline;
+  text-decoration-skip-ink: none;
+  text-underline-offset: .16em;
+}
+
+/* ---------- the bar ----------------------------------------------------- */
+
+.print-btn {
+  margin-left: auto;
+  font: inherit; font-size: .9rem;
+  color: var(--soft); background: none;
+  border: 1px solid var(--rule); border-radius: 999px;
+  padding: .28rem .9rem; cursor: pointer;
+  transition: color .2s ease, border-color .2s ease;
+}
+.print-btn:hover { color: var(--ink); border-color: var(--ink); }
+
+/* ---------- masthead ---------------------------------------------------- */
+
+.cv-head, .cv-row, .foot {
+  max-width: 46rem;
+  margin: 0 auto;
+  padding-left: var(--gutter); padding-right: var(--gutter);
+}
+
+.cv-head {
+  text-align: center;
+  padding-top: clamp(2.2rem, 5vw, 3.4rem);
+  padding-bottom: 1.5rem;
+}
+.cv-head h1 {
+  font-weight: 600; font-size: clamp(2rem, 4.6vw, 2.6rem);
+  letter-spacing: -.01em; line-height: 1.1;
+}
+.hangul {
+  display: inline; margin-left: .5em;
+  font-family: var(--kr); font-size: .42em; font-weight: 400;
+  letter-spacing: .06em; color: var(--faint);
+  vertical-align: .16em;
+}
+.cv-sub {
+  margin: .55rem 0 0;
+  font-size: 1.02rem; color: var(--soft);
+}
+
+/* the contact line reads as one run, separated rather than stacked */
+.cv-meta {
+  margin: .5rem 0 0;
+  display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline;
+  gap: .2rem .55rem;
+  font-size: .95rem; color: var(--faint);
+}
+.cv-meta > * + *::before {
+  content: "·";
+  /* The separator sits inside the link box, so it picks up the underline
+     unless it is taken out of the parent's text-decoration. */
+  display: inline-block;
+  text-decoration: none;
+  margin-right: .55rem;
+  color: var(--rule);
+}
+
+/* ---------- sections ---------------------------------------------------- */
+
+.cv-row {
+  padding-top: 1.4rem;
+  padding-bottom: .3rem;
+}
+.cv-row .head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: .3rem; margin-bottom: .75rem;
+  border-bottom: 1px solid var(--ink);
+}
+.cv-row h2 { font-size: 1.05rem; font-weight: 700; color: var(--ink); }
+.cv-note {
+  margin: 0; text-align: right; white-space: nowrap;
+  font-size: .85rem; color: var(--faint);
+}
+
+/* ---------- dated entries ----------------------------------------------- */
+
+.entries { list-style: none; margin: 0; padding: 0; }
+.entries > li { padding: .5rem 0; }
+.entries > li::after { content: ""; display: block; clear: both; }
+
+/* The date floats, so the title gives way to it on the line they share and
+   takes the full measure on every line after. Reserving a fixed right-hand
+   margin instead made the second line break as early as the first. */
+.entries > li > .when {
+  float: right; margin-left: 1.2rem;
+  white-space: nowrap;
+  font-size: .9rem; color: var(--soft);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.entry h3 { font-size: 1.02rem; font-weight: 700; }
+.entry .org { margin: .1rem 0 0; font-size: .92rem; color: var(--faint); }
+.entry p { margin: .2rem 0 0; font-size: .97rem; color: var(--soft); }
+.role {
+  font-size: .76rem; font-weight: 400;
+  color: var(--faint); border: 1px solid var(--rule); border-radius: 2px;
+  padding: .04rem .38rem; margin-left: .4rem; vertical-align: 2px;
+  white-space: nowrap;
+}
+
+/* ---------- publications ------------------------------------------------ */
+/* the reference number hangs in the margin of its entry */
+
+.pubs { list-style: none; margin: 0; padding: 0; }
+.pubs > li {
+  display: grid;
+  grid-template-columns: 2.2rem minmax(0, 1fr);
+  gap: .1rem .4rem;
+  padding: .45rem 0;
+}
+.pid { font-size: .92rem; color: var(--faint); padding-top: .12rem; }
+.pub h3 { font-size: 1.02rem; font-weight: 700; }
+.pub .authors { margin: .1rem 0 0; font-size: .95rem; color: var(--soft); }
+.pub .authors b { font-weight: 700; color: var(--ink); }
+.pub .authors sup { font-size: .72em; }
+.pub .meta { margin: .12rem 0 0; }
+.venue { font-size: .93rem; color: var(--soft); }
+.pub .links { margin: .2rem 0 0; }
+.pub .links a { font-size: .93rem; }
+
+/* ---------- skills ------------------------------------------------------ */
+
+.kit { margin: 0; font-size: .97rem; }
+.kit > div {
+  display: grid; grid-template-columns: 8.5rem minmax(0, 1fr); gap: .9rem;
+  padding: .22rem 0;
+}
+.kit dt { font-weight: 700; color: var(--ink); }
+.kit dd { margin: 0; color: var(--soft); }
+
+/* ---------- narrow ------------------------------------------------------ */
+
+@media (max-width: 40rem) {
+  .entries > li > .when { float: none; display: block; margin: 0 0 .1rem; }
+  .cv-row .head { flex-wrap: wrap; gap: .1rem; }
+  .cv-note { text-align: left; white-space: normal; }
+  .kit > div { grid-template-columns: minmax(0, 1fr); gap: .1rem; }
+}
+
+/* ---------- paper -------------------------------------------------------
+   The browser's own Save-as-PDF renders this, so the PDF keeps selectable
+   text and live links. Everything that belongs to the screen is dropped. */
+
+@media print {
+  @page { margin: 15mm 16mm; }
+
+  /* Paper is always light. :root[data-theme="dark"] outranks a bare :root,
+     so the override has to carry the attribute too, or a reader in dark
+     mode prints pale grey onto white. */
+  :root,
+  :root[data-theme="light"],
+  :root[data-theme="dark"] {
+    --ink: #000; --soft: #1c1c1c; --faint: #4a4a4a;
+    --rule: #999; --hair: #ccc; --paper: #fff; --sheet: #fff;
+  }
+  html, body.cv {
+    background: #fff !important;
+    color: #000;
+    font-size: 10.4pt;
+  }
+  .topbar, .glow, canvas.deco, footer { display: none !important; }
+
+  .cv-head, .cv-row, main { max-width: none; padding-left: 0; padding-right: 0; }
+  .cv-head { padding-top: 0; padding-bottom: 9pt; }
+  .cv-head h1 { font-size: 21pt; }
+  .cv-sub { font-size: 10.4pt; margin-top: 4pt; }
+  .cv-meta { font-size: 9.6pt; margin-top: 3pt; }
+
+  .cv-row { padding-top: 11pt; padding-bottom: 0; break-inside: auto; }
+  .cv-row h2 { font-size: 11pt; margin-bottom: 5pt; border-bottom-color: #000; }
+  .cv-note { font-size: 8.6pt; margin: -2pt 0 5pt; }
+
+  .entries > li, .pubs > li, .kit > div { break-inside: avoid; padding: 3.5pt 0; }
+  .entry h3, .pub h3 { font-size: 10.6pt; }
+  .entry p, .pub .authors { font-size: 9.8pt; }
+  .when, .pid, .venue { font-size: 9.4pt; }
+
+  a { color: #000; text-decoration: none; }
+  .pub .links { display: none; }
+}
