@@ -35,7 +35,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700&family=Inter+Tight:wght@600;700&display=swap">
-<link rel="stylesheet" href="style.css?v=126">
+<link rel="stylesheet" href="style.css?v=127">
 
 <!-- Set the theme before first paint so there is no flash. -->
 <script>
@@ -127,9 +127,9 @@
         <div class="vwrap">
           <!-- data-chapters: [start s, title], from make_teaser.py --chapters; regenerate with the clip. -->
           <video id="teaser-video" autoplay muted playsinline preload="auto"
-                 poster="assets/video/teaser.jpg?v=2"
+                 poster="assets/video/teaser.jpg?v=3"
                  data-chapters='[[0.0, "1 · Singapore · All six cameras working"], [3.84, "1 · Singapore · Front camera off"], [16.64, "2 · Singapore · All six cameras working"], [20.48, "2 · Singapore · Three front cameras off"], [33.28, "3 · Boston · All six cameras working"], [37.12, "3 · Boston · All six cameras off"]]'>
-            <source src="assets/video/teaser.mp4?v=2" type="video/mp4">
+            <source src="assets/video/teaser.mp4?v=3" type="video/mp4">
           </video>
           <!-- After one play: replay, the other clip, or on to the qualitative section. -->
           <div class="video-end" hidden>
@@ -163,9 +163,9 @@
         <div class="vwrap">
           <!-- data-chapters from make_long.py --chapters; regenerate with the clip. -->
           <video id="long-video" muted playsinline preload="metadata"
-                 poster="assets/video/long_range.jpg?v=2"
+                 poster="assets/video/long_range.jpg?v=3"
                  data-chapters='[[0.0, "1 · Singapore · scene-0963"], [16.0, "2 · Boston · scene-0762"], [32.0, "3 · Boston · All six cameras working"], [35.84, "3 · Boston · Three front cameras off"], [49.04, "4 · Singapore · All six cameras working"], [52.88, "4 · Singapore · All six cameras off"]]'>
-            <source src="assets/video/long_range.mp4?v=2" type="video/mp4">
+            <source src="assets/video/long_range.mp4?v=3" type="video/mp4">
           </video>
           <div class="video-end" hidden>
             <button type="button" class="ve-btn" data-act="replay"><span aria-hidden="true">&#8635;</span> Replay</button>
@@ -191,7 +191,7 @@
           <button type="button" class="icon" data-act="full" aria-label="Full screen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg></button>
         </div>
         </div>
-        <figcaption>Long range, 100 &times; 50&nbsp;m. Two scenes with every camera working, then two with cameras zeroed partway through: the three front cameras, then all six. The dashed box is the usual 60 &times; 30&nbsp;m range; past it, and once the cameras go, the satellite tile carries the map. MapTracker and SDTagNet are the two baselines with a 100 &times; 50&nbsp;m model; the numbers are Table 1&rsquo;s, and the paper has none for camera drops at this range.</figcaption>
+        <figcaption>Long range, 100 &times; 50&nbsp;m. Two scenes with every camera working, then two with cameras zeroed partway through: the three front cameras, then all six. The dashed box is the usual 60 &times; 30&nbsp;m range; past it, and once the cameras go, the satellite tile carries the map. The baselines are MapTracker, SDTagNet and SatforHDMap; the numbers are Table 1&rsquo;s, and the paper has none for camera drops at this range.</figcaption>
       </figure>
       </div>
     </div>
@@ -729,10 +729,10 @@
   </button>
 </div>
 
-<script src="failure.js?v=126"></script>
-<script src="drive.js?v=126"></script>
-<script src="main.js?v=126"></script>
-<script src="qual.js?v=126"></script>
-<script src="paper.js?v=126"></script>
+<script src="failure.js?v=127"></script>
+<script src="drive.js?v=127"></script>
+<script src="main.js?v=127"></script>
+<script src="qual.js?v=127"></script>
+<script src="paper.js?v=127"></script>
 </body>
 </html>
