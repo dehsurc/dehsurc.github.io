@@ -1,0 +1,457 @@
+/* =========================================================================
+   dehsurc.github.io
+   Monochrome. Hierarchy comes from size, weight and space — no rules
+   drawn for decoration, no colour doing a job that type can do.
+   ========================================================================= */
+
+/* Freesentation for Hangul, pinned to a commit so the URL cannot shift under
+   us — the same four weights and Korean ranges the ReSMap page loads, so the
+   two pages share a cache entry. Latin never touches these files. */
+@font-face {
+  font-family: "Freesentation";
+  src: url("https://cdn.jsdelivr.net/gh/Freesentation/freesentation@98f6b841fca55a23fbb0f9eb91acda0e16a676ea/woff2/Freesentation-4Regular.woff2") format("woff2");
+  font-weight: 400; font-display: swap;
+  unicode-range: U+1100-11FF, U+3000-303F, U+3130-318F, U+A960-A97F,
+                 U+AC00-D7A3, U+D7B0-D7FF, U+FF01-FF60;
+}
+@font-face {
+  font-family: "Freesentation";
+  src: url("https://cdn.jsdelivr.net/gh/Freesentation/freesentation@98f6b841fca55a23fbb0f9eb91acda0e16a676ea/woff2/Freesentation-5Medium.woff2") format("woff2");
+  font-weight: 500; font-display: swap;
+  unicode-range: U+1100-11FF, U+3000-303F, U+3130-318F, U+A960-A97F,
+                 U+AC00-D7A3, U+D7B0-D7FF, U+FF01-FF60;
+}
+@font-face {
+  font-family: "Freesentation";
+  src: url("https://cdn.jsdelivr.net/gh/Freesentation/freesentation@98f6b841fca55a23fbb0f9eb91acda0e16a676ea/woff2/Freesentation-6SemiBold.woff2") format("woff2");
+  font-weight: 600; font-display: swap;
+  unicode-range: U+1100-11FF, U+3000-303F, U+3130-318F, U+A960-A97F,
+                 U+AC00-D7A3, U+D7B0-D7FF, U+FF01-FF60;
+}
+@font-face {
+  font-family: "Freesentation";
+  src: url("https://cdn.jsdelivr.net/gh/Freesentation/freesentation@98f6b841fca55a23fbb0f9eb91acda0e16a676ea/woff2/Freesentation-7Bold.woff2") format("woff2");
+  font-weight: 700; font-display: swap;
+  unicode-range: U+1100-11FF, U+3000-303F, U+3130-318F, U+A960-A97F,
+                 U+AC00-D7A3, U+D7B0-D7FF, U+FF01-FF60;
+}
+
+:root {
+  --paper:   #ffffff;
+  --sheet:   #fafafa;
+  --ink:     #111112;
+  --soft:    #5b5d62;
+  --faint:   #8a8c92;
+  --rule:    #e4e5e8;
+  --hair:    #eeeff1;
+  --accent:  #111112;
+  --accent-soft: rgba(17, 17, 18, 0.08);
+  --bar-bg:  rgba(255, 255, 255, 0.86);
+  --wash:    #f4f4f5;                    /* the page settles into this at the foot */
+  --glow:    rgba(17, 17, 18, 0.038);    /* what the pointer lifts out of it */
+
+  --sans: "Inter", "Freesentation", "Nanum Gothic", -apple-system,
+          BlinkMacSystemFont, system-ui, "Segoe UI", Arial, sans-serif;
+  /* Display face: a grotesque with uneven widths and soft corners, so the
+     headings have a voice without going geometric. */
+  --display: "Inter Tight", "Freesentation", "Inter", system-ui, sans-serif;
+  --kr: "Freesentation", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+
+  --bar-h: 3rem;
+  --gutter: clamp(1.25rem, 5vw, 3.5rem);
+  --rail-w: 10.5rem;
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --paper:   #0e0e0f;
+  --sheet:   #161617;
+  --ink:     #ededee;
+  --soft:    #a2a4a8;
+  --faint:   #78797e;
+  --rule:    #2a2b2e;
+  --hair:    #202123;
+  --accent:  #ededee;
+  --accent-soft: rgba(237, 237, 238, 0.10);
+  --bar-bg:  rgba(14, 14, 15, 0.86);
+  --wash:    #08080a;
+  --glow:    rgba(255, 255, 255, 0.07);
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
+body {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: 1.02rem;
+  font-weight: 400;
+  line-height: 1.65;
+  color: var(--ink);
+  background-color: var(--paper);
+  background-image: linear-gradient(180deg, var(--paper) 0%, var(--wash) 100%);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* The water surface the page sits on; main.js draws it. */
+canvas.deco {
+  position: fixed; inset: 0; z-index: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+}
+
+/* A soft light under the content, tracking the pointer. Coarse pointers never
+   see it, so it costs them nothing; main.js only writes the two positions. */
+.glow {
+  position: fixed; inset: 0; z-index: 0;
+  pointer-events: none; opacity: 0;
+  transition: opacity .5s ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .glow {
+    background: radial-gradient(34rem circle at var(--mx, 50%) var(--my, 0%),
+                                var(--glow), transparent 68%);
+  }
+  body.lit .glow { opacity: 1; }
+}
+.topbar, .hero, main, footer { position: relative; z-index: 1; }
+
+a { color: var(--ink); text-decoration-color: var(--accent); text-underline-offset: 3px; }
+a:hover { color: var(--accent); }
+
+h1, h2, h3 { font-weight: 700; line-height: 1.25; margin: 0; }
+
+/* Balance suits a short heading and ruins a long one: it breaks the line
+   early to even the halves. Titles that run on get `pretty`, which only
+   guards the last line. */
+h1, h2 { text-wrap: balance; }
+h3, p, dd, li { text-wrap: pretty; }
+
+.venue, .pid, .foot {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.skip {
+  position: absolute; left: -9999px; top: 0;
+  background: var(--sheet); padding: .6rem 1rem; z-index: 20;
+}
+.skip:focus { left: 0; }
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+/* ---------- top bar ---------------------------------------------------- */
+
+.topbar {
+  position: sticky; top: 0; z-index: 10;
+  height: var(--bar-h);
+  background: var(--bar-bg);
+  backdrop-filter: saturate(1.4) blur(8px);
+  border-bottom: 1px solid var(--rule);
+}
+.bar {
+  max-width: 62rem; height: 100%;
+  margin: 0 auto; padding: 0 var(--gutter);
+  display: flex; align-items: center; gap: 1.25rem;
+}
+.mark {
+  font-size: .92rem; font-weight: 600;
+  letter-spacing: -.01em;
+  text-decoration: none; white-space: nowrap;
+  display: inline-flex; align-items: center; gap: .55rem;
+}
+.cv-link {
+  margin-left: auto;
+  display: inline-flex; align-items: center; gap: .3rem;
+  font-size: .86rem; font-weight: 500;
+  text-decoration: none; color: var(--soft); white-space: nowrap;
+}
+.cv-link:hover { color: var(--ink); }
+
+/* The arrow is drawn rather than typed: the ↗ glyph is a hairline at this
+   size, and a stroked one can be weighted to sit with the text. */
+.arrow {
+  width: .82em; height: .82em; flex: none;
+  fill: none; stroke: currentColor; stroke-width: 2.4;
+  stroke-linecap: round; stroke-linejoin: round;
+  transition: transform .25s cubic-bezier(.4, 0, .2, 1);
+}
+a:hover > .arrow { transform: translate(.1em, -.1em); }
+
+/* Same switch as the ReSMap page: the mask circle slides in to carve a
+   crescent out of a growing disc while the rays retract. */
+#theme-toggle {
+  flex: none; width: 2rem; height: 2rem; padding: 0;
+  display: grid; place-items: center;
+  background: none; border: 1px solid var(--rule); border-radius: 999px;
+  color: var(--soft); cursor: pointer;
+  transition: color .2s ease, border-color .2s ease;
+}
+#theme-toggle:hover { color: var(--accent); border-color: var(--accent); }
+#theme-toggle svg { width: 17px; height: 17px; overflow: visible; }
+
+#theme-toggle .disc {
+  fill: currentColor;
+  transition: r .45s cubic-bezier(.4, 0, .2, 1);
+}
+#theme-toggle .rays {
+  stroke: currentColor; stroke-width: 1.7; stroke-linecap: round;
+  transform-origin: 12px 12px;
+  transition: opacity .3s ease, transform .45s cubic-bezier(.4, 0, .2, 1);
+}
+#theme-toggle #crescent circle {
+  transition: cx .45s cubic-bezier(.4, 0, .2, 1),
+              cy .45s cubic-bezier(.4, 0, .2, 1);
+}
+
+:root[data-theme="dark"] #theme-toggle .disc { r: 8.5; }
+:root[data-theme="dark"] #theme-toggle #crescent circle { cx: 18.5; cy: 6.5; }
+:root[data-theme="dark"] #theme-toggle .rays { opacity: 0; transform: rotate(-45deg) scale(.4); }
+
+/* ---------- theme transition ------------------------------------------- */
+
+/* Browsers with the View Transitions API get the wipe driven from main.js;
+   everything else just cross-fades the palette. */
+@supports not (view-transition-name: none) {
+  body, .topbar, .portrait img, }
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-old(root) { z-index: 1; }
+::view-transition-new(root) { z-index: 2; }
+
+/* Closing wipe: the outgoing theme is the one being clipped, so it has to
+   sit above the incoming one. */
+:root[data-wipe="in"]::view-transition-old(root) { z-index: 2; }
+:root[data-wipe="in"]::view-transition-new(root) { z-index: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+
+/* ---------- shared sheet ----------------------------------------------- */
+
+.hero, .row, .foot {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding-left: var(--gutter);
+  padding-right: var(--gutter);
+}
+
+/* ---------- hero ------------------------------------------------------- */
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 13rem;
+  gap: clamp(1.5rem, 5vw, 3rem);
+  align-items: start;
+  padding-top: clamp(3rem, 9vw, 5.5rem);
+  padding-bottom: clamp(2.5rem, 7vw, 4rem);
+}
+.hero-meta {
+  display: flex; flex-wrap: wrap; align-items: baseline;
+  gap: .6rem 1.5rem;
+  margin-bottom: 1rem;
+}
+.status {
+  margin: 0;
+  display: inline-flex; align-items: center; gap: .45rem;
+  font-size: .95rem; color: var(--faint);
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: .95rem; font-weight: 400; color: var(--soft);
+}
+.hero h1 {
+  font-family: var(--display); font-weight: 700;
+  font-size: clamp(2.7rem, 8.6vw, 4.5rem);
+  letter-spacing: -.024em; line-height: 1.02;
+  margin-bottom: 1.2rem;
+}
+.hangul {
+  display: block;
+  margin-top: .6rem;
+  font-family: var(--kr); font-size: .82rem; font-weight: 400;
+  letter-spacing: .22em; color: var(--faint);
+}
+
+.standfirst {
+  margin: 0;
+  max-width: 34em;
+  font-size: clamp(1.05rem, 1.8vw, 1.2rem); line-height: 1.55;
+  color: var(--soft);
+}
+.standfirst a { color: var(--ink); }
+
+.portrait {
+  margin: .4rem 0 0;
+}
+.portrait img {
+  display: block; width: 100%; height: auto;
+}
+/* ---------- section rows ----------------------------------------------- */
+
+.row {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--rail-w) minmax(0, 1fr);
+  gap: clamp(1.5rem, 5vw, 3rem);
+  padding-top: clamp(2.2rem, 5vw, 3.2rem);
+  padding-bottom: clamp(2.2rem, 5vw, 3.2rem);
+  border-top: 1px solid var(--rule);
+  scroll-margin-top: var(--bar-h);
+}
+.rail { position: sticky; top: calc(var(--bar-h) + 1.6rem); align-self: start; }
+.rail h2 {
+  font-size: .95rem; font-weight: 600; letter-spacing: -.01em;
+  color: var(--soft);
+}
+.rail-note {
+  margin: .85rem 0 0;
+  font-size: .74rem; line-height: 1.65;
+  color: var(--faint);
+}
+
+.body > p { margin: 0 0 1.1rem; max-width: 38em; }
+.body > p:last-child { margin-bottom: 0; }
+
+/* ---------- publications ----------------------------------------------- */
+
+.pubs { list-style: none; margin: 0; padding: 0; }
+.pubs > li {
+  display: grid;
+  grid-template-columns: 2.4rem minmax(0, 1fr);
+  gap: .75rem;
+  padding: 1.05rem 0;
+  border-bottom: 1px dotted var(--rule);
+}
+.pubs > li { transition: padding-left .25s cubic-bezier(.4, 0, .2, 1); }
+.pubs > li:hover { padding-left: .55rem; }
+.pubs > li:hover .pid { color: var(--accent); }
+.pid { transition: color .25s ease; }
+.pubs > li:first-child { padding-top: 0; }
+.pubs > li:last-child { border-bottom: 0; padding-bottom: 0; }
+.pid {
+  font-size: .8rem; color: var(--faint);
+  padding-top: .2rem;
+}
+.pub h3 { font-size: 1.02rem; font-weight: 600; letter-spacing: -.012em; }
+.pub .authors {
+  margin: .3rem 0 0; font-size: .87rem; color: var(--soft);
+}
+.pub .authors b { font-weight: 600; color: var(--ink); }
+.pub .authors sup { font-size: .7em; }
+.pub .meta {
+  margin: .45rem 0 0;
+  display: flex; flex-wrap: wrap; align-items: center; gap: .5rem;
+}
+.venue {
+  font-size: .86rem; font-weight: 500; color: var(--soft);
+}
+.pub .links { margin: .5rem 0 0; font-size: .82rem; }
+.pub .links a {
+  font-size: .86rem; font-weight: 500;
+  text-decoration: none; color: var(--accent);
+  border-bottom: 1px solid var(--accent-soft);
+}
+.pub .links a:hover { border-bottom-color: var(--accent); }
+
+.soft { color: var(--faint); }
+
+/* ---------- contact ----------------------------------------------------- */
+
+.bigmail {
+  display: inline-flex; align-items: center; gap: .5rem;
+  font-family: var(--display); font-weight: 600;
+  font-size: clamp(1.55rem, 4.9vw, 2.65rem);
+  letter-spacing: -.028em; line-height: 1.1;
+  text-decoration: none; color: var(--ink);
+  padding-bottom: .35rem;
+  background-image: linear-gradient(var(--accent), var(--accent));
+  background-size: 0% 2px; background-position: 0 100%; background-repeat: no-repeat;
+  transition: background-size .35s cubic-bezier(.4, 0, .2, 1), color .25s ease;
+}
+.bigmail:hover { color: var(--accent); background-size: 100% 2px; }
+.bigmail .arrow {
+  width: .6em; height: .6em; flex: none;
+  fill: none; stroke: currentColor; stroke-width: 2.1;
+  stroke-linecap: round; stroke-linejoin: round;
+  transition: transform .3s cubic-bezier(.4, 0, .2, 1);
+}
+.bigmail:hover .arrow { transform: translate(.12em, -.12em); }
+
+/* One line, not a stack: the links sit side by side under the address. */
+.elsewhere {
+  margin: 1.6rem 0 0;
+  display: flex; flex-wrap: wrap; align-items: center;
+  gap: .3rem 1.5rem;
+  font-size: .92rem;
+}
+.elsewhere a {
+  display: inline-flex; align-items: center; gap: .3rem;
+  color: var(--soft); text-decoration: none;
+  transition: color .2s ease;
+}
+.elsewhere a:hover { color: var(--ink); }
+
+/* ---------- footer ------------------------------------------------------ */
+
+footer { border-top: 1px solid var(--rule); }
+.foot {
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem;
+  padding-top: 1.6rem; padding-bottom: 2.6rem;
+  font-size: .82rem; color: var(--faint);
+}
+.foot p { margin: 0; }
+.clock {
+  display: inline-flex; align-items: baseline; gap: .5rem;
+  font-variant-numeric: tabular-nums lining-nums;
+  color: var(--soft);
+}
+.clock .place { color: var(--faint); }
+
+/* ---------- narrow ------------------------------------------------------ */
+
+@media (max-width: 46rem) {
+  .hero {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .hero-text { order: 2; }
+  .portrait { order: 1; width: 9.5rem; margin: 0; }
+
+  .row { grid-template-columns: minmax(0, 1fr); gap: 1.1rem; }
+  .rail {
+    position: static;
+    display: flex; align-items: baseline; gap: .7rem;
+    flex-wrap: wrap;
+  }
+  .rail-note { flex-basis: 100%; margin-top: .2rem; }
+
+  .pubs > li {
+    grid-template-columns: minmax(0, 1fr);
+    gap: .25rem;
+  }
+  .pid { padding-top: 0; }
+}
+
+@media (max-width: 34rem) {
+  .topbar ul {
+    gap: .85rem;
+    -webkit-mask-image: linear-gradient(to right, #000 82%, transparent);
+    mask-image: linear-gradient(to right, #000 82%, transparent);
+  }
+  .topbar li a { font-size: .68rem; }
+  .topbar li:last-child { padding-right: .75rem; }
+}
