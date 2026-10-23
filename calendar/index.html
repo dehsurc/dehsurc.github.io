@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="ko" data-theme="light" data-style="chic">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>우리 달력</title>
+<!-- The page is public but carries no data: every event lives in a private
+     repo and is fetched with the viewer's own token. Keep it out of search,
+     and keep scripts to this origin so nothing else can read that token. -->
+<meta name="robots" content="noindex, nofollow">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com https://cdn.jsdelivr.net; img-src 'self' data:; connect-src https://api.github.com; manifest-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e0e0f" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="우리 달력">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-180.png">
+
+<!-- Inter / Inter Tight for the chic style, as on the main page; Jua and
+     Gowun Dodum for the cute one. Hangul in the chic style falls through to
+     Freesentation, declared in style.css. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@500;600;700&family=Jua&family=Gowun+Dodum&display=swap">
+<link rel="stylesheet" href="style.css?v=261023b">
+
+<script src="theme.js?v=261023b"></script>
+<script src="app.js?v=261023b" defer></script>
+</head>
+<body>
+
+<canvas class="deco" aria-hidden="true"></canvas>
+
+<nav class="topbar">
+  <div class="bar">
+    <span class="mark" id="mark">우리 달력</span>
+    <button id="status" class="status" type="button" title="다시 불러오기" hidden></button>
+    <button id="settings" class="text-btn" type="button" hidden>설정</button>
+    <button id="theme-toggle" type="button" aria-label="어두운 테마로 전환" aria-pressed="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <mask id="crescent">
+          <rect x="0" y="0" width="24" height="24" fill="#fff"></rect>
+          <circle cx="26" cy="6" r="8" fill="#000"></circle>
+        </mask>
+        <circle class="disc" cx="12" cy="12" r="5.5" mask="url(#crescent)"></circle>
+        <g class="rays">
+          <line x1="12" y1="1.8" x2="12" y2="3.8"></line>
+          <line x1="12" y1="20.2" x2="12" y2="22.2"></line>
+          <line x1="1.8" y1="12" x2="3.8" y2="12"></line>
+          <line x1="20.2" y1="12" x2="22.2" y2="12"></line>
+          <line x1="4.7" y1="4.7" x2="6.1" y2="6.1"></line>
+          <line x1="17.9" y1="17.9" x2="19.3" y2="19.3"></line>
+          <line x1="4.7" y1="19.3" x2="6.1" y2="17.9"></line>
+          <line x1="17.9" y1="6.1" x2="19.3" y2="4.7"></line>
+        </g>
+      </svg>
+    </button>
+  </div>
+</nav>
+
+<!-- Shown until a token is saved on this device. -->
+<main id="login" class="login" hidden>
+  <header class="hero solo">
+    <div class="hero-text">
+      <h1>우리 달력<span class="hangul">둘이 같이 쓰는 달력</span></h1>
+      <p class="standfirst">일정은 비공개 저장소 <code>dehsurc/calendar_private</code>에만 저장돼요. 이 기기에서 처음 한 번만 GitHub 토큰을 입력하면 돼요.</p>
+    </div>
+  </header>
+  <section class="row">
+    <div class="rail"><h2>Token</h2></div>
+    <div class="body">
+      <form id="login-form" autocomplete="off">
+        <input id="token" type="password" placeholder="github_pat_… 또는 ghp_…" required spellcheck="false" autocapitalize="off" aria-label="GitHub 토큰">
+        <p id="login-error" class="error" hidden></p>
+        <button class="primary" type="submit">시작하기</button>
+      </form>
+      <details class="help">
+        <summary>토큰은 어떻게 만들어요?</summary>
+        <ol>
+          <li>GitHub → Settings → Developer settings → Personal access tokens로 들어가요.</li>
+          <li><b>저장소 주인(dehsurc)</b>: <i>Fine-grained tokens</i>에서 Repository access를 <code>calendar_private</code>만으로 고르고, Permissions → Contents를 <b>Read and write</b>로 설정해요.</li>
+          <li><b>초대받은 사람</b>: 초대를 수락한 뒤 <i>Tokens (classic)</i>에서 <code>repo</code> 권한으로 만들어요. Fine-grained 토큰은 다른 사람 저장소에는 쓸 수 없어요.</li>
+          <li>만료되면 여기서 새 토큰을 다시 입력하면 돼요.</li>
+        </ol>
+      </details>
+    </div>
+  </section>
+</main>
+
+<main id="app" hidden>
+  <header class="hero">
+    <div class="hero-text">
+      <h1 id="month-title"><span id="month-big"></span><span class="hangul" id="month-small"></span></h1>
+      <nav class="month-nav" aria-label="달 이동">
+        <button id="prev" class="text-btn" type="button"><span aria-hidden="true">←</span> <span id="prev-label">이전</span></button>
+        <button id="today" class="text-btn" type="button">오늘</button>
+        <button id="next" class="text-btn" type="button"><span id="next-label">다음</span> <span aria-hidden="true">→</span></button>
+      </nav>
+    </div>
+    <div class="together" id="together" hidden>
+      <!-- An original bunny, drawn for this page; it only shows in the cute style. -->
+      <svg class="bunny" viewBox="0 0 120 120" aria-hidden="true">
+        <g class="ear ear-l"><ellipse cx="44" cy="34" rx="11" ry="27" transform="rotate(-14 44 34)"/><ellipse class="in" cx="44" cy="36" rx="5" ry="18" transform="rotate(-14 44 36)"/></g>
+        <g class="ear ear-r"><ellipse cx="76" cy="34" rx="11" ry="27" transform="rotate(12 76 34)"/><ellipse class="in" cx="76" cy="36" rx="5" ry="18" transform="rotate(12 76 36)"/></g>
+        <ellipse class="head" cx="60" cy="80" rx="38" ry="31"/>
+        <circle class="eye" cx="47" cy="78" r="3.4"/>
+        <circle class="eye" cx="73" cy="78" r="3.4"/>
+        <ellipse class="blush" cx="37" cy="88" rx="6.5" ry="3.6"/>
+        <ellipse class="blush" cx="83" cy="88" rx="6.5" ry="3.6"/>
+        <path class="mouth" d="M55 87 q2.5 3 5 0 q2.5 3 5 0"/>
+      </svg>
+      <p class="count"><span id="count-num"></span><span class="unit" id="count-unit"></span></p>
+      <p class="caption" id="count-caption"></p>
+    </div>
+  </header>
+
+  <section class="row" id="cal-row">
+    <div class="rail">
+      <h2 id="cal-label">Calendar</h2>
+      <p class="rail-note" id="legend"></p>
+    </div>
+    <div class="body">
+      <div class="weekdays" aria-hidden="true">
+        <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
+      </div>
+      <div id="grid" class="grid" role="grid" aria-labelledby="month-title"></div>
+    </div>
+  </section>
+
+  <section class="row" aria-labelledby="day-title">
+    <div class="rail">
+      <h2 id="day-title"></h2>
+      <p class="rail-note" id="day-note"></p>
+      <button id="add" class="add" type="button"><span id="add-label">일정 추가</span> <span aria-hidden="true">+</span></button>
+    </div>
+    <div class="body"><ol id="day-list" class="entries"></ol></div>
+  </section>
+
+  <section class="row" aria-labelledby="up-title">
+    <div class="rail"><h2 id="up-title">Upcoming</h2></div>
+    <div class="body"><ol id="up-list" class="entries"></ol></div>
+  </section>
+
+  <footer>
+    <div class="foot">
+      <p id="foot-names"></p>
+      <p class="clock"><span class="place">Seoul</span> <span id="clock"></span></p>
+      <p id="foot-since"></p>
+    </div>
+  </footer>
+</main>
+
+<dialog id="editor" class="sheet">
+  <form id="edit-form" method="dialog">
+    <h2 id="edit-title">일정 추가</h2>
+
+    <label for="f-title">제목</label>
+    <input id="f-title" name="title" required maxlength="80" placeholder="예: 영화 보기">
+
+    <div class="pair">
+      <div>
+        <label for="f-date">날짜</label>
+        <input id="f-date" name="date" type="date" required>
+      </div>
+      <div>
+        <label for="f-end">끝나는 날 <span class="opt">선택</span></label>
+        <input id="f-end" name="end" type="date">
+      </div>
+    </div>
+
+    <label class="check"><input id="f-allday" type="checkbox" checked> 하루 종일</label>
+    <div class="pair" id="time-row" hidden>
+      <div>
+        <label for="f-time">시작</label>
+        <input id="f-time" name="time" type="time">
+      </div>
+      <div>
+        <label for="f-endtime">끝 <span class="opt">선택</span></label>
+        <input id="f-endtime" name="endTime" type="time">
+      </div>
+    </div>
+
+    <fieldset class="choice">
+      <legend>누구 일정?</legend>
+      <label><input type="radio" name="who" value="a"><span><i class="mk who-a"></i><b data-name="a"></b></span></label>
+      <label><input type="radio" name="who" value="b"><span><i class="mk who-b"></i><b data-name="b"></b></span></label>
+      <label><input type="radio" name="who" value="both" checked><span><i class="mk who-both"></i><b>함께</b></span></label>
+    </fieldset>
+
+    <label class="check"><input id="f-yearly" type="checkbox"> 매년 반복 (기념일·생일)</label>
+
+    <label for="f-note">메모 <span class="opt">선택</span></label>
+    <textarea id="f-note" name="note" rows="2" maxlength="500" placeholder="장소, 예약 정보 등"></textarea>
+
+    <p id="edit-error" class="error" hidden></p>
+    <p id="edit-meta" class="meta"></p>
+
+    <div class="actions">
+      <button id="f-delete" class="danger" type="button" hidden>삭제</button>
+      <span class="spacer"></span>
+      <button type="button" class="ghost" data-close>취소</button>
+      <button id="f-save" class="primary" type="submit">저장</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="prefs" class="sheet">
+  <form id="prefs-form" method="dialog">
+    <h2>설정</h2>
+
+    <fieldset class="choice">
+      <legend>디자인 <span class="opt">이 기기에만 적용</span></legend>
+      <label><input type="radio" name="style" value="chic"><span><b>세련</b></span></label>
+      <label><input type="radio" name="style" value="cute"><span><b>귀여움</b></span></label>
+    </fieldset>
+
+    <div class="pair">
+      <div>
+        <label for="p-a">이름 1</label>
+        <input id="p-a" maxlength="12" required>
+      </div>
+      <div>
+        <label for="p-b">이름 2</label>
+        <input id="p-b" maxlength="12" required>
+      </div>
+    </div>
+
+    <label for="p-since">사귄 날 <span class="opt">D+일수와 100일·주년 표시</span></label>
+    <input id="p-since" type="date">
+
+    <fieldset class="choice">
+      <legend>이 기기를 쓰는 사람</legend>
+      <label><input type="radio" name="me" value="a"><span><i class="mk who-a"></i><b data-name="a"></b></span></label>
+      <label><input type="radio" name="me" value="b"><span><i class="mk who-b"></i><b data-name="b"></b></span></label>
+    </fieldset>
+
+    <p id="prefs-error" class="error" hidden></p>
+
+    <div class="actions">
+      <button id="logout" class="danger" type="button">로그아웃</button>
+      <span class="spacer"></span>
+      <button type="button" class="ghost" data-close>닫기</button>
+      <button id="p-save" class="primary" type="submit">저장</button>
+    </div>
+  </form>
+</dialog>
+
+</body>
+</html>
