@@ -722,3 +722,16 @@ dialog.sheet h2 { font-family: var(--display); font-size: 1.45rem; letter-spacin
   }
   :root[data-style="cute"] dialog.sheet { border-radius: 26px 26px 0 0; box-shadow: none; }
 }
+
+/* ---------- public holidays ------------------------------------------- */
+
+/* The name sits above the day's events as a quiet line; cute also turns
+   the number red, as a Sunday is. */
+.ev.hol { color: var(--faint); font-weight: 500; font-size: .66rem; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:root[data-style="cute"] .ev.hol { background: none; color: var(--danger); padding: 0; text-align: center; }
+:root[data-style="cute"] .cell.holiday .num { color: var(--danger); }
+@media (max-width: 640px) {
+  .ev.hol { display: none; }
+  .cell.holiday .num { text-decoration: underline dotted; text-underline-offset: 3px; }
+  :root[data-style="cute"] .cell.holiday .num { text-decoration: none; }
+}

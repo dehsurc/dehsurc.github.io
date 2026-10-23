@@ -9,7 +9,7 @@
   var REPO = 'dehsurc/calendar_private';
   var FILE = 'events.json';
   var API = 'https://api.github.com/repos/' + REPO;
-  var KEY = { token: 'cal-token', me: 'cal-me', cache: 'cal-cache', style: 'cal-style' };
+  var KEY = { token: 'cal-token', me: 'cal-me', cache: 'cal-cache', style: 'cal-style', holidays: 'cal-holidays' };
   var WEEK = ['일', '월', '화', '수', '목', '금', '토'];
   var DAYS = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
   var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
@@ -170,6 +170,22 @@
     store.set(KEY.cache, JSON.stringify(state.data));
   }
 
+  // Public holidays, 'YYYY-MM-DD' -> name, kept in the same repo so the
+  // widget reads the same list. Fetched once per load; a miss is harmless.
+  var holidays = {};
+  try { holidays = JSON.parse(store.get(KEY.holidays) || '{}'); } catch (e) { /* refetched below */ }
+  async function pullHolidays() {
+    try {
+      var r = await fetch(API + '/contents/holidays.json', {
+        headers: headers({ Accept: 'application/vnd.github.raw+json' }), cache: 'no-store'
+      });
+      if (!r.ok) return;
+      holidays = await r.json();
+      store.set(KEY.holidays, JSON.stringify(holidays));
+      render();
+    } catch (e) { /* keep the cached list */ }
+  }
+
   async function commit(change, message) {
     for (var attempt = 0; attempt < 4; attempt++) {
       var next = JSON.parse(JSON.stringify(state.data));
@@ -316,10 +332,12 @@
       if (p.m !== m) cell.classList.add('out');
       if (s === now) cell.classList.add('today');
       if (s === state.selected) { cell.classList.add('sel'); cell.setAttribute('aria-selected', 'true'); }
+      if (holidays[s]) cell.classList.add('holiday');
 
       cell.appendChild(el('span', 'num', String(p.d)));
 
       var list = el('span', 'events');
+      if (holidays[s]) list.appendChild(el('span', 'ev hol', holidays[s]));
       var items = eventsOn(s);
       milestones(s).forEach(function (t) {
         var c = el('span', 'ev mile');
@@ -392,7 +410,7 @@
     var n = daysTogether(s);
     var p = parts(s);
     $('day-title').textContent = (p.m + 1) + '월 ' + p.d + '일';
-    $('day-note').textContent = DAYS[weekday(s)] + (n ? ' · ' + n + '일째' : '');
+    $('day-note').textContent = DAYS[weekday(s)] + (holidays[s] ? ' · ' + holidays[s] : '') + (n ? ' · ' + n + '일째' : '');
     var ul = $('day-list');
     ul.textContent = '';
     milestones(s).forEach(function (t) { ul.appendChild(mileEntry(t)); });
@@ -874,7 +892,9 @@
       show(true);
       render();
       stamp();
+      pullHolidays();
       if (!state.me) openPrefs();    // first time on this device: who is it?
+      else route();
     } catch (err) {
       state.token = null;
       $('login-error').textContent = err.message;
@@ -894,6 +914,31 @@
   }, 120000);
 
   /* ------------------------------------------------------------------ *
+   * Links from the widget: #d=YYYY-MM-DD opens that day, #add opens the
+   * editor on today. The hash is cleared once handled so a reload does
+   * not repeat it.
+   * ------------------------------------------------------------------ */
+
+  function route() {
+    var h = location.hash;
+    if (!state.data || !h) return;
+    var day = /^#d=(\d{4}-\d{2}-\d{2})$/.exec(h);
+    if (day) {
+      var p = parts(day[1]);
+      state.selected = day[1];
+      state.year = p.y; state.month = p.m;
+      render();
+      $('day-title').scrollIntoView({ block: 'center' });
+    } else if (h === '#add') {
+      if (!document.querySelector('dialog[open]')) openEditor(null, today());
+    } else {
+      return;
+    }
+    history.replaceState(null, '', location.pathname + location.search);
+  }
+  window.addEventListener('hashchange', route);
+
+  /* ------------------------------------------------------------------ *
    * Start: paint the last copy at once, then fetch the live one.
    * ------------------------------------------------------------------ */
 
@@ -901,9 +946,13 @@
     show(true);
     try {
       var cached = store.get(KEY.cache);
-      if (cached) { state.data = normalize(JSON.parse(cached)); render(); }
+      if (cached) { state.data = normalize(JSON.parse(cached)); render(); route(); }
     } catch (e) { /* stale or broken cache; the fetch replaces it */ }
-    sync(false).then(function () { if (state.data && !state.me) openPrefs(); });
+    pullHolidays();
+    sync(false).then(function () {
+      if (state.data && !state.me) openPrefs();
+      else route();
+    });
   } else {
     show(false);
   }
