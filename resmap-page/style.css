@@ -859,6 +859,9 @@ h1 { margin: 0 0 1.4rem; }
 .authors sup { font-size: .68em; color: var(--ink-faint); }
 
 .affil { margin: 0; color: var(--ink-soft); }
+.affil sup, .authors sup { font-size: .68em; }
+.affil .nw { white-space: nowrap; }
+@media (max-width: 560px) { .affil .nw { white-space: normal; } }
 /* The marks under the author list, on a line of their own under the lab
    rather than trailing it, where they read as part of the affiliation. */
 .author-notes { margin: .2rem 0 .55rem; font-size: 13px; }
