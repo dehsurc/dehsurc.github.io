@@ -1278,6 +1278,9 @@ tbody th { font-weight: 400; text-align: left; }
 tbody tr:last-child th, tbody tr:last-child td { border-bottom: 1.5px solid var(--ink); }
 
 th.n, td.n { text-align: right; }
+/* In camera-dropout cells the drop sits in a fixed-width, left-aligned slot, so the mAP values line up
+   down the column whatever the length of the percentage next to them. */
+td.n span.dn { display: inline-block; min-width: 4.6em; text-align: left; }
 td.b, .n.b { font-weight: 600; }
 
 tr.group th {
