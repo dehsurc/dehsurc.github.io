@@ -1575,7 +1575,8 @@ footer .small { margin-top: .4rem; }
 .qv-panel.ours .qv-box { box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--accent); }
 .qv-panel.ours .qv-name { color: var(--accent); font-weight: 700; }
 .qv-panel.missing canvas { opacity: .6; }
-.qv.loading .qv-panels, .qv.loading .qv-cams { opacity: .5; transition: opacity .2s; }
+/* Dim only when a scene takes a while to arrive; a quick switch goes straight to the new frames. */
+.qv.loading .qv-panels, .qv.loading .qv-cams { opacity: .5; transition: opacity .2s .4s; }
 
 /* transport: the teaser's seek bar and button row (.seek, .speed) */
 .qv-transport { margin-top: 1.2rem; }

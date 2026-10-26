@@ -171,13 +171,20 @@
     g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath();
   }
 
+  // An image swaps in only once it has arrived; until then the previous one stays on screen,
+  // so a frame that is still downloading never shows up as a blank flash.
+  function loaded(im) { return !!(im && im.complete && im.naturalWidth > 0); }
+  function frameLoaded(f) {
+    return loaded(images.cams[f]) && loaded(images[RANGES[state.range].sat][f]);
+  }
+
   function showFrame() {
     if (!data) return;
     var f = state.frame, n = data.frames.length;
     var cam = images.cams[f];
-    if (cam) camCells.forEach(function (cell) { cell.style.backgroundImage = 'url("' + cam.src + '")'; });
+    if (loaded(cam)) camCells.forEach(function (cell) { cell.style.backgroundImage = 'url("' + cam.src + '")'; });
     var sat = images[RANGES[state.range].sat][f];
-    if (sat) satImg.src = sat.src;
+    if (loaded(sat)) satImg.src = sat.src;
     slider.value = String(f);
     slider.style.setProperty('--p', (n > 1 ? f / (n - 1) * 100 : 0) + '%');
     counter.textContent = 'Frame ' + (f + 1) + ' / ' + n;
@@ -230,6 +237,7 @@
     if (state.frame >= data.frames.length - 1) setFrame(0);
     timer = setInterval(function () {
       if (state.frame >= data.frames.length - 1) { play(false); return; }
+      if (!frameLoaded(state.frame + 1)) return;   // wait for the next frame instead of flashing
       setFrame(state.frame + 1);
     }, 1000 / (FPS * state.rate));
   }
@@ -266,7 +274,12 @@
       ['cams', 'sat60', 'sat100'].forEach(function (k) {
         for (var i = 0; i < n; i++) {
           var im = new Image();
-          im.onload = im.onerror = function () { if (--left <= n * 2) ready(); };   // a third is enough to start
+          im.onload = im.onerror = (function (i) {
+            return function () {
+              if (--left <= n * 2) ready();   // a third is enough to start
+              if (images === next && i === state.frame) showFrame();   // the frame on screen just arrived
+            };
+          })(i);
           im.src = base + k + '/' + pad(i) + '.jpg';
           next[k].push(im);
         }
