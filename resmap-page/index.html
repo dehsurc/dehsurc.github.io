@@ -282,8 +282,8 @@
 
   <div class="col">
     <figure class="figure">
-      <img src="assets/figures/gate.webp" alt="Per-pixel and per-query gate response under camera dropout.">
-      <figcaption><b>Gate response under camera dropout.</b> Left: over active BEV cells, removing all cameras collapses <math><msub><mi>r</mi><mtext>cam</mtext></msub></math> while <math><msub><mi>r</mi><mtext>sat</mtext></msub></math> rises to cover the same regions. Right: the same routing appears at the query level: the per-token gate shifts negatively for 98% of queries, with the largest drops on those that were most camera-reliant in the clean run.</figcaption>
+      <img src="assets/figures/gate.webp?v=2" alt="Per-pixel and per-query gate response under camera dropout.">
+      <figcaption><b>Gate response under camera dropout.</b> Left: camera and satellite reliability normalized to sum to one as in the PTF fusion, over active BEV cells; removing all cameras collapses <math><msub><mover><mi>r</mi><mo>&#175;</mo></mover><mtext>cam</mtext></msub></math> while <math><msub><mover><mi>r</mi><mo>&#175;</mo></mover><mtext>sat</mtext></msub></math> rises to cover the same regions. Right: the same routing appears at the query level: the per-token gate shifts negatively for 98% of queries, with the largest drops on those that were most camera-reliant in the clean run.</figcaption>
     </figure>
   </div>
 
@@ -352,7 +352,7 @@
         </tbody>
       </table>
       </div>
-      <p class="tcap"><b>Table 1.</b> Online HD map construction on the geographically non-overlapping split. C, L, SD, HD, SA denote camera, LiDAR, SD map, prior HD map, and satellite images; <i>Temp.</i> marks temporal memory or historical-prediction priors. FPS is measured on a single RTX&nbsp;4090. <sup>&dagger;</sup>Consistent-GT supervision. <sup>*</sup>Numbers taken from the original paper. PriorDrive (C+SD+HD) uses an SD map together with a noisy prior HD map and online local maps from earlier traversals. Best per column in bold.</p>
+      <p class="tcap"><b>Table 1.</b> Online HD map construction on the geographically non-overlapping split. C, L, SD, HD, SA denote camera, LiDAR, SD map, prior HD map, and satellite images; <i>Temp.</i> marks temporal memory or historical-prediction priors. FPS is measured on a single RTX&nbsp;4090. <sup>&dagger;</sup>Consistent-GT supervision. <sup>*</sup>Numbers taken from the original paper. Best per column in bold.</p>
       </div>
 
       <div class="tpanel" id="t1-orig" role="tabpanel" aria-labelledby="t1-orig-tab" hidden>
