@@ -24,15 +24,8 @@ body.cv { background-image: none; }          /* no wash behind a document */
 
 /* ---------- the bar ----------------------------------------------------- */
 
-.print-btn {
-  margin-left: auto;
-  font: inherit; font-size: .9rem;
-  color: var(--soft); background: none;
-  border: 1px solid var(--rule); border-radius: 999px;
-  padding: .28rem .9rem; cursor: pointer;
-  transition: color .2s ease, border-color .2s ease;
-}
-.print-btn:hover { color: var(--ink); border-color: var(--ink); }
+/* No other item in the bar: push the theme switch to the right edge. */
+.cv #theme-toggle { margin-left: auto; }
 
 /* ---------- masthead ---------------------------------------------------- */
 

@@ -35,7 +35,6 @@
 <nav class="topbar" aria-label="Site">
   <div class="bar">
     <a class="mark" href="../">Kyungmin&nbsp;Kim</a>
-    <button id="print" class="print-btn" type="button">Download PDF</button>
     <button id="theme-toggle" type="button" aria-label="Switch to dark theme" aria-pressed="false">
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <mask id="crescent">
@@ -255,15 +254,5 @@
 </footer>
 
 <script src="../main.js?v=260930" defer></script>
-<script>
-  window.addEventListener('DOMContentLoaded', function () {
-    // The print stylesheet lays this page out for paper; the browser's own
-    // "Save as PDF" then gives a PDF with selectable text and live links,
-    // which is what a CV needs. No library involved.
-    document.getElementById('print').addEventListener('click', function () {
-      window.print();
-    });
-  });
-</script>
 </body>
 </html>
