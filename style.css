@@ -362,7 +362,7 @@ a:hover > .arrow { transform: translate(.1em, -.1em); }
 .venue {
   font-size: .86rem; font-weight: 500; color: var(--soft);
 }
-.pub .links { margin: .5rem 0 0; font-size: .82rem; }
+.pub .links { margin: .5rem 0 0; font-size: .82rem; display: flex; flex-wrap: wrap; gap: .9rem; }
 .pub .links a {
   font-size: .86rem; font-weight: 500;
   text-decoration: none; color: var(--accent);

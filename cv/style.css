@@ -139,7 +139,7 @@ body.cv { background-image: none; }          /* no wash behind a document */
 .pub .authors sup { font-size: .72em; }
 .pub .meta { margin: .12rem 0 0; }
 .venue { font-size: .93rem; color: var(--soft); }
-.pub .links { margin: .2rem 0 0; }
+.pub .links { margin: .2rem 0 0; display: flex; flex-wrap: wrap; gap: .9rem; }
 .pub .links a { font-size: .93rem; }
 
 /* ---------- skills ------------------------------------------------------ */
