@@ -1646,36 +1646,38 @@ html.qv-max-open { overflow: hidden; }
   .qv.max .qv-transport { margin-top: .4rem; }
 }
 
-/* ---------- §5 paper card and reader (paper.js) ---------- */
-.paper-card { display: flex; gap: 1.6rem; align-items: center; margin: 0 0 1.8rem; }
-.paper-cover {
-  position: relative; flex: none; width: 9.5rem; aspect-ratio: 8.5 / 11; padding: 0;
-  border: 1px solid var(--rule); border-radius: 2px; background: #fff; cursor: pointer;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, .06), 0 6px 18px rgba(0, 0, 0, .07);
-  transition: transform .18s ease, box-shadow .18s ease; overflow: hidden;
+/* ---------- §5 paper strip and reader (paper.js) ---------- */
+/* The first pages side by side; on a phone the strip scrolls sideways. */
+.paper-strip {
+  display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: .7rem;
+  margin: 0 0 1.1rem;
 }
-.paper-cover:disabled { cursor: default; }
-.paper-card.ready .paper-cover:hover { transform: translateY(-2px); box-shadow: 0 2px 4px rgba(0, 0, 0, .08), 0 12px 26px rgba(0, 0, 0, .12); }
-.paper-cover canvas { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; transition: opacity .3s ease; }
-.paper-card.covered .paper-cover canvas { opacity: 1; }
-/* a blank page, lines for text, until the real first page is drawn */
-.paper-cover-blank { position: absolute; inset: 14% 12%; display: flex; flex-direction: column; gap: 9%; }
-.paper-cover-blank i { display: block; height: 4%; background: #e3e6ea; border-radius: 1px; }
-.paper-cover-blank i:first-child { width: 80%; margin: 0 auto 6%; height: 6%; background: #cfd3d9; }
-.paper-cover-blank i:nth-child(3) { width: 92%; }
-.paper-cover-blank i:last-child { width: 60%; }
-.paper-card.covered .paper-cover-blank { display: none; }
-.paper-title { font-family: var(--display); font-size: 1.12rem; font-weight: 700; line-height: 1.3; margin: 0 0 .25rem; color: var(--ink); }
-.paper-venue { margin: 0 0 .6rem; font-size: 14px; color: var(--ink-soft); }
-.paper-wait { margin: 0 0 .8rem; font-size: 13.5px; color: var(--ink-faint); }
-.paper-card.ready .paper-wait { display: none; }
-.paper-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin: 0; }
+.paper-page {
+  position: relative; display: block; width: 100%; aspect-ratio: 8.5 / 11; padding: 0;
+  border: 1px solid var(--rule); border-radius: 2px; background: #fff; cursor: pointer; overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .05), 0 4px 12px rgba(0, 0, 0, .06);
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+.paper-page:hover { transform: translateY(-2px); box-shadow: 0 2px 4px rgba(0, 0, 0, .08), 0 10px 22px rgba(0, 0, 0, .11); }
+.paper-page canvas { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; transition: opacity .3s ease; }
+.paper-page.drawn canvas { opacity: 1; }
+/* the last tile fades into "All pages" */
+.paper-more::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, .2), rgba(255, 255, 255, .92) 70%);
+}
+.paper-more-label {
+  position: absolute; left: 0; right: 0; bottom: 14%; z-index: 1; text-align: center;
+  font-size: 13px; font-weight: 600; color: #0e4a84;   /* sits on the white page in both themes */
+}
+.paper-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin: 0 0 1.8rem; }
 .paper-actions button.button { font: inherit; font-size: 14px; font-weight: 500; background: none; cursor: pointer; }
-.paper-actions button.button:disabled { cursor: default; }
 @media (max-width: 560px) {
-  .paper-card { gap: 1rem; align-items: flex-start; }
-  .paper-cover { width: 6.5rem; }
-  .paper-title { font-size: 1rem; }
+  .paper-strip {
+    grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 38%;
+    overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: .4rem;
+  }
+  .paper-page { scroll-snap-align: start; }
 }
 
 html.pdf-open { overflow: hidden; }

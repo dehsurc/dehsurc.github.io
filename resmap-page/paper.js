@@ -1,11 +1,8 @@
-/* §5 paper: a card with the first page as its cover, and a reader that opens
-   over the page (the header's Paper button opens it too).
-
-   Everything waits on assets/paper.pdf. Until that file is there the card
-   says the PDF is coming and the buttons stay "(soon)"; drop the file in and
-   the cover, the reader and the header button switch on by themselves.
-   Pages are drawn with pdf.js (cdnjs), loaded only when the section comes
-   near or the reader opens, so a visitor who never gets here pays nothing. */
+/* §5 paper: a strip of the first pages, and a reader that opens over the page.
+   A page in the strip opens the reader at that page; "Read the paper" opens it
+   at the start. Pages are drawn with pdf.js (cdnjs), loaded only when the
+   section comes near or the reader opens, so a visitor who never gets here
+   pays nothing. */
 (function () {
   var PDF = 'assets/paper.pdf';
   var LIB = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
@@ -14,9 +11,8 @@
   var box = document.getElementById('pdfbox');
   if (!card || !box) return;
 
-  var cover = card.querySelector('.paper-cover canvas');
+  var thumbs = Array.prototype.slice.call(card.querySelectorAll('[data-open-page]'));
   var opens = Array.prototype.slice.call(document.querySelectorAll('[data-open-paper]'));
-  var header = document.querySelector('.links a.paper-link');
   var scroller = box.querySelector('.pdf-pages');
   var pageNow = box.querySelector('.pdf-page-now');
   var zoomLabel = box.querySelector('.pdf-zoom-label');
@@ -43,45 +39,27 @@
     return doc;
   }
 
-  /* ---------------------------------------------------------------- the card */
+  /* ---------------------------------------------------------------- the strip */
   function enable() {
-    card.classList.add('ready');
-    opens.forEach(function (b) {
-      b.disabled = false;
-      b.removeAttribute('aria-disabled');
-      var soon = b.querySelector('.soon');
-      if (soon) soon.remove();
-    });
-    var dl = card.querySelector('.paper-download');
-    if (dl) { dl.href = PDF; dl.removeAttribute('aria-disabled'); var s = dl.querySelector('.soon'); if (s) s.remove(); }
-    if (header) {
-      header.href = PDF;
-      header.removeAttribute('aria-disabled');
-      var hs = header.querySelector('.soon');
-      if (hs) hs.remove();
-      header.addEventListener('click', function (e) {
-        if (e.metaKey || e.ctrlKey || e.shiftKey) return;   // a new tab still gets the file
-        e.preventDefault();
-        open();
-      });
-    }
-    // the cover, once the section is close
     var io = 'IntersectionObserver' in window && new IntersectionObserver(function (es) {
       if (!es.some(function (e) { return e.isIntersecting; })) return;
       io.disconnect();
-      drawCover();
+      drawStrip();
     }, { rootMargin: '400px 0px' });
-    if (io) io.observe(card); else drawCover();
+    if (io) io.observe(card); else drawStrip();
   }
 
-  function drawCover() {
-    loadDoc().then(function (d) { return d.getPage(1); }).then(function (page) {
-      var w = cover.clientWidth || 220, dpr = Math.min(window.devicePixelRatio || 1, 2);
-      var v = page.getViewport({ scale: 1 });
-      var vp = page.getViewport({ scale: w * dpr / v.width });
-      cover.width = vp.width; cover.height = vp.height;
-      return page.render({ canvasContext: cover.getContext('2d'), viewport: vp }).promise;
-    }).then(function () { card.classList.add('covered'); }).catch(function () {});
+  function drawStrip() {
+    thumbs.forEach(function (b) {
+      var n = Number(b.getAttribute('data-open-page')), canvas = b.querySelector('canvas');
+      loadDoc().then(function (d) { return d.getPage(n); }).then(function (page) {
+        var w = b.clientWidth || 140, dpr = Math.min(window.devicePixelRatio || 1, 2);
+        var v = page.getViewport({ scale: 1 });
+        var vp = page.getViewport({ scale: w * dpr / v.width });
+        canvas.width = vp.width; canvas.height = vp.height;
+        return page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+      }).then(function () { b.classList.add('drawn'); }).catch(function () {});
+    });
   }
 
   /* ---------------------------------------------------------------- the reader */
@@ -144,13 +122,24 @@
     pageNow.textContent = String(n);
   }
 
-  function open() {
+  function goTo(n) {
+    var slot = scroller.querySelector('[data-page="' + n + '"]');
+    if (!slot) return;
+    scroller.scrollTop = slot.offsetTop - scroller.offsetTop - 16;
+    renderPage(n);
+    trackPage();
+  }
+
+  function open(n) {
     lastFocus = document.activeElement;
     box.hidden = false;
     document.documentElement.classList.add('pdf-open');
     requestAnimationFrame(function () { box.classList.add('shown'); });
     box.querySelector('.pdf-close').focus();
-    loadDoc().then(function (d) { build(d); trackPage(); }).catch(function () {
+    loadDoc().then(function (d) {
+      build(d);
+      if (n > 1) requestAnimationFrame(function () { goTo(n); }); else { scroller.scrollTop = 0; trackPage(); }
+    }).catch(function () {
       scroller.innerHTML = '<p class="pdf-fail">The PDF could not be opened here. <a href="' + PDF + '">Open it directly</a>.</p>';
     });
   }
@@ -161,7 +150,12 @@
     if (lastFocus && lastFocus.focus) lastFocus.focus();
   }
 
-  opens.forEach(function (b) { b.addEventListener('click', open); });
+  opens.forEach(function (b) { b.addEventListener('click', function () { open(1); }); });
+  thumbs.forEach(function (b) {
+    b.addEventListener('click', function () {
+      open(b.classList.contains('paper-more') ? 1 : Number(b.getAttribute('data-open-page')));
+    });
+  });
   box.querySelector('.pdf-close').addEventListener('click', close);
   box.querySelector('[data-pdf-zoom="in"]').addEventListener('click', function () { setZoom(zoom * 1.2); });
   box.querySelector('[data-pdf-zoom="out"]').addEventListener('click', function () { setZoom(zoom / 1.2); });

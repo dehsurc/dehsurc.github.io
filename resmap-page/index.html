@@ -104,9 +104,7 @@
     <p class="notes author-notes"><sup>*</sup>Equal contribution &nbsp;&nbsp;<sup>&dagger;</sup>Corresponding author</p>
 
     <p class="links">
-      <!-- Paper switches on by itself once assets/paper.pdf exists (paper.js),
-           and opens the reader in section 5. -->
-      <a class="button paper-link" aria-disabled="true">Paper <span class="soon">(soon)</span></a>
+      <a class="button" href="https://neurips.cc/virtual/2026/loc/sydney/poster/149564" target="_blank" rel="noopener">NeurIPS</a>
       <a class="button" href="https://arxiv.org/abs/2611.04352" target="_blank" rel="noopener">arXiv</a>
       <a class="button" href="https://github.com/dehsurc/ReSMap" target="_blank" rel="noopener">Code</a>
       <a class="button" href="#cite">BibTeX</a>
@@ -615,23 +613,20 @@
 <section class="reveal" id="cite">
   <div class="col">
     <h2><span class="num">5</span>Paper</h2>
-    <!-- The card and the reader wait on assets/paper.pdf (paper.js): until it
-         is there they say so; add the file and both switch on. -->
-    <div class="paper-card" id="paper-card">
-      <button type="button" class="paper-cover" data-open-paper disabled aria-label="Read the paper">
-        <canvas width="220" height="285" aria-hidden="true"></canvas>
-        <span class="paper-cover-blank" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
-      </button>
-      <div class="paper-meta">
-        <p class="paper-title">ReSMap: Recasting Satellite Priors for Robust and Accurate Online HD Map Construction</p>
-        <p class="paper-venue">NeurIPS 2026</p>
-        <p class="paper-wait">The camera-ready PDF goes up here once it is final.</p>
-        <p class="paper-actions">
-          <button type="button" class="button" data-open-paper disabled aria-disabled="true">Read the paper <span class="soon">(soon)</span></button>
-          <a class="button paper-download" aria-disabled="true" download>Download PDF <span class="soon">(soon)</span></a>
-        </p>
-      </div>
+    <!-- A strip of the first pages, drawn with pdf.js once the section is near (paper.js);
+         a page opens the reader at that page. -->
+    <div class="paper-strip" id="paper-card">
+      <button type="button" class="paper-page" data-open-page="1" aria-label="Read the paper from page 1"><canvas aria-hidden="true"></canvas></button>
+      <button type="button" class="paper-page" data-open-page="2" aria-label="Read the paper from page 2"><canvas aria-hidden="true"></canvas></button>
+      <button type="button" class="paper-page" data-open-page="3" aria-label="Read the paper from page 3"><canvas aria-hidden="true"></canvas></button>
+      <button type="button" class="paper-page" data-open-page="4" aria-label="Read the paper from page 4"><canvas aria-hidden="true"></canvas></button>
+      <button type="button" class="paper-page" data-open-page="5" aria-label="Read the paper from page 5"><canvas aria-hidden="true"></canvas></button>
+      <button type="button" class="paper-page paper-more" data-open-page="6" aria-label="Read the whole paper"><canvas aria-hidden="true"></canvas><span class="paper-more-label">All pages</span></button>
     </div>
+    <p class="paper-actions">
+      <button type="button" class="button" data-open-paper>Read the paper</button>
+      <a class="button" href="https://arxiv.org/abs/2611.04352" target="_blank" rel="noopener">arXiv</a>
+    </p>
     <div class="bibtex">
       <button id="copy-bib" type="button">Copy</button>
       <pre id="bib">@inproceedings{kim2026resmap,
@@ -659,7 +654,6 @@
       <button type="button" data-pdf-zoom="out" aria-label="Zoom out">&minus;</button>
       <button type="button" data-pdf-zoom="fit" class="pdf-zoom-label" aria-label="Fit width">100%</button>
       <button type="button" data-pdf-zoom="in" aria-label="Zoom in">+</button>
-      <a href="assets/paper.pdf" download aria-label="Download PDF"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg></a>
       <button type="button" class="pdf-close" aria-label="Close">&times;</button>
     </span>
   </div>
